@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator trpc {
+  provider = "prisma-trpc-generator"
+  output   = "../src/generated/trpc"
+  config   = "./trpc.config.json"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  externalId  String    @unique
+  subreddit   String
+  author      String?
+  title       String?
+  body        String?
+  score       Int?
+  upvoteRatio Float?
+  numComments Int?
+  url         String?
+  createdUtc  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  restaurantId Int?
+
+  comments Comment[]
+  files    File[]
+}
+
+model Comment {
+  id              Int       @id @default(autoincrement())
+  externalId      String    @unique
+  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId          Int
+  parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId Int?
+  replies         Comment[] @relation("CommentReplies")
+  author          String?
+  body            String?
+  score           Int?
+  createdUtc      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  files File[]
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId Int?
+  fileUrl   String
+  fileType  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model Restaurant {
+  id         Int      @id @default(autoincrement())
+  name       String
+  address    String?
+  city       String?
+  state      String?
+  zipCode    String?
+  phone      String?
+  website    String?
+  cuisine    String?
+  priceRange String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  posts          Post[]
+  scrapeSessions ScrapingSession[]
+}
+
+model ScrapingSession {
+  id                Int         @id @default(autoincrement())
+  subreddit         String
+  restaurant        Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  restaurantId      Int?
+  status            String      @default("pending") // pending, in_progress, completed, failed
+  lastScrapedAt     DateTime?
+  lastPostTimestamp DateTime?
+  postsScraped      Int         @default(0)
+  commentsScraped   Int         @default(0)
+  errorMessage      String?
+  metadata          Json?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([subreddit])
+  @@index([status])
+}

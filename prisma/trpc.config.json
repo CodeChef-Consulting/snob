@@ -1,0 +1,4 @@
+{
+  "withZod": true,
+  "withMiddleware": true
+}

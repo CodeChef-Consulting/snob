@@ -1,0 +1,66 @@
+import * as z from 'zod';
+export const PostAggregateResultSchema = z.object({  _count: z.object({
+    id: z.number(),
+    externalId: z.number(),
+    subreddit: z.number(),
+    author: z.number(),
+    title: z.number(),
+    body: z.number(),
+    score: z.number(),
+    upvoteRatio: z.number(),
+    numComments: z.number(),
+    url: z.number(),
+    createdUtc: z.number(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+    restaurant: z.number(),
+    restaurantId: z.number(),
+    comments: z.number(),
+    files: z.number()
+  }).optional(),
+  _sum: z.object({
+    id: z.number().nullable(),
+    score: z.number().nullable(),
+    upvoteRatio: z.number().nullable(),
+    numComments: z.number().nullable(),
+    restaurantId: z.number().nullable()
+  }).nullable().optional(),
+  _avg: z.object({
+    id: z.number().nullable(),
+    score: z.number().nullable(),
+    upvoteRatio: z.number().nullable(),
+    numComments: z.number().nullable(),
+    restaurantId: z.number().nullable()
+  }).nullable().optional(),
+  _min: z.object({
+    id: z.number().int().nullable(),
+    externalId: z.string().nullable(),
+    subreddit: z.string().nullable(),
+    author: z.string().nullable(),
+    title: z.string().nullable(),
+    body: z.string().nullable(),
+    score: z.number().int().nullable(),
+    upvoteRatio: z.number().nullable(),
+    numComments: z.number().int().nullable(),
+    url: z.string().nullable(),
+    createdUtc: z.date().nullable(),
+    createdAt: z.date().nullable(),
+    updatedAt: z.date().nullable(),
+    restaurantId: z.number().int().nullable()
+  }).nullable().optional(),
+  _max: z.object({
+    id: z.number().int().nullable(),
+    externalId: z.string().nullable(),
+    subreddit: z.string().nullable(),
+    author: z.string().nullable(),
+    title: z.string().nullable(),
+    body: z.string().nullable(),
+    score: z.number().int().nullable(),
+    upvoteRatio: z.number().nullable(),
+    numComments: z.number().int().nullable(),
+    url: z.string().nullable(),
+    createdUtc: z.date().nullable(),
+    createdAt: z.date().nullable(),
+    updatedAt: z.date().nullable(),
+    restaurantId: z.number().int().nullable()
+  }).nullable().optional()});

@@ -1,0 +1,20 @@
+import * as z from 'zod';
+import type { Prisma } from '@prisma/client';
+
+
+const makeSchema = () => z.object({
+  id: z.literal(true).optional(),
+  name: z.literal(true).optional(),
+  address: z.literal(true).optional(),
+  city: z.literal(true).optional(),
+  state: z.literal(true).optional(),
+  zipCode: z.literal(true).optional(),
+  phone: z.literal(true).optional(),
+  website: z.literal(true).optional(),
+  cuisine: z.literal(true).optional(),
+  priceRange: z.literal(true).optional(),
+  createdAt: z.literal(true).optional(),
+  updatedAt: z.literal(true).optional()
+}).strict();
+export const RestaurantMinAggregateInputObjectSchema: z.ZodType<Prisma.RestaurantMinAggregateInputType> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantMinAggregateInputType>;
+export const RestaurantMinAggregateInputObjectZodSchema = makeSchema();
