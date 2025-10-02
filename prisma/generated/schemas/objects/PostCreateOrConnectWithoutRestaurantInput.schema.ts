@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostWhereUniqueInputObjectSchema as PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
-import { PostCreateWithoutRestaurantInputObjectSchema as PostCreateWithoutRestaurantInputObjectSchema } from './PostCreateWithoutRestaurantInput.schema';
-import { PostUncheckedCreateWithoutRestaurantInputObjectSchema as PostUncheckedCreateWithoutRestaurantInputObjectSchema } from './PostUncheckedCreateWithoutRestaurantInput.schema'
+import { PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
+import { PostCreateWithoutRestaurantInputObjectSchema } from './PostCreateWithoutRestaurantInput.schema';
+import { PostUncheckedCreateWithoutRestaurantInputObjectSchema } from './PostUncheckedCreateWithoutRestaurantInput.schema'
 
 const makeSchema = () => z.object({
   where: z.lazy(() => PostWhereUniqueInputObjectSchema),

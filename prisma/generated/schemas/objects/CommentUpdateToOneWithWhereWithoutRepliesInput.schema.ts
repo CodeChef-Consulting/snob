@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { CommentWhereInputObjectSchema as CommentWhereInputObjectSchema } from './CommentWhereInput.schema';
-import { CommentUpdateWithoutRepliesInputObjectSchema as CommentUpdateWithoutRepliesInputObjectSchema } from './CommentUpdateWithoutRepliesInput.schema';
-import { CommentUncheckedUpdateWithoutRepliesInputObjectSchema as CommentUncheckedUpdateWithoutRepliesInputObjectSchema } from './CommentUncheckedUpdateWithoutRepliesInput.schema'
+import { CommentWhereInputObjectSchema } from './CommentWhereInput.schema';
+import { CommentUpdateWithoutRepliesInputObjectSchema } from './CommentUpdateWithoutRepliesInput.schema';
+import { CommentUncheckedUpdateWithoutRepliesInputObjectSchema } from './CommentUncheckedUpdateWithoutRepliesInput.schema'
 
 const makeSchema = () => z.object({
   where: z.lazy(() => CommentWhereInputObjectSchema).optional(),

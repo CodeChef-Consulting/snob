@@ -1,12 +1,12 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
-import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
-import { FloatNullableFilterObjectSchema as FloatNullableFilterObjectSchema } from './FloatNullableFilter.schema';
-import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
+import { FloatNullableFilterObjectSchema } from './FloatNullableFilter.schema';
+import { DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
 
 const postscalarwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => PostScalarWhereInputObjectSchema), z.lazy(() => PostScalarWhereInputObjectSchema).array()]).optional(),

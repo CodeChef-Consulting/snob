@@ -7,7 +7,6 @@ generator client {
 
 generator trpc {
   provider = "prisma-trpc-generator"
-  output   = "../src/generated/trpc"
   config   = "./trpc.config.json"
 }
 
@@ -83,24 +82,22 @@ model Restaurant {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  posts          Post[]
-  scrapeSessions ScrapingSession[]
+  posts Post[]
 }
 
 model ScrapingSession {
-  id                Int         @id @default(autoincrement())
-  subreddit         String
-  restaurant        Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
-  restaurantId      Int?
-  status            String      @default("pending") // pending, in_progress, completed, failed
+  id        Int    @id @default(autoincrement())
+  subreddit String
+
+  status            String    @default("pending") // pending, in_progress, completed, failed
   lastScrapedAt     DateTime?
   lastPostTimestamp DateTime?
-  postsScraped      Int         @default(0)
-  commentsScraped   Int         @default(0)
+  postsScraped      Int       @default(0)
+  commentsScraped   Int       @default(0)
   errorMessage      String?
   metadata          Json?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([subreddit])
   @@index([status])

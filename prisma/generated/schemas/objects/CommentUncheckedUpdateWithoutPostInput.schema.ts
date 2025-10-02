@@ -1,13 +1,13 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFieldUpdateOperationsInputObjectSchema as IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
-import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperationsInputObjectSchema } from './StringFieldUpdateOperationsInput.schema';
-import { NullableIntFieldUpdateOperationsInputObjectSchema as NullableIntFieldUpdateOperationsInputObjectSchema } from './NullableIntFieldUpdateOperationsInput.schema';
-import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
-import { NullableDateTimeFieldUpdateOperationsInputObjectSchema as NullableDateTimeFieldUpdateOperationsInputObjectSchema } from './NullableDateTimeFieldUpdateOperationsInput.schema';
-import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
-import { CommentUncheckedUpdateManyWithoutParentCommentNestedInputObjectSchema as CommentUncheckedUpdateManyWithoutParentCommentNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutParentCommentNestedInput.schema';
-import { FileUncheckedUpdateManyWithoutCommentNestedInputObjectSchema as FileUncheckedUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUncheckedUpdateManyWithoutCommentNestedInput.schema'
+import { IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
+import { StringFieldUpdateOperationsInputObjectSchema } from './StringFieldUpdateOperationsInput.schema';
+import { NullableIntFieldUpdateOperationsInputObjectSchema } from './NullableIntFieldUpdateOperationsInput.schema';
+import { NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
+import { NullableDateTimeFieldUpdateOperationsInputObjectSchema } from './NullableDateTimeFieldUpdateOperationsInput.schema';
+import { DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
+import { CommentUncheckedUpdateManyWithoutParentCommentNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutParentCommentNestedInput.schema';
+import { FileUncheckedUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUncheckedUpdateManyWithoutCommentNestedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),

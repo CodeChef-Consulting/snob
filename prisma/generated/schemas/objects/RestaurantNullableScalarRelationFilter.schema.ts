@@ -1,6 +1,6 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema'
+import { RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema'
 
 const makeSchema = () => z.object({
   is: z.lazy(() => RestaurantWhereInputObjectSchema).optional().nullable(),

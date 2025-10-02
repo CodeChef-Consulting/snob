@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { CommentCreateWithoutParentCommentInputObjectSchema as CommentCreateWithoutParentCommentInputObjectSchema } from './CommentCreateWithoutParentCommentInput.schema';
-import { CommentUncheckedCreateWithoutParentCommentInputObjectSchema as CommentUncheckedCreateWithoutParentCommentInputObjectSchema } from './CommentUncheckedCreateWithoutParentCommentInput.schema';
-import { CommentCreateOrConnectWithoutParentCommentInputObjectSchema as CommentCreateOrConnectWithoutParentCommentInputObjectSchema } from './CommentCreateOrConnectWithoutParentCommentInput.schema';
-import { CommentCreateManyParentCommentInputEnvelopeObjectSchema as CommentCreateManyParentCommentInputEnvelopeObjectSchema } from './CommentCreateManyParentCommentInputEnvelope.schema';
-import { CommentWhereUniqueInputObjectSchema as CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema'
+import { CommentCreateWithoutParentCommentInputObjectSchema } from './CommentCreateWithoutParentCommentInput.schema';
+import { CommentUncheckedCreateWithoutParentCommentInputObjectSchema } from './CommentUncheckedCreateWithoutParentCommentInput.schema';
+import { CommentCreateOrConnectWithoutParentCommentInputObjectSchema } from './CommentCreateOrConnectWithoutParentCommentInput.schema';
+import { CommentCreateManyParentCommentInputEnvelopeObjectSchema } from './CommentCreateManyParentCommentInputEnvelope.schema';
+import { CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => CommentCreateWithoutParentCommentInputObjectSchema), z.lazy(() => CommentCreateWithoutParentCommentInputObjectSchema).array(), z.lazy(() => CommentUncheckedCreateWithoutParentCommentInputObjectSchema), z.lazy(() => CommentUncheckedCreateWithoutParentCommentInputObjectSchema).array()]).optional(),

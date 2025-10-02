@@ -1,12 +1,12 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
-import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { CommentCountOrderByAggregateInputObjectSchema as CommentCountOrderByAggregateInputObjectSchema } from './CommentCountOrderByAggregateInput.schema';
-import { CommentAvgOrderByAggregateInputObjectSchema as CommentAvgOrderByAggregateInputObjectSchema } from './CommentAvgOrderByAggregateInput.schema';
-import { CommentMaxOrderByAggregateInputObjectSchema as CommentMaxOrderByAggregateInputObjectSchema } from './CommentMaxOrderByAggregateInput.schema';
-import { CommentMinOrderByAggregateInputObjectSchema as CommentMinOrderByAggregateInputObjectSchema } from './CommentMinOrderByAggregateInput.schema';
-import { CommentSumOrderByAggregateInputObjectSchema as CommentSumOrderByAggregateInputObjectSchema } from './CommentSumOrderByAggregateInput.schema'
+import { SortOrderInputObjectSchema } from './SortOrderInput.schema';
+import { CommentCountOrderByAggregateInputObjectSchema } from './CommentCountOrderByAggregateInput.schema';
+import { CommentAvgOrderByAggregateInputObjectSchema } from './CommentAvgOrderByAggregateInput.schema';
+import { CommentMaxOrderByAggregateInputObjectSchema } from './CommentMaxOrderByAggregateInput.schema';
+import { CommentMinOrderByAggregateInputObjectSchema } from './CommentMinOrderByAggregateInput.schema';
+import { CommentSumOrderByAggregateInputObjectSchema } from './CommentSumOrderByAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),

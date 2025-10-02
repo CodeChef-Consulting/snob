@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
-import { PostCreateNestedOneWithoutFilesInputObjectSchema as PostCreateNestedOneWithoutFilesInputObjectSchema } from './PostCreateNestedOneWithoutFilesInput.schema';
-import { CommentCreateNestedOneWithoutFilesInputObjectSchema as CommentCreateNestedOneWithoutFilesInputObjectSchema } from './CommentCreateNestedOneWithoutFilesInput.schema'
+import { PostCreateNestedOneWithoutFilesInputObjectSchema } from './PostCreateNestedOneWithoutFilesInput.schema';
+import { CommentCreateNestedOneWithoutFilesInputObjectSchema } from './CommentCreateNestedOneWithoutFilesInput.schema'
 
 import { JsonValueSchema as jsonSchema } from '../../helpers/json-helpers';
 

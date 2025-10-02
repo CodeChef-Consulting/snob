@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 // prettier-ignore
 export const PostResultSchema = z.object({

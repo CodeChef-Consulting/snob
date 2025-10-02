@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { FileWhereUniqueInputObjectSchema as FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema';
-import { FileUpdateWithoutCommentInputObjectSchema as FileUpdateWithoutCommentInputObjectSchema } from './FileUpdateWithoutCommentInput.schema';
-import { FileUncheckedUpdateWithoutCommentInputObjectSchema as FileUncheckedUpdateWithoutCommentInputObjectSchema } from './FileUncheckedUpdateWithoutCommentInput.schema'
+import { FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema';
+import { FileUpdateWithoutCommentInputObjectSchema } from './FileUpdateWithoutCommentInput.schema';
+import { FileUncheckedUpdateWithoutCommentInputObjectSchema } from './FileUncheckedUpdateWithoutCommentInput.schema'
 
 const makeSchema = () => z.object({
   where: z.lazy(() => FileWhereUniqueInputObjectSchema),

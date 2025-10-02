@@ -1,7 +1,7 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantCreateNestedOneWithoutPostsInputObjectSchema as RestaurantCreateNestedOneWithoutPostsInputObjectSchema } from './RestaurantCreateNestedOneWithoutPostsInput.schema';
-import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema'
+import { RestaurantCreateNestedOneWithoutPostsInputObjectSchema } from './RestaurantCreateNestedOneWithoutPostsInput.schema';
+import { CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.string(),

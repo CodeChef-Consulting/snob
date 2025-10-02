@@ -1,12 +1,12 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
-import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { FileCountOrderByAggregateInputObjectSchema as FileCountOrderByAggregateInputObjectSchema } from './FileCountOrderByAggregateInput.schema';
-import { FileAvgOrderByAggregateInputObjectSchema as FileAvgOrderByAggregateInputObjectSchema } from './FileAvgOrderByAggregateInput.schema';
-import { FileMaxOrderByAggregateInputObjectSchema as FileMaxOrderByAggregateInputObjectSchema } from './FileMaxOrderByAggregateInput.schema';
-import { FileMinOrderByAggregateInputObjectSchema as FileMinOrderByAggregateInputObjectSchema } from './FileMinOrderByAggregateInput.schema';
-import { FileSumOrderByAggregateInputObjectSchema as FileSumOrderByAggregateInputObjectSchema } from './FileSumOrderByAggregateInput.schema'
+import { SortOrderInputObjectSchema } from './SortOrderInput.schema';
+import { FileCountOrderByAggregateInputObjectSchema } from './FileCountOrderByAggregateInput.schema';
+import { FileAvgOrderByAggregateInputObjectSchema } from './FileAvgOrderByAggregateInput.schema';
+import { FileMaxOrderByAggregateInputObjectSchema } from './FileMaxOrderByAggregateInput.schema';
+import { FileMinOrderByAggregateInputObjectSchema } from './FileMinOrderByAggregateInput.schema';
+import { FileSumOrderByAggregateInputObjectSchema } from './FileSumOrderByAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),

@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 export const FileScalarFieldEnumSchema = z.enum(['id', 'postId', 'commentId', 'fileUrl', 'fileType', 'metadata', 'createdAt'])
 

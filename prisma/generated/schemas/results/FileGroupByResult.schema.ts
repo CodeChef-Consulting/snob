@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const FileGroupByResultSchema = z.array(z.object({
   id: z.number().int(),
   postId: z.number().int(),

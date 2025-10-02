@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const RestaurantGroupByResultSchema = z.array(z.object({
   id: z.number().int(),
   name: z.string(),
@@ -27,8 +27,7 @@ export const RestaurantGroupByResultSchema = z.array(z.object({
     metadata: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
-    posts: z.number(),
-    scrapeSessions: z.number()
+    posts: z.number()
   }).optional(),
   _sum: z.object({
     id: z.number().nullable()

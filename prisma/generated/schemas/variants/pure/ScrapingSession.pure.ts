@@ -1,11 +1,9 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 // prettier-ignore
 export const ScrapingSessionModelSchema = z.object({
     id: z.number().int(),
     subreddit: z.string(),
-    restaurant: z.unknown().nullable(),
-    restaurantId: z.number().int().nullable(),
     status: z.string(),
     lastScrapedAt: z.date().nullable(),
     lastPostTimestamp: z.date().nullable(),

@@ -1,14 +1,14 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantCreateWithoutPostsInputObjectSchema as RestaurantCreateWithoutPostsInputObjectSchema } from './RestaurantCreateWithoutPostsInput.schema';
-import { RestaurantUncheckedCreateWithoutPostsInputObjectSchema as RestaurantUncheckedCreateWithoutPostsInputObjectSchema } from './RestaurantUncheckedCreateWithoutPostsInput.schema';
-import { RestaurantCreateOrConnectWithoutPostsInputObjectSchema as RestaurantCreateOrConnectWithoutPostsInputObjectSchema } from './RestaurantCreateOrConnectWithoutPostsInput.schema';
-import { RestaurantUpsertWithoutPostsInputObjectSchema as RestaurantUpsertWithoutPostsInputObjectSchema } from './RestaurantUpsertWithoutPostsInput.schema';
-import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema';
-import { RestaurantWhereUniqueInputObjectSchema as RestaurantWhereUniqueInputObjectSchema } from './RestaurantWhereUniqueInput.schema';
-import { RestaurantUpdateToOneWithWhereWithoutPostsInputObjectSchema as RestaurantUpdateToOneWithWhereWithoutPostsInputObjectSchema } from './RestaurantUpdateToOneWithWhereWithoutPostsInput.schema';
-import { RestaurantUpdateWithoutPostsInputObjectSchema as RestaurantUpdateWithoutPostsInputObjectSchema } from './RestaurantUpdateWithoutPostsInput.schema';
-import { RestaurantUncheckedUpdateWithoutPostsInputObjectSchema as RestaurantUncheckedUpdateWithoutPostsInputObjectSchema } from './RestaurantUncheckedUpdateWithoutPostsInput.schema'
+import { RestaurantCreateWithoutPostsInputObjectSchema } from './RestaurantCreateWithoutPostsInput.schema';
+import { RestaurantUncheckedCreateWithoutPostsInputObjectSchema } from './RestaurantUncheckedCreateWithoutPostsInput.schema';
+import { RestaurantCreateOrConnectWithoutPostsInputObjectSchema } from './RestaurantCreateOrConnectWithoutPostsInput.schema';
+import { RestaurantUpsertWithoutPostsInputObjectSchema } from './RestaurantUpsertWithoutPostsInput.schema';
+import { RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema';
+import { RestaurantWhereUniqueInputObjectSchema } from './RestaurantWhereUniqueInput.schema';
+import { RestaurantUpdateToOneWithWhereWithoutPostsInputObjectSchema } from './RestaurantUpdateToOneWithWhereWithoutPostsInput.schema';
+import { RestaurantUpdateWithoutPostsInputObjectSchema } from './RestaurantUpdateWithoutPostsInput.schema';
+import { RestaurantUncheckedUpdateWithoutPostsInputObjectSchema } from './RestaurantUncheckedUpdateWithoutPostsInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => RestaurantCreateWithoutPostsInputObjectSchema), z.lazy(() => RestaurantUncheckedCreateWithoutPostsInputObjectSchema)]).optional(),

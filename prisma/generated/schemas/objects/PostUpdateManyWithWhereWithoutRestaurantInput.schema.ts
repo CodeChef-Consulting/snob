@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostScalarWhereInputObjectSchema as PostScalarWhereInputObjectSchema } from './PostScalarWhereInput.schema';
-import { PostUpdateManyMutationInputObjectSchema as PostUpdateManyMutationInputObjectSchema } from './PostUpdateManyMutationInput.schema';
-import { PostUncheckedUpdateManyWithoutRestaurantInputObjectSchema as PostUncheckedUpdateManyWithoutRestaurantInputObjectSchema } from './PostUncheckedUpdateManyWithoutRestaurantInput.schema'
+import { PostScalarWhereInputObjectSchema } from './PostScalarWhereInput.schema';
+import { PostUpdateManyMutationInputObjectSchema } from './PostUpdateManyMutationInput.schema';
+import { PostUncheckedUpdateManyWithoutRestaurantInputObjectSchema } from './PostUncheckedUpdateManyWithoutRestaurantInput.schema'
 
 const makeSchema = () => z.object({
   where: z.lazy(() => PostScalarWhereInputObjectSchema),

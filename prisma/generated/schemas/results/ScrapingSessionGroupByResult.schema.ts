@@ -1,8 +1,7 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const ScrapingSessionGroupByResultSchema = z.array(z.object({
   id: z.number().int(),
   subreddit: z.string(),
-  restaurantId: z.number().int(),
   status: z.string(),
   lastScrapedAt: z.date(),
   lastPostTimestamp: z.date(),
@@ -15,8 +14,6 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
   _count: z.object({
     id: z.number(),
     subreddit: z.number(),
-    restaurant: z.number(),
-    restaurantId: z.number(),
     status: z.number(),
     lastScrapedAt: z.number(),
     lastPostTimestamp: z.number(),
@@ -29,20 +26,17 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),
-    restaurantId: z.number().nullable(),
     postsScraped: z.number().nullable(),
     commentsScraped: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
-    restaurantId: z.number().nullable(),
     postsScraped: z.number().nullable(),
     commentsScraped: z.number().nullable()
   }).nullable().optional(),
   _min: z.object({
     id: z.number().int().nullable(),
     subreddit: z.string().nullable(),
-    restaurantId: z.number().int().nullable(),
     status: z.string().nullable(),
     lastScrapedAt: z.date().nullable(),
     lastPostTimestamp: z.date().nullable(),
@@ -55,7 +49,6 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
   _max: z.object({
     id: z.number().int().nullable(),
     subreddit: z.string().nullable(),
-    restaurantId: z.number().int().nullable(),
     status: z.string().nullable(),
     lastScrapedAt: z.date().nullable(),
     lastPostTimestamp: z.date().nullable(),

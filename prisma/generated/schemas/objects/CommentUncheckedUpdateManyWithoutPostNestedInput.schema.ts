@@ -1,14 +1,14 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { CommentCreateWithoutPostInputObjectSchema as CommentCreateWithoutPostInputObjectSchema } from './CommentCreateWithoutPostInput.schema';
-import { CommentUncheckedCreateWithoutPostInputObjectSchema as CommentUncheckedCreateWithoutPostInputObjectSchema } from './CommentUncheckedCreateWithoutPostInput.schema';
-import { CommentCreateOrConnectWithoutPostInputObjectSchema as CommentCreateOrConnectWithoutPostInputObjectSchema } from './CommentCreateOrConnectWithoutPostInput.schema';
-import { CommentUpsertWithWhereUniqueWithoutPostInputObjectSchema as CommentUpsertWithWhereUniqueWithoutPostInputObjectSchema } from './CommentUpsertWithWhereUniqueWithoutPostInput.schema';
-import { CommentCreateManyPostInputEnvelopeObjectSchema as CommentCreateManyPostInputEnvelopeObjectSchema } from './CommentCreateManyPostInputEnvelope.schema';
-import { CommentWhereUniqueInputObjectSchema as CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema';
-import { CommentUpdateWithWhereUniqueWithoutPostInputObjectSchema as CommentUpdateWithWhereUniqueWithoutPostInputObjectSchema } from './CommentUpdateWithWhereUniqueWithoutPostInput.schema';
-import { CommentUpdateManyWithWhereWithoutPostInputObjectSchema as CommentUpdateManyWithWhereWithoutPostInputObjectSchema } from './CommentUpdateManyWithWhereWithoutPostInput.schema';
-import { CommentScalarWhereInputObjectSchema as CommentScalarWhereInputObjectSchema } from './CommentScalarWhereInput.schema'
+import { CommentCreateWithoutPostInputObjectSchema } from './CommentCreateWithoutPostInput.schema';
+import { CommentUncheckedCreateWithoutPostInputObjectSchema } from './CommentUncheckedCreateWithoutPostInput.schema';
+import { CommentCreateOrConnectWithoutPostInputObjectSchema } from './CommentCreateOrConnectWithoutPostInput.schema';
+import { CommentUpsertWithWhereUniqueWithoutPostInputObjectSchema } from './CommentUpsertWithWhereUniqueWithoutPostInput.schema';
+import { CommentCreateManyPostInputEnvelopeObjectSchema } from './CommentCreateManyPostInputEnvelope.schema';
+import { CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema';
+import { CommentUpdateWithWhereUniqueWithoutPostInputObjectSchema } from './CommentUpdateWithWhereUniqueWithoutPostInput.schema';
+import { CommentUpdateManyWithWhereWithoutPostInputObjectSchema } from './CommentUpdateManyWithWhereWithoutPostInput.schema';
+import { CommentScalarWhereInputObjectSchema } from './CommentScalarWhereInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => CommentCreateWithoutPostInputObjectSchema), z.lazy(() => CommentCreateWithoutPostInputObjectSchema).array(), z.lazy(() => CommentUncheckedCreateWithoutPostInputObjectSchema), z.lazy(() => CommentUncheckedCreateWithoutPostInputObjectSchema).array()]).optional(),

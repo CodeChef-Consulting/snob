@@ -1,14 +1,14 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { CommentCreateWithoutFilesInputObjectSchema as CommentCreateWithoutFilesInputObjectSchema } from './CommentCreateWithoutFilesInput.schema';
-import { CommentUncheckedCreateWithoutFilesInputObjectSchema as CommentUncheckedCreateWithoutFilesInputObjectSchema } from './CommentUncheckedCreateWithoutFilesInput.schema';
-import { CommentCreateOrConnectWithoutFilesInputObjectSchema as CommentCreateOrConnectWithoutFilesInputObjectSchema } from './CommentCreateOrConnectWithoutFilesInput.schema';
-import { CommentUpsertWithoutFilesInputObjectSchema as CommentUpsertWithoutFilesInputObjectSchema } from './CommentUpsertWithoutFilesInput.schema';
-import { CommentWhereInputObjectSchema as CommentWhereInputObjectSchema } from './CommentWhereInput.schema';
-import { CommentWhereUniqueInputObjectSchema as CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema';
-import { CommentUpdateToOneWithWhereWithoutFilesInputObjectSchema as CommentUpdateToOneWithWhereWithoutFilesInputObjectSchema } from './CommentUpdateToOneWithWhereWithoutFilesInput.schema';
-import { CommentUpdateWithoutFilesInputObjectSchema as CommentUpdateWithoutFilesInputObjectSchema } from './CommentUpdateWithoutFilesInput.schema';
-import { CommentUncheckedUpdateWithoutFilesInputObjectSchema as CommentUncheckedUpdateWithoutFilesInputObjectSchema } from './CommentUncheckedUpdateWithoutFilesInput.schema'
+import { CommentCreateWithoutFilesInputObjectSchema } from './CommentCreateWithoutFilesInput.schema';
+import { CommentUncheckedCreateWithoutFilesInputObjectSchema } from './CommentUncheckedCreateWithoutFilesInput.schema';
+import { CommentCreateOrConnectWithoutFilesInputObjectSchema } from './CommentCreateOrConnectWithoutFilesInput.schema';
+import { CommentUpsertWithoutFilesInputObjectSchema } from './CommentUpsertWithoutFilesInput.schema';
+import { CommentWhereInputObjectSchema } from './CommentWhereInput.schema';
+import { CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema';
+import { CommentUpdateToOneWithWhereWithoutFilesInputObjectSchema } from './CommentUpdateToOneWithWhereWithoutFilesInput.schema';
+import { CommentUpdateWithoutFilesInputObjectSchema } from './CommentUpdateWithoutFilesInput.schema';
+import { CommentUncheckedUpdateWithoutFilesInputObjectSchema } from './CommentUncheckedUpdateWithoutFilesInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => CommentCreateWithoutFilesInputObjectSchema), z.lazy(() => CommentUncheckedCreateWithoutFilesInputObjectSchema)]).optional(),

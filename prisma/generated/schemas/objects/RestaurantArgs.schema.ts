@@ -1,7 +1,7 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantSelectObjectSchema as RestaurantSelectObjectSchema } from './RestaurantSelect.schema';
-import { RestaurantIncludeObjectSchema as RestaurantIncludeObjectSchema } from './RestaurantInclude.schema'
+import { RestaurantSelectObjectSchema } from './RestaurantSelect.schema';
+import { RestaurantIncludeObjectSchema } from './RestaurantInclude.schema'
 
 const makeSchema = () => z.object({
   select: z.lazy(() => RestaurantSelectObjectSchema).optional(),

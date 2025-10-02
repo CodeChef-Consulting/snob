@@ -1,11 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 
 
 const makeSchema = () => z.object({
   id: z.literal(true).optional(),
   subreddit: z.literal(true).optional(),
-  restaurantId: z.literal(true).optional(),
   status: z.literal(true).optional(),
   lastScrapedAt: z.literal(true).optional(),
   lastPostTimestamp: z.literal(true).optional(),

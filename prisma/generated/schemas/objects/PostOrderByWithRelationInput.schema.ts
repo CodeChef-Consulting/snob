@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
-import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { RestaurantOrderByWithRelationInputObjectSchema as RestaurantOrderByWithRelationInputObjectSchema } from './RestaurantOrderByWithRelationInput.schema';
-import { CommentOrderByRelationAggregateInputObjectSchema as CommentOrderByRelationAggregateInputObjectSchema } from './CommentOrderByRelationAggregateInput.schema';
-import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema'
+import { SortOrderInputObjectSchema } from './SortOrderInput.schema';
+import { RestaurantOrderByWithRelationInputObjectSchema } from './RestaurantOrderByWithRelationInput.schema';
+import { CommentOrderByRelationAggregateInputObjectSchema } from './CommentOrderByRelationAggregateInput.schema';
+import { FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),

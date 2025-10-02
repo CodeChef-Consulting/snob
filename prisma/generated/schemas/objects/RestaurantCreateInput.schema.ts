@@ -1,8 +1,7 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
-import { PostCreateNestedManyWithoutRestaurantInputObjectSchema as PostCreateNestedManyWithoutRestaurantInputObjectSchema } from './PostCreateNestedManyWithoutRestaurantInput.schema';
-import { ScrapingSessionCreateNestedManyWithoutRestaurantInputObjectSchema as ScrapingSessionCreateNestedManyWithoutRestaurantInputObjectSchema } from './ScrapingSessionCreateNestedManyWithoutRestaurantInput.schema'
+import { PostCreateNestedManyWithoutRestaurantInputObjectSchema } from './PostCreateNestedManyWithoutRestaurantInput.schema'
 
 import { JsonValueSchema as jsonSchema } from '../../helpers/json-helpers';
 
@@ -18,8 +17,7 @@ const makeSchema = () => z.object({
   priceRange: z.string().optional().nullable(),
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   createdAt: z.coerce.date().optional(),
-  posts: z.lazy(() => PostCreateNestedManyWithoutRestaurantInputObjectSchema),
-  scrapeSessions: z.lazy(() => ScrapingSessionCreateNestedManyWithoutRestaurantInputObjectSchema)
+  posts: z.lazy(() => PostCreateNestedManyWithoutRestaurantInputObjectSchema)
 }).strict();
 export const RestaurantCreateInputObjectSchema: z.ZodType<Prisma.RestaurantCreateInput> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantCreateInput>;
 export const RestaurantCreateInputObjectZodSchema = makeSchema();

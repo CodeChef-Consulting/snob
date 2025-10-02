@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { JsonNullableFilterObjectSchema as JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
 
 const filescalarwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => FileScalarWhereInputObjectSchema), z.lazy(() => FileScalarWhereInputObjectSchema).array()]).optional(),

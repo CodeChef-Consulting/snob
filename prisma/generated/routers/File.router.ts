@@ -1,4 +1,4 @@
-import { t, protectedProcedure } from "./helpers/createRouter";
+import { t, publicProcedure } from "./helpers/createRouter";
 import { Prisma } from "@prisma/client";
 import { FileAggregateSchema } from "../schemas/aggregateFile.schema";
 import { FileCreateManySchema } from "../schemas/createManyFile.schema";
@@ -14,87 +14,93 @@ import { FileUpdateManySchema } from "../schemas/updateManyFile.schema";
 import { FileUpdateManyAndReturnSchema } from "../schemas/updateManyAndReturnFile.schema";
 import { FileUpdateOneSchema } from "../schemas/updateOneFile.schema";
 import { FileUpsertSchema } from "../schemas/upsertOneFile.schema";
+import { FileCountSchema } from "../schemas/countFile.schema";
 
 export const filesRouter = t.router({
-  aggregateFile: protectedProcedure
+  aggregateFile: publicProcedure
     .input(FileAggregateSchema).query(async ({ ctx, input }) => {
       const aggregateFile = await ctx.prisma.file.aggregate(input as Prisma.FileAggregateArgs);
       return aggregateFile;
     }),
-  createManyFile: protectedProcedure
+  createManyFile: publicProcedure
     .input(FileCreateManySchema).mutation(async ({ ctx, input }) => {
       const createManyFile = await ctx.prisma.file.createMany(input as Prisma.FileCreateManyArgs);
       return createManyFile;
     }),
-  createManyFileAndReturn: protectedProcedure
+  createManyFileAndReturn: publicProcedure
     .input(FileCreateManyAndReturnSchema).mutation(async ({ ctx, input }) => {
       const createManyFileAndReturn = await ctx.prisma.file.createManyAndReturn(input as Prisma.FileCreateManyAndReturnArgs);
       return createManyFileAndReturn;
     }),
-  createOneFile: protectedProcedure
+  createOneFile: publicProcedure
     .input(FileCreateOneSchema).mutation(async ({ ctx, input }) => {
       const createOneFile = await ctx.prisma.file.create(input as Prisma.FileCreateArgs);
       return createOneFile;
     }),
-  deleteManyFile: protectedProcedure
+  deleteManyFile: publicProcedure
     .input(FileDeleteManySchema).mutation(async ({ ctx, input }) => {
       const deleteManyFile = await ctx.prisma.file.deleteMany(input as Prisma.FileDeleteManyArgs);
       return deleteManyFile;
     }),
-  deleteOneFile: protectedProcedure
+  deleteOneFile: publicProcedure
     .input(FileDeleteOneSchema).mutation(async ({ ctx, input }) => {
       const deleteOneFile = await ctx.prisma.file.delete(input as Prisma.FileDeleteArgs);
       return deleteOneFile;
     }),
-  findFirstFile: protectedProcedure
+  findFirstFile: publicProcedure
     .input(FileFindFirstSchema).query(async ({ ctx, input }) => {
       const findFirstFile = await ctx.prisma.file.findFirst(input as Prisma.FileFindFirstArgs);
       return findFirstFile;
     }),
-  findFirstFileOrThrow: protectedProcedure
+  findFirstFileOrThrow: publicProcedure
     .input(FileFindFirstSchema).query(async ({ ctx, input }) => {
       const findFirstFileOrThrow = await ctx.prisma.file.findFirstOrThrow(input as Prisma.FileFindFirstOrThrowArgs);
       return findFirstFileOrThrow;
     }),
-  findManyFile: protectedProcedure
+  findManyFile: publicProcedure
     .input(FileFindManySchema).query(async ({ ctx, input }) => {
       const findManyFile = await ctx.prisma.file.findMany(input as Prisma.FileFindManyArgs);
       return findManyFile;
     }),
-  findUniqueFile: protectedProcedure
+  findUniqueFile: publicProcedure
     .input(FileFindUniqueSchema).query(async ({ ctx, input }) => {
       const findUniqueFile = await ctx.prisma.file.findUnique(input as Prisma.FileFindUniqueArgs);
       return findUniqueFile;
     }),
-  findUniqueFileOrThrow: protectedProcedure
+  findUniqueFileOrThrow: publicProcedure
     .input(FileFindUniqueSchema).query(async ({ ctx, input }) => {
       const findUniqueFileOrThrow = await ctx.prisma.file.findUniqueOrThrow(input as Prisma.FileFindUniqueOrThrowArgs);
       return findUniqueFileOrThrow;
     }),
-  groupByFile: protectedProcedure
+  groupByFile: publicProcedure
     .input(FileGroupBySchema).query(async ({ ctx, input }) => {
       const groupByFile = await ctx.prisma.file.groupBy({ ...({ ...input, orderBy: input.orderBy } as Prisma.FileGroupByArgs), orderBy: ({ ...input, orderBy: input.orderBy } as Prisma.FileGroupByArgs).orderBy });
       return groupByFile;
     }),
-  updateManyFile: protectedProcedure
+  updateManyFile: publicProcedure
     .input(FileUpdateManySchema).mutation(async ({ ctx, input }) => {
       const updateManyFile = await ctx.prisma.file.updateMany(input as Prisma.FileUpdateManyArgs);
       return updateManyFile;
     }),
-  updateManyFileAndReturn: protectedProcedure
+  updateManyFileAndReturn: publicProcedure
     .input(FileUpdateManyAndReturnSchema).mutation(async ({ ctx, input }) => {
       const updateManyFileAndReturn = await ctx.prisma.file.updateManyAndReturn(input as Prisma.FileUpdateManyAndReturnArgs);
       return updateManyFileAndReturn;
     }),
-  updateOneFile: protectedProcedure
+  updateOneFile: publicProcedure
     .input(FileUpdateOneSchema).mutation(async ({ ctx, input }) => {
       const updateOneFile = await ctx.prisma.file.update(input as Prisma.FileUpdateArgs);
       return updateOneFile;
     }),
-  upsertOneFile: protectedProcedure
+  upsertOneFile: publicProcedure
     .input(FileUpsertSchema).mutation(async ({ ctx, input }) => {
       const upsertOneFile = await ctx.prisma.file.upsert(input as Prisma.FileUpsertArgs);
       return upsertOneFile;
+    }),
+  countFile: publicProcedure
+    .input(FileCountSchema).query(async ({ ctx, input }) => {
+      const countFile = await ctx.prisma.file.count(input as Prisma.FileCountArgs);
+      return countFile;
     }),
 
 }) 

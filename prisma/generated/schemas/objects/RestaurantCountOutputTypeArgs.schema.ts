@@ -1,6 +1,6 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantCountOutputTypeSelectObjectSchema as RestaurantCountOutputTypeSelectObjectSchema } from './RestaurantCountOutputTypeSelect.schema'
+import { RestaurantCountOutputTypeSelectObjectSchema } from './RestaurantCountOutputTypeSelect.schema'
 
 const makeSchema = () => z.object({
   select: z.lazy(() => RestaurantCountOutputTypeSelectObjectSchema).optional()

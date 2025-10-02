@@ -1,7 +1,4 @@
-import type { Prisma } from '@prisma/client';
-import * as z from 'zod';
-import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';
+import { z } from 'zod';
+import { RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';
 
-export const RestaurantDeleteManySchema: z.ZodType<Prisma.RestaurantDeleteManyArgs> = z.object({ where: RestaurantWhereInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.RestaurantDeleteManyArgs>;
-
-export const RestaurantDeleteManyZodSchema = z.object({ where: RestaurantWhereInputObjectSchema.optional() }).strict();
+export const RestaurantDeleteManySchema = z.object({ where: RestaurantWhereInputObjectSchema.optional()  })

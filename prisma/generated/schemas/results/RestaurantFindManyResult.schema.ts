@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const RestaurantFindManyResultSchema = z.object({
   data: z.array(z.object({
   id: z.number().int(),
@@ -14,8 +14,7 @@ export const RestaurantFindManyResultSchema = z.object({
   metadata: z.unknown().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  posts: z.array(z.unknown()),
-  scrapeSessions: z.array(z.unknown())
+  posts: z.array(z.unknown())
 })),
   pagination: z.object({
   page: z.number().int().min(1),

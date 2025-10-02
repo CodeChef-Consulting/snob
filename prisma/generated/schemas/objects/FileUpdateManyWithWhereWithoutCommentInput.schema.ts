@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { FileScalarWhereInputObjectSchema as FileScalarWhereInputObjectSchema } from './FileScalarWhereInput.schema';
-import { FileUpdateManyMutationInputObjectSchema as FileUpdateManyMutationInputObjectSchema } from './FileUpdateManyMutationInput.schema';
-import { FileUncheckedUpdateManyWithoutCommentInputObjectSchema as FileUncheckedUpdateManyWithoutCommentInputObjectSchema } from './FileUncheckedUpdateManyWithoutCommentInput.schema'
+import { FileScalarWhereInputObjectSchema } from './FileScalarWhereInput.schema';
+import { FileUpdateManyMutationInputObjectSchema } from './FileUpdateManyMutationInput.schema';
+import { FileUncheckedUpdateManyWithoutCommentInputObjectSchema } from './FileUncheckedUpdateManyWithoutCommentInput.schema'
 
 const makeSchema = () => z.object({
   where: z.lazy(() => FileScalarWhereInputObjectSchema),

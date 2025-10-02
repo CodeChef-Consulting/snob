@@ -1,7 +1,7 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { QueryModeSchema } from '../enums/QueryMode.schema';
-import { NestedStringNullableFilterObjectSchema as NestedStringNullableFilterObjectSchema } from './NestedStringNullableFilter.schema'
+import { NestedStringNullableFilterObjectSchema } from './NestedStringNullableFilter.schema'
 
 const makeSchema = () => z.object({
   equals: z.string().optional().nullable(),

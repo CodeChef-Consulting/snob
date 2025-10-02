@@ -1,14 +1,14 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { JsonNullableFilterObjectSchema as JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
-import { PostNullableScalarRelationFilterObjectSchema as PostNullableScalarRelationFilterObjectSchema } from './PostNullableScalarRelationFilter.schema';
-import { PostWhereInputObjectSchema as PostWhereInputObjectSchema } from './PostWhereInput.schema';
-import { CommentNullableScalarRelationFilterObjectSchema as CommentNullableScalarRelationFilterObjectSchema } from './CommentNullableScalarRelationFilter.schema';
-import { CommentWhereInputObjectSchema as CommentWhereInputObjectSchema } from './CommentWhereInput.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
+import { PostNullableScalarRelationFilterObjectSchema } from './PostNullableScalarRelationFilter.schema';
+import { PostWhereInputObjectSchema } from './PostWhereInput.schema';
+import { CommentNullableScalarRelationFilterObjectSchema } from './CommentNullableScalarRelationFilter.schema';
+import { CommentWhereInputObjectSchema } from './CommentWhereInput.schema'
 
 const filewhereinputSchema = z.object({
   AND: z.union([z.lazy(() => FileWhereInputObjectSchema), z.lazy(() => FileWhereInputObjectSchema).array()]).optional(),

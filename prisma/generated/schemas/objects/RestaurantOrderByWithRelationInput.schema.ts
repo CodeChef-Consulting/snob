@@ -1,9 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
-import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { PostOrderByRelationAggregateInputObjectSchema as PostOrderByRelationAggregateInputObjectSchema } from './PostOrderByRelationAggregateInput.schema';
-import { ScrapingSessionOrderByRelationAggregateInputObjectSchema as ScrapingSessionOrderByRelationAggregateInputObjectSchema } from './ScrapingSessionOrderByRelationAggregateInput.schema'
+import { SortOrderInputObjectSchema } from './SortOrderInput.schema';
+import { PostOrderByRelationAggregateInputObjectSchema } from './PostOrderByRelationAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
@@ -19,8 +18,7 @@ const makeSchema = () => z.object({
   metadata: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),
-  posts: z.lazy(() => PostOrderByRelationAggregateInputObjectSchema).optional(),
-  scrapeSessions: z.lazy(() => ScrapingSessionOrderByRelationAggregateInputObjectSchema).optional()
+  posts: z.lazy(() => PostOrderByRelationAggregateInputObjectSchema).optional()
 }).strict();
 export const RestaurantOrderByWithRelationInputObjectSchema: z.ZodType<Prisma.RestaurantOrderByWithRelationInput> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantOrderByWithRelationInput>;
 export const RestaurantOrderByWithRelationInputObjectZodSchema = makeSchema();

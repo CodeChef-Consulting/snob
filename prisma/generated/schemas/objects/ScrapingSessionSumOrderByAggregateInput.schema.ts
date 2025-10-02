@@ -1,10 +1,9 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
-  restaurantId: SortOrderSchema.optional(),
   postsScraped: SortOrderSchema.optional(),
   commentsScraped: SortOrderSchema.optional()
 }).strict();

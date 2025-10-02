@@ -1,6 +1,6 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostWhereInputObjectSchema as PostWhereInputObjectSchema } from './PostWhereInput.schema'
+import { PostWhereInputObjectSchema } from './PostWhereInput.schema'
 
 const makeSchema = () => z.object({
   every: z.lazy(() => PostWhereInputObjectSchema).optional(),

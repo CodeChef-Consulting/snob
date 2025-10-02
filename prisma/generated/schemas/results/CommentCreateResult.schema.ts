@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const CommentCreateResultSchema = z.object({
   id: z.number().int(),
   externalId: z.string(),

@@ -1,4 +1,6 @@
 {
   "withZod": true,
-  "withMiddleware": true
+  "withMiddleware": false,
+  "contextPath": "../src/context",
+  "trpcOptionsPath": "../src/trpcOptions"
 }

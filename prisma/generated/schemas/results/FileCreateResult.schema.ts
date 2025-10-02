@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const FileCreateResultSchema = z.object({
   id: z.number().int(),
   post: z.unknown().optional(),

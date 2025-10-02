@@ -1,8 +1,8 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostWhereUniqueInputObjectSchema as PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
-import { PostCreateWithoutFilesInputObjectSchema as PostCreateWithoutFilesInputObjectSchema } from './PostCreateWithoutFilesInput.schema';
-import { PostUncheckedCreateWithoutFilesInputObjectSchema as PostUncheckedCreateWithoutFilesInputObjectSchema } from './PostUncheckedCreateWithoutFilesInput.schema'
+import { PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
+import { PostCreateWithoutFilesInputObjectSchema } from './PostCreateWithoutFilesInput.schema';
+import { PostUncheckedCreateWithoutFilesInputObjectSchema } from './PostUncheckedCreateWithoutFilesInput.schema'
 
 const makeSchema = () => z.object({
   where: z.lazy(() => PostWhereUniqueInputObjectSchema),

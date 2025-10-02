@@ -1,16 +1,16 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
-import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
-import { FloatNullableFilterObjectSchema as FloatNullableFilterObjectSchema } from './FloatNullableFilter.schema';
-import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
-import { RestaurantNullableScalarRelationFilterObjectSchema as RestaurantNullableScalarRelationFilterObjectSchema } from './RestaurantNullableScalarRelationFilter.schema';
-import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema';
-import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema';
-import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
+import { FloatNullableFilterObjectSchema } from './FloatNullableFilter.schema';
+import { DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
+import { RestaurantNullableScalarRelationFilterObjectSchema } from './RestaurantNullableScalarRelationFilter.schema';
+import { RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema';
+import { CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema';
+import { FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema'
 
 const postwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => PostWhereInputObjectSchema), z.lazy(() => PostWhereInputObjectSchema).array()]).optional(),

@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { CommentCreateWithoutPostInputObjectSchema as CommentCreateWithoutPostInputObjectSchema } from './CommentCreateWithoutPostInput.schema';
-import { CommentUncheckedCreateWithoutPostInputObjectSchema as CommentUncheckedCreateWithoutPostInputObjectSchema } from './CommentUncheckedCreateWithoutPostInput.schema';
-import { CommentCreateOrConnectWithoutPostInputObjectSchema as CommentCreateOrConnectWithoutPostInputObjectSchema } from './CommentCreateOrConnectWithoutPostInput.schema';
-import { CommentCreateManyPostInputEnvelopeObjectSchema as CommentCreateManyPostInputEnvelopeObjectSchema } from './CommentCreateManyPostInputEnvelope.schema';
-import { CommentWhereUniqueInputObjectSchema as CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema'
+import { CommentCreateWithoutPostInputObjectSchema } from './CommentCreateWithoutPostInput.schema';
+import { CommentUncheckedCreateWithoutPostInputObjectSchema } from './CommentUncheckedCreateWithoutPostInput.schema';
+import { CommentCreateOrConnectWithoutPostInputObjectSchema } from './CommentCreateOrConnectWithoutPostInput.schema';
+import { CommentCreateManyPostInputEnvelopeObjectSchema } from './CommentCreateManyPostInputEnvelope.schema';
+import { CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => CommentCreateWithoutPostInputObjectSchema), z.lazy(() => CommentCreateWithoutPostInputObjectSchema).array(), z.lazy(() => CommentUncheckedCreateWithoutPostInputObjectSchema), z.lazy(() => CommentUncheckedCreateWithoutPostInputObjectSchema).array()]).optional(),

@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 export const PostScalarFieldEnumSchema = z.enum(['id', 'externalId', 'subreddit', 'author', 'title', 'body', 'score', 'upvoteRatio', 'numComments', 'url', 'createdUtc', 'createdAt', 'updatedAt', 'restaurantId'])
 

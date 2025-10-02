@@ -1,16 +1,16 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
-import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
-import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
-import { PostScalarRelationFilterObjectSchema as PostScalarRelationFilterObjectSchema } from './PostScalarRelationFilter.schema';
-import { PostWhereInputObjectSchema as PostWhereInputObjectSchema } from './PostWhereInput.schema';
-import { CommentNullableScalarRelationFilterObjectSchema as CommentNullableScalarRelationFilterObjectSchema } from './CommentNullableScalarRelationFilter.schema';
-import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema';
-import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
+import { StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
+import { PostScalarRelationFilterObjectSchema } from './PostScalarRelationFilter.schema';
+import { PostWhereInputObjectSchema } from './PostWhereInput.schema';
+import { CommentNullableScalarRelationFilterObjectSchema } from './CommentNullableScalarRelationFilter.schema';
+import { CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema';
+import { FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema'
 
 const commentwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => CommentWhereInputObjectSchema), z.lazy(() => CommentWhereInputObjectSchema).array()]).optional(),

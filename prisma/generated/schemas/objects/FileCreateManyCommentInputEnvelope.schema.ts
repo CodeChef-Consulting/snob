@@ -1,6 +1,6 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { FileCreateManyCommentInputObjectSchema as FileCreateManyCommentInputObjectSchema } from './FileCreateManyCommentInput.schema'
+import { FileCreateManyCommentInputObjectSchema } from './FileCreateManyCommentInput.schema'
 
 const makeSchema = () => z.object({
   data: z.union([z.lazy(() => FileCreateManyCommentInputObjectSchema), z.lazy(() => FileCreateManyCommentInputObjectSchema).array()]),

@@ -1,13 +1,13 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostCreateWithoutCommentsInputObjectSchema as PostCreateWithoutCommentsInputObjectSchema } from './PostCreateWithoutCommentsInput.schema';
-import { PostUncheckedCreateWithoutCommentsInputObjectSchema as PostUncheckedCreateWithoutCommentsInputObjectSchema } from './PostUncheckedCreateWithoutCommentsInput.schema';
-import { PostCreateOrConnectWithoutCommentsInputObjectSchema as PostCreateOrConnectWithoutCommentsInputObjectSchema } from './PostCreateOrConnectWithoutCommentsInput.schema';
-import { PostUpsertWithoutCommentsInputObjectSchema as PostUpsertWithoutCommentsInputObjectSchema } from './PostUpsertWithoutCommentsInput.schema';
-import { PostWhereUniqueInputObjectSchema as PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
-import { PostUpdateToOneWithWhereWithoutCommentsInputObjectSchema as PostUpdateToOneWithWhereWithoutCommentsInputObjectSchema } from './PostUpdateToOneWithWhereWithoutCommentsInput.schema';
-import { PostUpdateWithoutCommentsInputObjectSchema as PostUpdateWithoutCommentsInputObjectSchema } from './PostUpdateWithoutCommentsInput.schema';
-import { PostUncheckedUpdateWithoutCommentsInputObjectSchema as PostUncheckedUpdateWithoutCommentsInputObjectSchema } from './PostUncheckedUpdateWithoutCommentsInput.schema'
+import { PostCreateWithoutCommentsInputObjectSchema } from './PostCreateWithoutCommentsInput.schema';
+import { PostUncheckedCreateWithoutCommentsInputObjectSchema } from './PostUncheckedCreateWithoutCommentsInput.schema';
+import { PostCreateOrConnectWithoutCommentsInputObjectSchema } from './PostCreateOrConnectWithoutCommentsInput.schema';
+import { PostUpsertWithoutCommentsInputObjectSchema } from './PostUpsertWithoutCommentsInput.schema';
+import { PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
+import { PostUpdateToOneWithWhereWithoutCommentsInputObjectSchema } from './PostUpdateToOneWithWhereWithoutCommentsInput.schema';
+import { PostUpdateWithoutCommentsInputObjectSchema } from './PostUpdateWithoutCommentsInput.schema';
+import { PostUncheckedUpdateWithoutCommentsInputObjectSchema } from './PostUncheckedUpdateWithoutCommentsInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => PostCreateWithoutCommentsInputObjectSchema), z.lazy(() => PostUncheckedCreateWithoutCommentsInputObjectSchema)]).optional(),

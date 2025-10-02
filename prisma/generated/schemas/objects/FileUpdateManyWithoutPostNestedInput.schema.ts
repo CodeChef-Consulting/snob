@@ -1,14 +1,14 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { FileCreateWithoutPostInputObjectSchema as FileCreateWithoutPostInputObjectSchema } from './FileCreateWithoutPostInput.schema';
-import { FileUncheckedCreateWithoutPostInputObjectSchema as FileUncheckedCreateWithoutPostInputObjectSchema } from './FileUncheckedCreateWithoutPostInput.schema';
-import { FileCreateOrConnectWithoutPostInputObjectSchema as FileCreateOrConnectWithoutPostInputObjectSchema } from './FileCreateOrConnectWithoutPostInput.schema';
-import { FileUpsertWithWhereUniqueWithoutPostInputObjectSchema as FileUpsertWithWhereUniqueWithoutPostInputObjectSchema } from './FileUpsertWithWhereUniqueWithoutPostInput.schema';
-import { FileCreateManyPostInputEnvelopeObjectSchema as FileCreateManyPostInputEnvelopeObjectSchema } from './FileCreateManyPostInputEnvelope.schema';
-import { FileWhereUniqueInputObjectSchema as FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema';
-import { FileUpdateWithWhereUniqueWithoutPostInputObjectSchema as FileUpdateWithWhereUniqueWithoutPostInputObjectSchema } from './FileUpdateWithWhereUniqueWithoutPostInput.schema';
-import { FileUpdateManyWithWhereWithoutPostInputObjectSchema as FileUpdateManyWithWhereWithoutPostInputObjectSchema } from './FileUpdateManyWithWhereWithoutPostInput.schema';
-import { FileScalarWhereInputObjectSchema as FileScalarWhereInputObjectSchema } from './FileScalarWhereInput.schema'
+import { FileCreateWithoutPostInputObjectSchema } from './FileCreateWithoutPostInput.schema';
+import { FileUncheckedCreateWithoutPostInputObjectSchema } from './FileUncheckedCreateWithoutPostInput.schema';
+import { FileCreateOrConnectWithoutPostInputObjectSchema } from './FileCreateOrConnectWithoutPostInput.schema';
+import { FileUpsertWithWhereUniqueWithoutPostInputObjectSchema } from './FileUpsertWithWhereUniqueWithoutPostInput.schema';
+import { FileCreateManyPostInputEnvelopeObjectSchema } from './FileCreateManyPostInputEnvelope.schema';
+import { FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema';
+import { FileUpdateWithWhereUniqueWithoutPostInputObjectSchema } from './FileUpdateWithWhereUniqueWithoutPostInput.schema';
+import { FileUpdateManyWithWhereWithoutPostInputObjectSchema } from './FileUpdateManyWithWhereWithoutPostInput.schema';
+import { FileScalarWhereInputObjectSchema } from './FileScalarWhereInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => FileCreateWithoutPostInputObjectSchema), z.lazy(() => FileCreateWithoutPostInputObjectSchema).array(), z.lazy(() => FileUncheckedCreateWithoutPostInputObjectSchema), z.lazy(() => FileUncheckedCreateWithoutPostInputObjectSchema).array()]).optional(),

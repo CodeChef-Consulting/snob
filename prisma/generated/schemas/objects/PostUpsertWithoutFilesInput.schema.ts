@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostUpdateWithoutFilesInputObjectSchema as PostUpdateWithoutFilesInputObjectSchema } from './PostUpdateWithoutFilesInput.schema';
-import { PostUncheckedUpdateWithoutFilesInputObjectSchema as PostUncheckedUpdateWithoutFilesInputObjectSchema } from './PostUncheckedUpdateWithoutFilesInput.schema';
-import { PostCreateWithoutFilesInputObjectSchema as PostCreateWithoutFilesInputObjectSchema } from './PostCreateWithoutFilesInput.schema';
-import { PostUncheckedCreateWithoutFilesInputObjectSchema as PostUncheckedCreateWithoutFilesInputObjectSchema } from './PostUncheckedCreateWithoutFilesInput.schema';
-import { PostWhereInputObjectSchema as PostWhereInputObjectSchema } from './PostWhereInput.schema'
+import { PostUpdateWithoutFilesInputObjectSchema } from './PostUpdateWithoutFilesInput.schema';
+import { PostUncheckedUpdateWithoutFilesInputObjectSchema } from './PostUncheckedUpdateWithoutFilesInput.schema';
+import { PostCreateWithoutFilesInputObjectSchema } from './PostCreateWithoutFilesInput.schema';
+import { PostUncheckedCreateWithoutFilesInputObjectSchema } from './PostUncheckedCreateWithoutFilesInput.schema';
+import { PostWhereInputObjectSchema } from './PostWhereInput.schema'
 
 const makeSchema = () => z.object({
   update: z.union([z.lazy(() => PostUpdateWithoutFilesInputObjectSchema), z.lazy(() => PostUncheckedUpdateWithoutFilesInputObjectSchema)]),

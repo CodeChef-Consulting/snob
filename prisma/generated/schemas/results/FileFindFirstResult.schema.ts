@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const FileFindFirstResultSchema = z.nullable(z.object({
   id: z.number().int(),
   post: z.unknown().optional(),

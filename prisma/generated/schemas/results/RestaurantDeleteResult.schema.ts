@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const RestaurantDeleteResultSchema = z.nullable(z.object({
   id: z.number().int(),
   name: z.string(),
@@ -13,6 +13,5 @@ export const RestaurantDeleteResultSchema = z.nullable(z.object({
   metadata: z.unknown().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  posts: z.array(z.unknown()),
-  scrapeSessions: z.array(z.unknown())
+  posts: z.array(z.unknown())
 }));

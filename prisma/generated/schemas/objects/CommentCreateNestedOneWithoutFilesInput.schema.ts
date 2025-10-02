@@ -1,9 +1,9 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { CommentCreateWithoutFilesInputObjectSchema as CommentCreateWithoutFilesInputObjectSchema } from './CommentCreateWithoutFilesInput.schema';
-import { CommentUncheckedCreateWithoutFilesInputObjectSchema as CommentUncheckedCreateWithoutFilesInputObjectSchema } from './CommentUncheckedCreateWithoutFilesInput.schema';
-import { CommentCreateOrConnectWithoutFilesInputObjectSchema as CommentCreateOrConnectWithoutFilesInputObjectSchema } from './CommentCreateOrConnectWithoutFilesInput.schema';
-import { CommentWhereUniqueInputObjectSchema as CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema'
+import { CommentCreateWithoutFilesInputObjectSchema } from './CommentCreateWithoutFilesInput.schema';
+import { CommentUncheckedCreateWithoutFilesInputObjectSchema } from './CommentUncheckedCreateWithoutFilesInput.schema';
+import { CommentCreateOrConnectWithoutFilesInputObjectSchema } from './CommentCreateOrConnectWithoutFilesInput.schema';
+import { CommentWhereUniqueInputObjectSchema } from './CommentWhereUniqueInput.schema'
 
 const makeSchema = () => z.object({
   create: z.union([z.lazy(() => CommentCreateWithoutFilesInputObjectSchema), z.lazy(() => CommentUncheckedCreateWithoutFilesInputObjectSchema)]).optional(),

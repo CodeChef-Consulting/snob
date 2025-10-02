@@ -1,9 +1,8 @@
 import type { Prisma } from '@prisma/client';
-import * as z from 'zod';
-import { ScrapingSessionIncludeObjectSchema as ScrapingSessionIncludeObjectSchema } from './objects/ScrapingSessionInclude.schema';
-import { ScrapingSessionOrderByWithRelationInputObjectSchema as ScrapingSessionOrderByWithRelationInputObjectSchema } from './objects/ScrapingSessionOrderByWithRelationInput.schema';
-import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './objects/ScrapingSessionWhereInput.schema';
-import { ScrapingSessionWhereUniqueInputObjectSchema as ScrapingSessionWhereUniqueInputObjectSchema } from './objects/ScrapingSessionWhereUniqueInput.schema';
+import { z } from 'zod';
+import { ScrapingSessionOrderByWithRelationInputObjectSchema } from './objects/ScrapingSessionOrderByWithRelationInput.schema';
+import { ScrapingSessionWhereInputObjectSchema } from './objects/ScrapingSessionWhereInput.schema';
+import { ScrapingSessionWhereUniqueInputObjectSchema } from './objects/ScrapingSessionWhereUniqueInput.schema';
 import { ScrapingSessionScalarFieldEnumSchema } from './enums/ScrapingSessionScalarFieldEnum.schema';
 
 // Select schema needs to be in file to prevent circular imports
@@ -12,8 +11,6 @@ import { ScrapingSessionScalarFieldEnumSchema } from './enums/ScrapingSessionSca
 export const ScrapingSessionFindManySelectSchema: z.ZodType<Prisma.ScrapingSessionSelect> = z.object({
     id: z.boolean().optional(),
     subreddit: z.boolean().optional(),
-    restaurant: z.boolean().optional(),
-    restaurantId: z.boolean().optional(),
     status: z.boolean().optional(),
     lastScrapedAt: z.boolean().optional(),
     lastPostTimestamp: z.boolean().optional(),
@@ -28,8 +25,6 @@ export const ScrapingSessionFindManySelectSchema: z.ZodType<Prisma.ScrapingSessi
 export const ScrapingSessionFindManySelectZodSchema = z.object({
     id: z.boolean().optional(),
     subreddit: z.boolean().optional(),
-    restaurant: z.boolean().optional(),
-    restaurantId: z.boolean().optional(),
     status: z.boolean().optional(),
     lastScrapedAt: z.boolean().optional(),
     lastPostTimestamp: z.boolean().optional(),
@@ -41,6 +36,6 @@ export const ScrapingSessionFindManySelectZodSchema = z.object({
     updatedAt: z.boolean().optional()
   }).strict();
 
-export const ScrapingSessionFindManySchema: z.ZodType<Prisma.ScrapingSessionFindManyArgs> = z.object({ select: ScrapingSessionFindManySelectSchema.optional(), include: z.lazy(() => ScrapingSessionIncludeObjectSchema.optional()), orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict() as unknown as z.ZodType<Prisma.ScrapingSessionFindManyArgs>;
+export const ScrapingSessionFindManySchema: z.ZodType<Prisma.ScrapingSessionFindManyArgs> = z.object({ select: ScrapingSessionFindManySelectSchema.optional(),  orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict() as unknown as z.ZodType<Prisma.ScrapingSessionFindManyArgs>;
 
-export const ScrapingSessionFindManyZodSchema = z.object({ select: ScrapingSessionFindManySelectSchema.optional(), include: z.lazy(() => ScrapingSessionIncludeObjectSchema.optional()), orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict();
+export const ScrapingSessionFindManyZodSchema = z.object({ select: ScrapingSessionFindManySelectSchema.optional(),  orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict();

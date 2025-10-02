@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     id: z.number(),
     name: z.number(),
@@ -13,8 +13,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     metadata: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
-    posts: z.number(),
-    scrapeSessions: z.number()
+    posts: z.number()
   }).optional(),
   _sum: z.object({
     id: z.number().nullable()

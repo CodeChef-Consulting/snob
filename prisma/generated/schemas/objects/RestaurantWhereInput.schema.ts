@@ -1,12 +1,11 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
-import { JsonNullableFilterObjectSchema as JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
-import { PostListRelationFilterObjectSchema as PostListRelationFilterObjectSchema } from './PostListRelationFilter.schema';
-import { ScrapingSessionListRelationFilterObjectSchema as ScrapingSessionListRelationFilterObjectSchema } from './ScrapingSessionListRelationFilter.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
+import { PostListRelationFilterObjectSchema } from './PostListRelationFilter.schema'
 
 const restaurantwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => RestaurantWhereInputObjectSchema), z.lazy(() => RestaurantWhereInputObjectSchema).array()]).optional(),
@@ -25,8 +24,7 @@ const restaurantwhereinputSchema = z.object({
   metadata: z.lazy(() => JsonNullableFilterObjectSchema).optional(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
-  posts: z.lazy(() => PostListRelationFilterObjectSchema).optional(),
-  scrapeSessions: z.lazy(() => ScrapingSessionListRelationFilterObjectSchema).optional()
+  posts: z.lazy(() => PostListRelationFilterObjectSchema).optional()
 }).strict();
 export const RestaurantWhereInputObjectSchema: z.ZodType<Prisma.RestaurantWhereInput> = restaurantwhereinputSchema as unknown as z.ZodType<Prisma.RestaurantWhereInput>;
 export const RestaurantWhereInputObjectZodSchema = restaurantwhereinputSchema;

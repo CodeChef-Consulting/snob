@@ -1,12 +1,11 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFieldUpdateOperationsInputObjectSchema as IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
-import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperationsInputObjectSchema } from './StringFieldUpdateOperationsInput.schema';
-import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
+import { IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
+import { StringFieldUpdateOperationsInputObjectSchema } from './StringFieldUpdateOperationsInput.schema';
+import { NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
-import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
-import { PostUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema as PostUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema } from './PostUncheckedUpdateManyWithoutRestaurantNestedInput.schema';
-import { ScrapingSessionUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema as ScrapingSessionUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema } from './ScrapingSessionUncheckedUpdateManyWithoutRestaurantNestedInput.schema'
+import { DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
+import { PostUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema } from './PostUncheckedUpdateManyWithoutRestaurantNestedInput.schema'
 
 import { JsonValueSchema as jsonSchema } from '../../helpers/json-helpers';
 
@@ -24,8 +23,7 @@ const makeSchema = () => z.object({
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
-  posts: z.lazy(() => PostUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema).optional(),
-  scrapeSessions: z.lazy(() => ScrapingSessionUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema).optional()
+  posts: z.lazy(() => PostUncheckedUpdateManyWithoutRestaurantNestedInputObjectSchema).optional()
 }).strict();
 export const RestaurantUncheckedUpdateInputObjectSchema: z.ZodType<Prisma.RestaurantUncheckedUpdateInput> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantUncheckedUpdateInput>;
 export const RestaurantUncheckedUpdateInputObjectZodSchema = makeSchema();

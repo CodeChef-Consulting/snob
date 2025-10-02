@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 export const CommentFindManyResultSchema = z.object({
   data: z.array(z.object({
   id: z.number().int(),

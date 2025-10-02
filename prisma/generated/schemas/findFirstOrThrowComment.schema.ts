@@ -1,9 +1,9 @@
 import type { Prisma } from '@prisma/client';
-import * as z from 'zod';
-import { CommentIncludeObjectSchema as CommentIncludeObjectSchema } from './objects/CommentInclude.schema';
-import { CommentOrderByWithRelationInputObjectSchema as CommentOrderByWithRelationInputObjectSchema } from './objects/CommentOrderByWithRelationInput.schema';
-import { CommentWhereInputObjectSchema as CommentWhereInputObjectSchema } from './objects/CommentWhereInput.schema';
-import { CommentWhereUniqueInputObjectSchema as CommentWhereUniqueInputObjectSchema } from './objects/CommentWhereUniqueInput.schema';
+import { z } from 'zod';
+import { CommentIncludeObjectSchema } from './objects/CommentInclude.schema';
+import { CommentOrderByWithRelationInputObjectSchema } from './objects/CommentOrderByWithRelationInput.schema';
+import { CommentWhereInputObjectSchema } from './objects/CommentWhereInput.schema';
+import { CommentWhereUniqueInputObjectSchema } from './objects/CommentWhereUniqueInput.schema';
 import { CommentScalarFieldEnumSchema } from './enums/CommentScalarFieldEnum.schema';
 
 // Select schema needs to be in file to prevent circular imports

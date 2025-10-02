@@ -1,9 +1,9 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantArgsObjectSchema as RestaurantArgsObjectSchema } from './RestaurantArgs.schema';
-import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
-import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
-import { PostCountOutputTypeArgsObjectSchema as PostCountOutputTypeArgsObjectSchema } from './PostCountOutputTypeArgs.schema'
+import { RestaurantArgsObjectSchema } from './RestaurantArgs.schema';
+import { CommentFindManySchema } from '../findManyComment.schema';
+import { FileFindManySchema } from '../findManyFile.schema';
+import { PostCountOutputTypeArgsObjectSchema } from './PostCountOutputTypeArgs.schema'
 
 const makeSchema = () => z.object({
   restaurant: z.union([z.boolean(), z.lazy(() => RestaurantArgsObjectSchema)]).optional(),

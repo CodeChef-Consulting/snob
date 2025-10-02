@@ -1,12 +1,12 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
-import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { RestaurantCountOrderByAggregateInputObjectSchema as RestaurantCountOrderByAggregateInputObjectSchema } from './RestaurantCountOrderByAggregateInput.schema';
-import { RestaurantAvgOrderByAggregateInputObjectSchema as RestaurantAvgOrderByAggregateInputObjectSchema } from './RestaurantAvgOrderByAggregateInput.schema';
-import { RestaurantMaxOrderByAggregateInputObjectSchema as RestaurantMaxOrderByAggregateInputObjectSchema } from './RestaurantMaxOrderByAggregateInput.schema';
-import { RestaurantMinOrderByAggregateInputObjectSchema as RestaurantMinOrderByAggregateInputObjectSchema } from './RestaurantMinOrderByAggregateInput.schema';
-import { RestaurantSumOrderByAggregateInputObjectSchema as RestaurantSumOrderByAggregateInputObjectSchema } from './RestaurantSumOrderByAggregateInput.schema'
+import { SortOrderInputObjectSchema } from './SortOrderInput.schema';
+import { RestaurantCountOrderByAggregateInputObjectSchema } from './RestaurantCountOrderByAggregateInput.schema';
+import { RestaurantAvgOrderByAggregateInputObjectSchema } from './RestaurantAvgOrderByAggregateInput.schema';
+import { RestaurantMaxOrderByAggregateInputObjectSchema } from './RestaurantMaxOrderByAggregateInput.schema';
+import { RestaurantMinOrderByAggregateInputObjectSchema } from './RestaurantMinOrderByAggregateInput.schema';
+import { RestaurantSumOrderByAggregateInputObjectSchema } from './RestaurantSumOrderByAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),

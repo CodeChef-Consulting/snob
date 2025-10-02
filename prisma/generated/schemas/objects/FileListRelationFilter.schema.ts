@@ -1,6 +1,6 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { FileWhereInputObjectSchema as FileWhereInputObjectSchema } from './FileWhereInput.schema'
+import { FileWhereInputObjectSchema } from './FileWhereInput.schema'
 
 const makeSchema = () => z.object({
   every: z.lazy(() => FileWhereInputObjectSchema).optional(),

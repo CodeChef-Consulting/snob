@@ -1,17 +1,16 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
-import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { ScrapingSessionCountOrderByAggregateInputObjectSchema as ScrapingSessionCountOrderByAggregateInputObjectSchema } from './ScrapingSessionCountOrderByAggregateInput.schema';
-import { ScrapingSessionAvgOrderByAggregateInputObjectSchema as ScrapingSessionAvgOrderByAggregateInputObjectSchema } from './ScrapingSessionAvgOrderByAggregateInput.schema';
-import { ScrapingSessionMaxOrderByAggregateInputObjectSchema as ScrapingSessionMaxOrderByAggregateInputObjectSchema } from './ScrapingSessionMaxOrderByAggregateInput.schema';
-import { ScrapingSessionMinOrderByAggregateInputObjectSchema as ScrapingSessionMinOrderByAggregateInputObjectSchema } from './ScrapingSessionMinOrderByAggregateInput.schema';
-import { ScrapingSessionSumOrderByAggregateInputObjectSchema as ScrapingSessionSumOrderByAggregateInputObjectSchema } from './ScrapingSessionSumOrderByAggregateInput.schema'
+import { SortOrderInputObjectSchema } from './SortOrderInput.schema';
+import { ScrapingSessionCountOrderByAggregateInputObjectSchema } from './ScrapingSessionCountOrderByAggregateInput.schema';
+import { ScrapingSessionAvgOrderByAggregateInputObjectSchema } from './ScrapingSessionAvgOrderByAggregateInput.schema';
+import { ScrapingSessionMaxOrderByAggregateInputObjectSchema } from './ScrapingSessionMaxOrderByAggregateInput.schema';
+import { ScrapingSessionMinOrderByAggregateInputObjectSchema } from './ScrapingSessionMinOrderByAggregateInput.schema';
+import { ScrapingSessionSumOrderByAggregateInputObjectSchema } from './ScrapingSessionSumOrderByAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
   subreddit: SortOrderSchema.optional(),
-  restaurantId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   status: SortOrderSchema.optional(),
   lastScrapedAt: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   lastPostTimestamp: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),

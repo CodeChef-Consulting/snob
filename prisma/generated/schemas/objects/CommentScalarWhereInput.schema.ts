@@ -1,11 +1,11 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
-import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
-import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
-import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
-import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
-import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
+import { IntFilterObjectSchema } from './IntFilter.schema';
+import { StringFilterObjectSchema } from './StringFilter.schema';
+import { IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
+import { StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
+import { DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
 
 const commentscalarwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => CommentScalarWhereInputObjectSchema), z.lazy(() => CommentScalarWhereInputObjectSchema).array()]).optional(),

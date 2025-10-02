@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 // prettier-ignore
 export const RestaurantInputSchema = z.object({
@@ -15,8 +15,7 @@ export const RestaurantInputSchema = z.object({
     metadata: z.unknown().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
-    posts: z.array(z.unknown()),
-    scrapeSessions: z.array(z.unknown())
+    posts: z.array(z.unknown())
 }).strict();
 
 export type RestaurantInputType = z.infer<typeof RestaurantInputSchema>;

@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostArgsObjectSchema as PostArgsObjectSchema } from './PostArgs.schema';
-import { CommentArgsObjectSchema as CommentArgsObjectSchema } from './CommentArgs.schema';
-import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
-import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
-import { CommentCountOutputTypeArgsObjectSchema as CommentCountOutputTypeArgsObjectSchema } from './CommentCountOutputTypeArgs.schema'
+import { PostArgsObjectSchema } from './PostArgs.schema';
+import { CommentArgsObjectSchema } from './CommentArgs.schema';
+import { CommentFindManySchema } from '../findManyComment.schema';
+import { FileFindManySchema } from '../findManyFile.schema';
+import { CommentCountOutputTypeArgsObjectSchema } from './CommentCountOutputTypeArgs.schema'
 
 const makeSchema = () => z.object({
   post: z.union([z.boolean(), z.lazy(() => PostArgsObjectSchema)]).optional(),

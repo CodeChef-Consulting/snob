@@ -1,9 +1,9 @@
 import type { Prisma } from '@prisma/client';
-import * as z from 'zod';
-import { RestaurantIncludeObjectSchema as RestaurantIncludeObjectSchema } from './objects/RestaurantInclude.schema';
-import { RestaurantOrderByWithRelationInputObjectSchema as RestaurantOrderByWithRelationInputObjectSchema } from './objects/RestaurantOrderByWithRelationInput.schema';
-import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';
-import { RestaurantWhereUniqueInputObjectSchema as RestaurantWhereUniqueInputObjectSchema } from './objects/RestaurantWhereUniqueInput.schema';
+import { z } from 'zod';
+import { RestaurantIncludeObjectSchema } from './objects/RestaurantInclude.schema';
+import { RestaurantOrderByWithRelationInputObjectSchema } from './objects/RestaurantOrderByWithRelationInput.schema';
+import { RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';
+import { RestaurantWhereUniqueInputObjectSchema } from './objects/RestaurantWhereUniqueInput.schema';
 import { RestaurantScalarFieldEnumSchema } from './enums/RestaurantScalarFieldEnum.schema';
 
 // Select schema needs to be in file to prevent circular imports
@@ -24,7 +24,6 @@ export const RestaurantFindManySelectSchema: z.ZodType<Prisma.RestaurantSelect> 
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
     posts: z.boolean().optional(),
-    scrapeSessions: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict() as unknown as z.ZodType<Prisma.RestaurantSelect>;
 
@@ -43,7 +42,6 @@ export const RestaurantFindManySelectZodSchema = z.object({
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
     posts: z.boolean().optional(),
-    scrapeSessions: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict();
 
