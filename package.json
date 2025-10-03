@@ -17,16 +17,16 @@
   "description": "Reddit restaurant data scraper with Prisma and tRPC",
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.16.3",
     "@trpc/server": "^11.0.0",
     "snoowrap": "^1.23.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^24.6.1",
-    "prisma": "^5.22.0",
+    "prisma": "^6.16.3",
     "prisma-trpc-generator": "^2.4.0",
-    "prisma-zod-generator": "^1.21.4",
+    "prisma-zod-generator": "^1.23.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
     "typescript": "^5.9.3"

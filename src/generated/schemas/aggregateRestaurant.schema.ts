@@ -1,0 +1,14 @@
+import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { RestaurantOrderByWithRelationInputObjectSchema as RestaurantOrderByWithRelationInputObjectSchema } from './objects/RestaurantOrderByWithRelationInput.schema';
+import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';
+import { RestaurantWhereUniqueInputObjectSchema as RestaurantWhereUniqueInputObjectSchema } from './objects/RestaurantWhereUniqueInput.schema';
+import { RestaurantCountAggregateInputObjectSchema as RestaurantCountAggregateInputObjectSchema } from './objects/RestaurantCountAggregateInput.schema';
+import { RestaurantMinAggregateInputObjectSchema as RestaurantMinAggregateInputObjectSchema } from './objects/RestaurantMinAggregateInput.schema';
+import { RestaurantMaxAggregateInputObjectSchema as RestaurantMaxAggregateInputObjectSchema } from './objects/RestaurantMaxAggregateInput.schema';
+import { RestaurantAvgAggregateInputObjectSchema as RestaurantAvgAggregateInputObjectSchema } from './objects/RestaurantAvgAggregateInput.schema';
+import { RestaurantSumAggregateInputObjectSchema as RestaurantSumAggregateInputObjectSchema } from './objects/RestaurantSumAggregateInput.schema';
+
+export const RestaurantAggregateSchema: z.ZodType<Prisma.RestaurantAggregateArgs> = z.object({ orderBy: z.union([RestaurantOrderByWithRelationInputObjectSchema, RestaurantOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantWhereInputObjectSchema.optional(), cursor: RestaurantWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), RestaurantCountAggregateInputObjectSchema ]).optional(), _min: RestaurantMinAggregateInputObjectSchema.optional(), _max: RestaurantMaxAggregateInputObjectSchema.optional(), _avg: RestaurantAvgAggregateInputObjectSchema.optional(), _sum: RestaurantSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.RestaurantAggregateArgs>;
+
+export const RestaurantAggregateZodSchema = z.object({ orderBy: z.union([RestaurantOrderByWithRelationInputObjectSchema, RestaurantOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantWhereInputObjectSchema.optional(), cursor: RestaurantWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), RestaurantCountAggregateInputObjectSchema ]).optional(), _min: RestaurantMinAggregateInputObjectSchema.optional(), _max: RestaurantMaxAggregateInputObjectSchema.optional(), _avg: RestaurantAvgAggregateInputObjectSchema.optional(), _sum: RestaurantSumAggregateInputObjectSchema.optional() }).strict();

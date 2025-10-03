@@ -8,6 +8,12 @@ generator client {
 generator trpc {
   provider = "prisma-trpc-generator"
   config   = "./trpc.config.json"
+  output   = "../src/generated"
+}
+
+generator zod {
+  provider = "prisma-zod-generator"
+  output   = "../src/generated"
 }
 
 datasource db {
