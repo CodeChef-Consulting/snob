@@ -3,13 +3,8 @@ export const ScrapingSessionFindManyResultSchema = z.object({
   data: z.array(z.object({
   id: z.number().int(),
   subreddit: z.string(),
-  status: z.string(),
-  lastScrapedAt: z.date().optional(),
+  lastPostId: z.string().optional(),
   lastPostTimestamp: z.date().optional(),
-  postsScraped: z.number().int(),
-  commentsScraped: z.number().int(),
-  errorMessage: z.string().optional(),
-  metadata: z.unknown().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })),

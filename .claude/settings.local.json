@@ -7,7 +7,8 @@
       "Bash(pnpm db:generate:*)",
       "Bash(node:*)",
       "Bash(npx tsc:*)",
-      "Bash(for file in src/generated/routers/*.router.ts)"
+      "Bash(for file in src/generated/routers/*.router.ts)",
+      "Bash(npx prisma generate:*)"
     ],
     "deny": [],
     "ask": []

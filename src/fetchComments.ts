@@ -87,14 +87,40 @@ function extractMediaFromCommentBody(body: string): MediaFile[] {
   return mediaFiles;
 }
 
-async function fetchComments() {
-  const subredditName = 'FoodLosAngeles';
+async function fetchComments(subredditName: string = 'FoodLosAngeles') {
+  // Create new session
+  const session = await prisma.scrapingSession.create({
+    data: { subreddit: subredditName },
+  });
+
+  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+  // Fetch recent posts (up to 2 weeks)
   const posts: Submission[] = await r
     .getSubreddit(subredditName)
-    .getNew({ limit: 1 });
+    .getNew({ limit: 100 });
+
+  let latestPostId: string | null = null;
+  let latestPostTimestamp: Date | null = null;
+  let postsUpdated = 0;
+  let commentsUpdated = 0;
 
   for (const post of posts) {
-    // First, ensure the post exists in the database
+    const postCreatedAt = new Date(post.created_utc * 1000);
+
+    // Stop if post is older than 2 weeks
+    if (postCreatedAt < twoWeeksAgo) {
+      console.log(`Reached 2-week threshold at ${post.id}`);
+      break;
+    }
+
+    // Track latest post
+    if (!latestPostTimestamp || postCreatedAt > latestPostTimestamp) {
+      latestPostId = post.id;
+      latestPostTimestamp = postCreatedAt;
+    }
+
+    // Upsert post with current data
     const dbPost = await prisma.post.upsert({
       where: { externalId: post.id },
       update: {
@@ -106,7 +132,7 @@ async function fetchComments() {
         url: post.url,
         author: post.author.name,
         subreddit: subredditName,
-        createdUtc: new Date(post.created_utc * 1000),
+        createdUtc: postCreatedAt,
         updatedAt: new Date(),
       },
       create: {
@@ -119,45 +145,39 @@ async function fetchComments() {
         url: post.url,
         author: post.author.name,
         subreddit: subredditName,
-        createdUtc: new Date(post.created_utc * 1000),
+        createdUtc: postCreatedAt,
       },
     });
+    postsUpdated++;
 
-    // Extract and save post media/files
+    // Update post media
     const postMediaUrls = extractMediaUrls(post);
     for (const media of postMediaUrls) {
-      const existingFile = await prisma.file.findFirst({
+      await prisma.file.upsert({
         where: {
-          postId: dbPost.id,
-          fileUrl: media.url,
-        },
-      });
-
-      if (existingFile) {
-        await prisma.file.update({
-          where: { id: existingFile.id },
-          data: {
-            fileType: media.type,
-            metadata: media.metadata,
-          },
-        });
-      } else {
-        await prisma.file.create({
-          data: {
+          postId_fileUrl: {
             postId: dbPost.id,
             fileUrl: media.url,
-            fileType: media.type,
-            metadata: media.metadata,
           },
-        });
-      }
+        },
+        update: {
+          fileType: media.type,
+          metadata: media.metadata,
+        },
+        create: {
+          postId: dbPost.id,
+          fileUrl: media.url,
+          fileType: media.type,
+          metadata: media.metadata,
+        },
+      });
     }
 
+    // Fetch and update all comments
     //@ts-ignore
     const comments = await post.expandReplies({ limit: 1000, depth: 1 });
 
     for (const comment of comments.comments as Comment[]) {
-      // Handle parent comment ID - extract numeric ID from t1_ or t3_ prefix
       let parentDbCommentId: number | null = null;
       if (comment.parent_id.startsWith('t1_')) {
         const parentExternalId = comment.parent_id.replace('t1_', '');
@@ -168,7 +188,6 @@ async function fetchComments() {
         parentDbCommentId = parentComment?.id || null;
       }
 
-      // Upsert the comment
       const dbComment = await prisma.comment.upsert({
         where: { externalId: comment.id },
         update: {
@@ -188,44 +207,50 @@ async function fetchComments() {
           createdUtc: new Date(comment.created_utc * 1000),
         },
       });
+      commentsUpdated++;
 
-      // Extract and save comment media/files
       const commentMediaUrls = extractMediaFromCommentBody(comment.body);
       for (const media of commentMediaUrls) {
-        const existingFile = await prisma.file.findFirst({
+        await prisma.file.upsert({
           where: {
-            commentId: dbComment.id,
-            fileUrl: media.url,
-          },
-        });
-
-        if (existingFile) {
-          await prisma.file.update({
-            where: { id: existingFile.id },
-            data: {
-              fileType: media.type,
-              metadata: media.metadata,
-            },
-          });
-        } else {
-          await prisma.file.create({
-            data: {
+            commentId_fileUrl: {
               commentId: dbComment.id,
               fileUrl: media.url,
-              fileType: media.type,
-              metadata: media.metadata,
             },
-          });
-        }
+          },
+          update: {
+            fileType: media.type,
+            metadata: media.metadata,
+          },
+          create: {
+            commentId: dbComment.id,
+            fileUrl: media.url,
+            fileType: media.type,
+            metadata: media.metadata,
+          },
+        });
       }
     }
 
     console.log(
-      `Processed post ${post.id} with ${comments.comments.length} comments`
+      `Post ${post.id} (${postCreatedAt.toISOString()}): ${comments.comments.length} comments`
     );
   }
 
-  console.log('Fetch completed successfully');
+  // Save session checkpoint
+  if (latestPostId && latestPostTimestamp) {
+    await prisma.scrapingSession.update({
+      where: { id: session.id },
+      data: {
+        lastPostId: latestPostId,
+        lastPostTimestamp: latestPostTimestamp,
+      },
+    });
+  }
+
+  console.log(
+    `Completed: ${postsUpdated} posts, ${commentsUpdated} comments (last: ${latestPostId})`
+  );
 }
 
 fetchComments()

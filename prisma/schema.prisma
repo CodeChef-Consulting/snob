@@ -97,19 +97,13 @@ model Restaurant {
 }
 
 model ScrapingSession {
-  id        Int    @id @default(autoincrement())
-  subreddit String
-
-  status            String    @default("pending") // pending, in_progress, completed, failed
-  lastScrapedAt     DateTime?
+  id                Int       @id @default(autoincrement())
+  subreddit         String
+  lastPostId        String?
   lastPostTimestamp DateTime?
-  postsScraped      Int       @default(0)
-  commentsScraped   Int       @default(0)
-  errorMessage      String?
-  metadata          Json?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   @@index([subreddit])
-  @@index([status])
+  @@index([createdAt])
 }
