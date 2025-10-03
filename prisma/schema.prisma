@@ -71,6 +71,9 @@ model File {
   fileType  String
   metadata  Json?
   createdAt DateTime @default(now())
+
+  @@unique([postId, fileUrl], name: "postId_fileUrl")
+  @@unique([commentId, fileUrl], name: "commentId_fileUrl")
 }
 
 model Restaurant {
