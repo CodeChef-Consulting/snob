@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
 import { PostCreateNestedOneWithoutFilesInputObjectSchema as PostCreateNestedOneWithoutFilesInputObjectSchema } from './PostCreateNestedOneWithoutFilesInput.schema'

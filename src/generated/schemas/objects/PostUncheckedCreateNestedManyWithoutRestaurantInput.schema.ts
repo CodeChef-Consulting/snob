@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostCreateWithoutRestaurantInputObjectSchema as PostCreateWithoutRestaurantInputObjectSchema } from './PostCreateWithoutRestaurantInput.schema';
 import { PostUncheckedCreateWithoutRestaurantInputObjectSchema as PostUncheckedCreateWithoutRestaurantInputObjectSchema } from './PostUncheckedCreateWithoutRestaurantInput.schema';
 import { PostCreateOrConnectWithoutRestaurantInputObjectSchema as PostCreateOrConnectWithoutRestaurantInputObjectSchema } from './PostCreateOrConnectWithoutRestaurantInput.schema';
-import { RestaurantPostCreateManyRestaurantInputEnvelopeObjectSchema as PostCreateManyRestaurantInputEnvelopeObjectSchema } from './PostCreateManyRestaurantInputEnvelope.schema';
+import { PostCreateManyRestaurantInputEnvelopeObjectSchema as PostCreateManyRestaurantInputEnvelopeObjectSchema } from './PostCreateManyRestaurantInputEnvelope.schema';
 import { PostWhereUniqueInputObjectSchema as PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema'
 
 const makeSchema = () => z.object({

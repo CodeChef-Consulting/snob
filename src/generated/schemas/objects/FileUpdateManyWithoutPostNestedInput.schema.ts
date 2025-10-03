@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { FileCreateWithoutPostInputObjectSchema as FileCreateWithoutPostInputObjectSchema } from './FileCreateWithoutPostInput.schema';
 import { FileUncheckedCreateWithoutPostInputObjectSchema as FileUncheckedCreateWithoutPostInputObjectSchema } from './FileUncheckedCreateWithoutPostInput.schema';
 import { FileCreateOrConnectWithoutPostInputObjectSchema as FileCreateOrConnectWithoutPostInputObjectSchema } from './FileCreateOrConnectWithoutPostInput.schema';
 import { FileUpsertWithWhereUniqueWithoutPostInputObjectSchema as FileUpsertWithWhereUniqueWithoutPostInputObjectSchema } from './FileUpsertWithWhereUniqueWithoutPostInput.schema';
-import { PostFileCreateManyPostInputEnvelopeObjectSchema as FileCreateManyPostInputEnvelopeObjectSchema } from './FileCreateManyPostInputEnvelope.schema';
+import { FileCreateManyPostInputEnvelopeObjectSchema as FileCreateManyPostInputEnvelopeObjectSchema } from './FileCreateManyPostInputEnvelope.schema';
 import { FileWhereUniqueInputObjectSchema as FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema';
 import { FileUpdateWithWhereUniqueWithoutPostInputObjectSchema as FileUpdateWithWhereUniqueWithoutPostInputObjectSchema } from './FileUpdateWithWhereUniqueWithoutPostInput.schema';
 import { FileUpdateManyWithWhereWithoutPostInputObjectSchema as FileUpdateManyWithWhereWithoutPostInputObjectSchema } from './FileUpdateManyWithWhereWithoutPostInput.schema';

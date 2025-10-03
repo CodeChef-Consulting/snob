@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { ScrapingSessionUpdateManyMutationInputObjectSchema as ScrapingSessionUpdateManyMutationInputObjectSchema } from './objects/ScrapingSessionUpdateManyMutationInput.schema';
 import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './objects/ScrapingSessionWhereInput.schema';
 

@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { FileCreateWithoutCommentInputObjectSchema as FileCreateWithoutCommentInputObjectSchema } from './FileCreateWithoutCommentInput.schema';
 import { FileUncheckedCreateWithoutCommentInputObjectSchema as FileUncheckedCreateWithoutCommentInputObjectSchema } from './FileUncheckedCreateWithoutCommentInput.schema';
 import { FileCreateOrConnectWithoutCommentInputObjectSchema as FileCreateOrConnectWithoutCommentInputObjectSchema } from './FileCreateOrConnectWithoutCommentInput.schema';
-import { CommentFileCreateManyCommentInputEnvelopeObjectSchema as FileCreateManyCommentInputEnvelopeObjectSchema } from './FileCreateManyCommentInputEnvelope.schema';
+import { FileCreateManyCommentInputEnvelopeObjectSchema as FileCreateManyCommentInputEnvelopeObjectSchema } from './FileCreateManyCommentInputEnvelope.schema';
 import { FileWhereUniqueInputObjectSchema as FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema'
 
 const makeSchema = () => z.object({

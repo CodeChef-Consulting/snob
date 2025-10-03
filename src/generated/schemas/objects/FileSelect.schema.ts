@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostArgsObjectSchema as PostArgsObjectSchema } from './PostArgs.schema';
 import { CommentArgsObjectSchema as CommentArgsObjectSchema } from './CommentArgs.schema'

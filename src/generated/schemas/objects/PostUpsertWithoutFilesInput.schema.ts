@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostUpdateWithoutFilesInputObjectSchema as PostUpdateWithoutFilesInputObjectSchema } from './PostUpdateWithoutFilesInput.schema';
 import { PostUncheckedUpdateWithoutFilesInputObjectSchema as PostUncheckedUpdateWithoutFilesInputObjectSchema } from './PostUncheckedUpdateWithoutFilesInput.schema';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const ScrapingSessionUpsertResultSchema = z.object({
   id: z.number().int(),
   subreddit: z.string(),

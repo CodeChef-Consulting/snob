@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const CommentFindFirstResultSchema = z.nullable(z.object({
   id: z.number().int(),
   externalId: z.string(),

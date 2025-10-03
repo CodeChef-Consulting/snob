@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { FileWhereUniqueInputObjectSchema as FileWhereUniqueInputObjectSchema } from './FileWhereUniqueInput.schema';
 import { FileUpdateWithoutCommentInputObjectSchema as FileUpdateWithoutCommentInputObjectSchema } from './FileUpdateWithoutCommentInput.schema';

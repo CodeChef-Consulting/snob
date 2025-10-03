@@ -37,8 +37,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)
       prisma-zod-generator:
-        specifier: ^1.23.2
-        version: 1.23.2(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)(zod@4.1.11)
+        specifier: ^1.26.0
+        version: 1.26.0(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)(zod@4.1.11)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@24.6.1)(typescript@5.9.3)
@@ -860,8 +860,8 @@ packages:
     resolution: {integrity: sha512-GRgpsAUFw4sUaDS9jnwyDuac069w+oSh31AJazcrbQm+6KDt+lamw2i+4u6w5/Uubx6ZGL2rS2B3MR9OHoE0pQ==}
     hasBin: true
 
-  prisma-zod-generator@1.23.2:
-    resolution: {integrity: sha512-Tkalukw/Gg6mM4ZgdDk13ERGn56cbhXYOfCaEHYaWsI+1MSomYJ4mXcDB/MAuypPQ4L2w08eHO8Awb0/+PMP2w==}
+  prisma-zod-generator@1.26.0:
+    resolution: {integrity: sha512-ysGgRRabAPmWTBzqW0S7MIkrjhGcAiE1MD9UytRlfmfpVIJmDf91EBS1Yaj5NJlXyxGJfJOSv62AI1lY9qPKZw==}
     hasBin: true
     peerDependencies:
       zod: '>=3.25.0 <5'
@@ -1848,7 +1848,7 @@ snapshots:
       - prisma
       - typescript
 
-  prisma-zod-generator@1.23.2(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)(zod@4.1.11):
+  prisma-zod-generator@1.26.0(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)(zod@4.1.11):
     dependencies:
       '@prisma/client': 6.16.3(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)
       '@prisma/generator-helper': 6.16.3

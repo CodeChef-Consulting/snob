@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostCreateWithoutCommentsInputObjectSchema as PostCreateWithoutCommentsInputObjectSchema } from './PostCreateWithoutCommentsInput.schema';
 import { PostUncheckedCreateWithoutCommentsInputObjectSchema as PostUncheckedCreateWithoutCommentsInputObjectSchema } from './PostUncheckedCreateWithoutCommentsInput.schema';

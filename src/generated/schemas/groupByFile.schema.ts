@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { FileWhereInputObjectSchema as FileWhereInputObjectSchema } from './objects/FileWhereInput.schema';
 import { FileOrderByWithAggregationInputObjectSchema as FileOrderByWithAggregationInputObjectSchema } from './objects/FileOrderByWithAggregationInput.schema';
 import { FileScalarWhereWithAggregatesInputObjectSchema as FileScalarWhereWithAggregatesInputObjectSchema } from './objects/FileScalarWhereWithAggregatesInput.schema';

@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './objects/ScrapingSessionWhereInput.schema';
 import { ScrapingSessionOrderByWithAggregationInputObjectSchema as ScrapingSessionOrderByWithAggregationInputObjectSchema } from './objects/ScrapingSessionOrderByWithAggregationInput.schema';
 import { ScrapingSessionScalarWhereWithAggregatesInputObjectSchema as ScrapingSessionScalarWhereWithAggregatesInputObjectSchema } from './objects/ScrapingSessionScalarWhereWithAggregatesInput.schema';

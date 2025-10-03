@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostWhereUniqueInputObjectSchema as PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
 import { PostUpdateWithoutRestaurantInputObjectSchema as PostUpdateWithoutRestaurantInputObjectSchema } from './PostUpdateWithoutRestaurantInput.schema';

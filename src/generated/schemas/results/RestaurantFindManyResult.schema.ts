@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const RestaurantFindManyResultSchema = z.object({
   data: z.array(z.object({
   id: z.number().int(),

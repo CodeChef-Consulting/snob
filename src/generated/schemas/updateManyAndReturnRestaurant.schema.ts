@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { RestaurantSelectObjectSchema as RestaurantSelectObjectSchema } from './objects/RestaurantSelect.schema';
 import { RestaurantUpdateManyMutationInputObjectSchema as RestaurantUpdateManyMutationInputObjectSchema } from './objects/RestaurantUpdateManyMutationInput.schema';
 import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';

@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostCreateWithoutRestaurantInputObjectSchema as PostCreateWithoutRestaurantInputObjectSchema } from './PostCreateWithoutRestaurantInput.schema';
 import { PostUncheckedCreateWithoutRestaurantInputObjectSchema as PostUncheckedCreateWithoutRestaurantInputObjectSchema } from './PostUncheckedCreateWithoutRestaurantInput.schema';
 import { PostCreateOrConnectWithoutRestaurantInputObjectSchema as PostCreateOrConnectWithoutRestaurantInputObjectSchema } from './PostCreateOrConnectWithoutRestaurantInput.schema';
 import { PostUpsertWithWhereUniqueWithoutRestaurantInputObjectSchema as PostUpsertWithWhereUniqueWithoutRestaurantInputObjectSchema } from './PostUpsertWithWhereUniqueWithoutRestaurantInput.schema';
-import { RestaurantPostCreateManyRestaurantInputEnvelopeObjectSchema as PostCreateManyRestaurantInputEnvelopeObjectSchema } from './PostCreateManyRestaurantInputEnvelope.schema';
+import { PostCreateManyRestaurantInputEnvelopeObjectSchema as PostCreateManyRestaurantInputEnvelopeObjectSchema } from './PostCreateManyRestaurantInputEnvelope.schema';
 import { PostWhereUniqueInputObjectSchema as PostWhereUniqueInputObjectSchema } from './PostWhereUniqueInput.schema';
 import { PostUpdateWithWhereUniqueWithoutRestaurantInputObjectSchema as PostUpdateWithWhereUniqueWithoutRestaurantInputObjectSchema } from './PostUpdateWithWhereUniqueWithoutRestaurantInput.schema';
 import { PostUpdateManyWithWhereWithoutRestaurantInputObjectSchema as PostUpdateManyWithWhereWithoutRestaurantInputObjectSchema } from './PostUpdateManyWithWhereWithoutRestaurantInput.schema';

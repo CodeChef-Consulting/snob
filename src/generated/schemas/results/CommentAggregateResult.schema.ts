@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const CommentAggregateResultSchema = z.object({  _count: z.object({
     id: z.number(),
     externalId: z.number(),

@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './objects/RestaurantWhereInput.schema';
 import { RestaurantOrderByWithAggregationInputObjectSchema as RestaurantOrderByWithAggregationInputObjectSchema } from './objects/RestaurantOrderByWithAggregationInput.schema';
 import { RestaurantScalarWhereWithAggregatesInputObjectSchema as RestaurantScalarWhereWithAggregatesInputObjectSchema } from './objects/RestaurantScalarWhereWithAggregatesInput.schema';

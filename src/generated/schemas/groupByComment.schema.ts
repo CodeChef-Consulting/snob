@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CommentWhereInputObjectSchema as CommentWhereInputObjectSchema } from './objects/CommentWhereInput.schema';
 import { CommentOrderByWithAggregationInputObjectSchema as CommentOrderByWithAggregationInputObjectSchema } from './objects/CommentOrderByWithAggregationInput.schema';
 import { CommentScalarWhereWithAggregatesInputObjectSchema as CommentScalarWhereWithAggregatesInputObjectSchema } from './objects/CommentScalarWhereWithAggregatesInput.schema';

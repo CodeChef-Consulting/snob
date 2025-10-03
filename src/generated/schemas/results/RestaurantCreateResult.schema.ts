@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const RestaurantCreateResultSchema = z.object({
   id: z.number().int(),
   name: z.string(),

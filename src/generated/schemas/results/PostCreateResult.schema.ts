@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const PostCreateResultSchema = z.object({
   id: z.number().int(),
   externalId: z.string(),

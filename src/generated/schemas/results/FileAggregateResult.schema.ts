@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 export const FileAggregateResultSchema = z.object({  _count: z.object({
     id: z.number(),
     post: z.number(),

@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { ScrapingSessionSelectObjectSchema as ScrapingSessionSelectObjectSchema } from './objects/ScrapingSessionSelect.schema';
 import { ScrapingSessionCreateManyInputObjectSchema as ScrapingSessionCreateManyInputObjectSchema } from './objects/ScrapingSessionCreateManyInput.schema';
 

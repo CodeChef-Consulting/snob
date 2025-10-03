@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostFindManySchema as PostFindManySchema } from '../findManyPost.schema';
 import { RestaurantCountOutputTypeArgsObjectSchema as RestaurantCountOutputTypeArgsObjectSchema } from './RestaurantCountOutputTypeArgs.schema'

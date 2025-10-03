@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantPostCreateManyRestaurantInputObjectSchema as PostCreateManyRestaurantInputObjectSchema } from './PostCreateManyRestaurantInput.schema'
+import { PostCreateManyRestaurantInputObjectSchema as PostCreateManyRestaurantInputObjectSchema } from './PostCreateManyRestaurantInput.schema'
 
 const makeSchema = () => z.object({
   data: z.union([z.lazy(() => PostCreateManyRestaurantInputObjectSchema), z.lazy(() => PostCreateManyRestaurantInputObjectSchema).array()]),

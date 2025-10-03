@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { NestedIntFilterObjectSchema as NestedIntFilterObjectSchema } from './NestedIntFilter.schema';
 import { NestedDateTimeFilterObjectSchema as NestedDateTimeFilterObjectSchema } from './NestedDateTimeFilter.schema'

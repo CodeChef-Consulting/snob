@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { FilePostId_fileUrlCompoundUniqueInputObjectSchema as FilePostId_fileUrlCompoundUniqueInputObjectSchema } from './FilePostId_fileUrlCompoundUniqueInput.schema';
 import { FileCommentId_fileUrlCompoundUniqueInputObjectSchema as FileCommentId_fileUrlCompoundUniqueInputObjectSchema } from './FileCommentId_fileUrlCompoundUniqueInput.schema'

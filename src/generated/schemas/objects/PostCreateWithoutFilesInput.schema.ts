@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { RestaurantCreateNestedOneWithoutPostsInputObjectSchema as RestaurantCreateNestedOneWithoutPostsInputObjectSchema } from './RestaurantCreateNestedOneWithoutPostsInput.schema';
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema'

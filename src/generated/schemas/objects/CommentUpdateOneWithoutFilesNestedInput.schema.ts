@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { CommentCreateWithoutFilesInputObjectSchema as CommentCreateWithoutFilesInputObjectSchema } from './CommentCreateWithoutFilesInput.schema';
 import { CommentUncheckedCreateWithoutFilesInputObjectSchema as CommentUncheckedCreateWithoutFilesInputObjectSchema } from './CommentUncheckedCreateWithoutFilesInput.schema';
