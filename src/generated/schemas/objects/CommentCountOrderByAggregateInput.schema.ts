@@ -10,6 +10,7 @@ const makeSchema = () => z.object({
   author: SortOrderSchema.optional(),
   body: SortOrderSchema.optional(),
   score: SortOrderSchema.optional(),
+  restaurantsMentioned: SortOrderSchema.optional(),
   createdUtc: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional()

@@ -12,6 +12,7 @@ export const PostInputSchema = z.object({
     upvoteRatio: z.number().optional().nullable(),
     numComments: z.number().int().optional().nullable(),
     url: z.string().optional().nullable(),
+    restaurantsMentioned: z.array(z.string()),
     createdUtc: z.date().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),

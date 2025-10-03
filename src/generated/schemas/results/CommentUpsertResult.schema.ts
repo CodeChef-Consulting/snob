@@ -10,6 +10,7 @@ export const CommentUpsertResultSchema = z.object({
   author: z.string().optional(),
   body: z.string().optional(),
   score: z.number().int().optional(),
+  restaurantsMentioned: z.array(z.string()),
   createdUtc: z.date().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),

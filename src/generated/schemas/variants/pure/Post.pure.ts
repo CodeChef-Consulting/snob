@@ -12,6 +12,7 @@ export const PostModelSchema = z.object({
     upvoteRatio: z.number().nullable(),
     numComments: z.number().int().nullable(),
     url: z.string().nullable(),
+    restaurantsMentioned: z.array(z.string()),
     createdUtc: z.date().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),

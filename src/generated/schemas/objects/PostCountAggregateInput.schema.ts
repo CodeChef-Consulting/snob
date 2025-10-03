@@ -13,6 +13,7 @@ const makeSchema = () => z.object({
   upvoteRatio: z.literal(true).optional(),
   numComments: z.literal(true).optional(),
   url: z.literal(true).optional(),
+  restaurantsMentioned: z.literal(true).optional(),
   createdUtc: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional(),

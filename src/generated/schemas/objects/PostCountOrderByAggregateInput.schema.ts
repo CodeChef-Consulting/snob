@@ -13,6 +13,7 @@ const makeSchema = () => z.object({
   upvoteRatio: SortOrderSchema.optional(),
   numComments: SortOrderSchema.optional(),
   url: SortOrderSchema.optional(),
+  restaurantsMentioned: SortOrderSchema.optional(),
   createdUtc: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),

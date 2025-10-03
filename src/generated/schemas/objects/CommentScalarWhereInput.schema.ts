@@ -4,6 +4,7 @@ import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.sche
 import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
 import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
 import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { StringNullableListFilterObjectSchema as StringNullableListFilterObjectSchema } from './StringNullableListFilter.schema';
 import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
 
@@ -18,6 +19,7 @@ const commentscalarwhereinputSchema = z.object({
   author: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   body: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   score: z.union([z.lazy(() => IntNullableFilterObjectSchema), z.number().int()]).optional().nullable(),
+  restaurantsMentioned: z.lazy(() => StringNullableListFilterObjectSchema).optional(),
   createdUtc: z.union([z.lazy(() => DateTimeNullableFilterObjectSchema), z.coerce.date()]).optional().nullable(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional()

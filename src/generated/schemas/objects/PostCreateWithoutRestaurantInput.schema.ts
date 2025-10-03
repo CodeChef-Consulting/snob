@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
+import { PostCreaterestaurantsMentionedInputObjectSchema as PostCreaterestaurantsMentionedInputObjectSchema } from './PostCreaterestaurantsMentionedInput.schema';
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
 import { FileCreateNestedManyWithoutPostInputObjectSchema as FileCreateNestedManyWithoutPostInputObjectSchema } from './FileCreateNestedManyWithoutPostInput.schema'
 
@@ -13,6 +14,7 @@ const makeSchema = () => z.object({
   upvoteRatio: z.number().optional().nullable(),
   numComments: z.number().int().optional().nullable(),
   url: z.string().optional().nullable(),
+  restaurantsMentioned: z.union([z.lazy(() => PostCreaterestaurantsMentionedInputObjectSchema), z.string().array()]).optional(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),

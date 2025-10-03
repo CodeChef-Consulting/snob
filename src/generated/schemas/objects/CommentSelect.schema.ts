@@ -17,6 +17,7 @@ const makeSchema = () => z.object({
   author: z.boolean().optional(),
   body: z.boolean().optional(),
   score: z.boolean().optional(),
+  restaurantsMentioned: z.boolean().optional(),
   createdUtc: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),

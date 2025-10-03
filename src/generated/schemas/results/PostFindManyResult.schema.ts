@@ -11,6 +11,7 @@ export const PostFindManyResultSchema = z.object({
   upvoteRatio: z.number().optional(),
   numComments: z.number().int().optional(),
   url: z.string().optional(),
+  restaurantsMentioned: z.array(z.string()),
   createdUtc: z.date().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),

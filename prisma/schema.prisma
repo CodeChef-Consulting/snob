@@ -24,19 +24,20 @@ datasource db {
 }
 
 model Post {
-  id          Int       @id @default(autoincrement())
-  externalId  String    @unique
-  subreddit   String
-  author      String?
-  title       String?
-  body        String?
-  score       Int?
-  upvoteRatio Float?
-  numComments Int?
-  url         String?
-  createdUtc  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                   Int       @id @default(autoincrement())
+  externalId           String    @unique
+  subreddit            String
+  author               String?
+  title                String?
+  body                 String?
+  score                Int?
+  upvoteRatio          Float?
+  numComments          Int?
+  url                  String?
+  restaurantsMentioned String[]
+  createdUtc           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
   restaurantId Int?
@@ -46,19 +47,20 @@ model Post {
 }
 
 model Comment {
-  id              Int       @id @default(autoincrement())
-  externalId      String    @unique
-  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId          Int
-  parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  parentCommentId Int?
-  replies         Comment[] @relation("CommentReplies")
-  author          String?
-  body            String?
-  score           Int?
-  createdUtc      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                   Int       @id @default(autoincrement())
+  externalId           String    @unique
+  post                 Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId               Int
+  parentComment        Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId      Int?
+  replies              Comment[] @relation("CommentReplies")
+  author               String?
+  body                 String?
+  score                Int?
+  restaurantsMentioned String[]
+  createdUtc           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   files File[]
 }

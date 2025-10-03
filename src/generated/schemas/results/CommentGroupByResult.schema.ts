@@ -7,6 +7,7 @@ export const CommentGroupByResultSchema = z.array(z.object({
   author: z.string(),
   body: z.string(),
   score: z.number().int(),
+  restaurantsMentioned: z.array(z.string()),
   createdUtc: z.date(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -21,6 +22,7 @@ export const CommentGroupByResultSchema = z.array(z.object({
     author: z.number(),
     body: z.number(),
     score: z.number(),
+    restaurantsMentioned: z.number(),
     createdUtc: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
@@ -46,6 +48,7 @@ export const CommentGroupByResultSchema = z.array(z.object({
     author: z.string().nullable(),
     body: z.string().nullable(),
     score: z.number().int().nullable(),
+    restaurantsMentioned: z.array(z.string()).nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
@@ -58,6 +61,7 @@ export const CommentGroupByResultSchema = z.array(z.object({
     author: z.string().nullable(),
     body: z.string().nullable(),
     score: z.number().int().nullable(),
+    restaurantsMentioned: z.array(z.string()).nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()

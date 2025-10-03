@@ -12,6 +12,7 @@ export const CommentInputSchema = z.object({
     author: z.string().optional().nullable(),
     body: z.string().optional().nullable(),
     score: z.number().int().optional().nullable(),
+    restaurantsMentioned: z.array(z.string()),
     createdUtc: z.date().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),

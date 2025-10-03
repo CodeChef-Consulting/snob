@@ -16,6 +16,7 @@ const makeSchema = () => z.object({
   upvoteRatio: z.boolean().optional(),
   numComments: z.boolean().optional(),
   url: z.boolean().optional(),
+  restaurantsMentioned: z.boolean().optional(),
   createdUtc: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),

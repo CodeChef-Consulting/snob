@@ -16,6 +16,7 @@ const makeSchema = () => z.object({
   author: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   body: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   score: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  restaurantsMentioned: SortOrderSchema.optional(),
   createdUtc: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),

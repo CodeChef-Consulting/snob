@@ -12,6 +12,7 @@ export const CommentResultSchema = z.object({
     author: z.string().nullable(),
     body: z.string().nullable(),
     score: z.number().int().nullable(),
+    restaurantsMentioned: z.array(z.string()),
     createdUtc: z.date().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),

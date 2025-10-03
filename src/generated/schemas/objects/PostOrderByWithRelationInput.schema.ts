@@ -17,6 +17,7 @@ const makeSchema = () => z.object({
   upvoteRatio: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   numComments: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   url: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  restaurantsMentioned: SortOrderSchema.optional(),
   createdUtc: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),
