@@ -12,8 +12,10 @@ generator trpc {
 }
 
 generator zod {
-  provider = "prisma-zod-generator"
-  output   = "../src/generated"
+  provider       = "prisma-zod-generator"
+  output         = "../src/generated"
+  createOptionalDefaultValuesTypes = true
+  createRelationValuesTypes        = true
 }
 
 datasource db {

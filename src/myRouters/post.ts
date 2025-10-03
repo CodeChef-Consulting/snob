@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../server/trpc';
+import { publicProcedure, t } from '../generated/routers/helpers/createRouter';
 
-export const postRouter = router({
+export const postRouter = t.router({
   list: publicProcedure
     .input(
       z.object({

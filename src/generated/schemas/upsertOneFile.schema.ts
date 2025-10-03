@@ -11,3 +11,5 @@ import { FileUncheckedUpdateInputObjectSchema as FileUncheckedUpdateInputObjectS
 export const FileUpsertOneSchema: z.ZodType<Prisma.FileUpsertArgs> = z.object({ select: FileSelectObjectSchema.optional(), include: FileIncludeObjectSchema.optional(), where: FileWhereUniqueInputObjectSchema, create: z.union([ FileCreateInputObjectSchema, FileUncheckedCreateInputObjectSchema ]), update: z.union([ FileUpdateInputObjectSchema, FileUncheckedUpdateInputObjectSchema ]) }).strict() as unknown as z.ZodType<Prisma.FileUpsertArgs>;
 
 export const FileUpsertOneZodSchema = z.object({ select: FileSelectObjectSchema.optional(), include: FileIncludeObjectSchema.optional(), where: FileWhereUniqueInputObjectSchema, create: z.union([ FileCreateInputObjectSchema, FileUncheckedCreateInputObjectSchema ]), update: z.union([ FileUpdateInputObjectSchema, FileUncheckedUpdateInputObjectSchema ]) }).strict();
+// Alias for prisma-trpc-generator compatibility
+export const FileUpsertSchema = FileUpsertOneSchema;

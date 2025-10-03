@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../server/trpc';
+import { publicProcedure, t } from '../generated/routers/helpers/createRouter';
 
-export const fileRouter = router({
+export const fileRouter = t.router({
   byPostId: publicProcedure
     .input(z.object({ postId: z.number() }))
     .query(async ({ ctx, input }) => {

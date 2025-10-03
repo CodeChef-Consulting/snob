@@ -6,10 +6,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "fetch-comments": "ts-node src/fetchComments.ts",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && node scripts/fix-upsert-schemas.js",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "postgenerate": "node scripts/fix-upsert-schemas.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.6.1",
+    "glob": "^11.0.0",
     "prisma": "^6.16.3",
     "prisma-trpc-generator": "^2.4.0",
     "prisma-zod-generator": "^1.23.2",
