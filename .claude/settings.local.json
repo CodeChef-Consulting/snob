@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(cat:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(for file in src/generated/routers/*.router.ts)"
     ],
     "deny": [],
     "ask": []
