@@ -8,7 +8,15 @@
       "Bash(node:*)",
       "Bash(npx tsc:*)",
       "Bash(for file in src/generated/routers/*.router.ts)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker compose:*)",
+      "Bash(npx prisma:*)",
+      "Bash(docker exec:*)",
+      "Bash(DATABASE_URL=\"postgresql://user:password@localhost:5432/reddit_scraper?schema=public\" npx prisma db push)",
+      "Bash(dotenvx run -- npx prisma db push)",
+      "Bash(psql:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []
