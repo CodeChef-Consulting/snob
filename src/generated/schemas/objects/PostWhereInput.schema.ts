@@ -5,13 +5,11 @@ import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFi
 import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
 import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
 import { FloatNullableFilterObjectSchema as FloatNullableFilterObjectSchema } from './FloatNullableFilter.schema';
-import { StringNullableListFilterObjectSchema as StringNullableListFilterObjectSchema } from './StringNullableListFilter.schema';
 import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
-import { RestaurantNullableScalarRelationFilterObjectSchema as RestaurantNullableScalarRelationFilterObjectSchema } from './RestaurantNullableScalarRelationFilter.schema';
-import { RestaurantWhereInputObjectSchema as RestaurantWhereInputObjectSchema } from './RestaurantWhereInput.schema';
 import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema';
-import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema'
+import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema';
+import { RestaurantListRelationFilterObjectSchema as RestaurantListRelationFilterObjectSchema } from './RestaurantListRelationFilter.schema'
 
 const postwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => PostWhereInputObjectSchema), z.lazy(() => PostWhereInputObjectSchema).array()]).optional(),
@@ -27,14 +25,12 @@ const postwhereinputSchema = z.object({
   upvoteRatio: z.union([z.lazy(() => FloatNullableFilterObjectSchema), z.number()]).optional().nullable(),
   numComments: z.union([z.lazy(() => IntNullableFilterObjectSchema), z.number().int()]).optional().nullable(),
   url: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
-  restaurantsMentioned: z.lazy(() => StringNullableListFilterObjectSchema).optional(),
   createdUtc: z.union([z.lazy(() => DateTimeNullableFilterObjectSchema), z.coerce.date()]).optional().nullable(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
-  restaurantId: z.union([z.lazy(() => IntNullableFilterObjectSchema), z.number().int()]).optional().nullable(),
-  restaurant: z.union([z.lazy(() => RestaurantNullableScalarRelationFilterObjectSchema), z.lazy(() => RestaurantWhereInputObjectSchema)]).optional(),
   comments: z.lazy(() => CommentListRelationFilterObjectSchema).optional(),
-  files: z.lazy(() => FileListRelationFilterObjectSchema).optional()
+  files: z.lazy(() => FileListRelationFilterObjectSchema).optional(),
+  restaurantsMentioned: z.lazy(() => RestaurantListRelationFilterObjectSchema).optional()
 }).strict();
 export const PostWhereInputObjectSchema: z.ZodType<Prisma.PostWhereInput> = postwhereinputSchema as unknown as z.ZodType<Prisma.PostWhereInput>;
 export const PostWhereInputObjectZodSchema = postwhereinputSchema;

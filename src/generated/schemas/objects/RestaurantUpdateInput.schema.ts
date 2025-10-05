@@ -4,7 +4,8 @@ import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperat
 import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
-import { PostUpdateManyWithoutRestaurantNestedInputObjectSchema as PostUpdateManyWithoutRestaurantNestedInputObjectSchema } from './PostUpdateManyWithoutRestaurantNestedInput.schema'
+import { PostUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema as PostUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema } from './PostUpdateManyWithoutRestaurantsMentionedNestedInput.schema';
+import { CommentUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema as CommentUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema } from './CommentUpdateManyWithoutRestaurantsMentionedNestedInput.schema'
 
 import { JsonValueSchema as jsonSchema } from '../../helpers/json-helpers';
 
@@ -21,7 +22,8 @@ const makeSchema = () => z.object({
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
-  posts: z.lazy(() => PostUpdateManyWithoutRestaurantNestedInputObjectSchema).optional()
+  posts: z.lazy(() => PostUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema).optional(),
+  comments: z.lazy(() => CommentUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema).optional()
 }).strict();
 export const RestaurantUpdateInputObjectSchema: z.ZodType<Prisma.RestaurantUpdateInput> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantUpdateInput>;
 export const RestaurantUpdateInputObjectZodSchema = makeSchema();

@@ -5,7 +5,8 @@ import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFi
 import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
 import { JsonNullableFilterObjectSchema as JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
-import { PostListRelationFilterObjectSchema as PostListRelationFilterObjectSchema } from './PostListRelationFilter.schema'
+import { PostListRelationFilterObjectSchema as PostListRelationFilterObjectSchema } from './PostListRelationFilter.schema';
+import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema'
 
 const restaurantwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => RestaurantWhereInputObjectSchema), z.lazy(() => RestaurantWhereInputObjectSchema).array()]).optional(),
@@ -24,7 +25,8 @@ const restaurantwhereinputSchema = z.object({
   metadata: z.lazy(() => JsonNullableFilterObjectSchema).optional(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
-  posts: z.lazy(() => PostListRelationFilterObjectSchema).optional()
+  posts: z.lazy(() => PostListRelationFilterObjectSchema).optional(),
+  comments: z.lazy(() => CommentListRelationFilterObjectSchema).optional()
 }).strict();
 export const RestaurantWhereInputObjectSchema: z.ZodType<Prisma.RestaurantWhereInput> = restaurantwhereinputSchema as unknown as z.ZodType<Prisma.RestaurantWhereInput>;
 export const RestaurantWhereInputObjectZodSchema = restaurantwhereinputSchema;

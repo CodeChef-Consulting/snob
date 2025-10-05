@@ -20,14 +20,12 @@ export const PostFindFirstOrThrowSelectSchema: z.ZodType<Prisma.PostSelect> = z.
     upvoteRatio: z.boolean().optional(),
     numComments: z.boolean().optional(),
     url: z.boolean().optional(),
-    restaurantsMentioned: z.boolean().optional(),
     createdUtc: z.boolean().optional(),
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
-    restaurant: z.boolean().optional(),
-    restaurantId: z.boolean().optional(),
     comments: z.boolean().optional(),
     files: z.boolean().optional(),
+    restaurantsMentioned: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict() as unknown as z.ZodType<Prisma.PostSelect>;
 
@@ -42,14 +40,12 @@ export const PostFindFirstOrThrowSelectZodSchema = z.object({
     upvoteRatio: z.boolean().optional(),
     numComments: z.boolean().optional(),
     url: z.boolean().optional(),
-    restaurantsMentioned: z.boolean().optional(),
     createdUtc: z.boolean().optional(),
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
-    restaurant: z.boolean().optional(),
-    restaurantId: z.boolean().optional(),
     comments: z.boolean().optional(),
     files: z.boolean().optional(),
+    restaurantsMentioned: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict();
 

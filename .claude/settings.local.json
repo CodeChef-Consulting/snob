@@ -16,7 +16,9 @@
       "Bash(DATABASE_URL=\"postgresql://user:password@localhost:5432/reddit_scraper?schema=public\" npx prisma db push)",
       "Bash(dotenvx run -- npx prisma db push)",
       "Bash(psql:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []

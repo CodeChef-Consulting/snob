@@ -1,7 +1,8 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
-import { PostUncheckedCreateNestedManyWithoutRestaurantInputObjectSchema as PostUncheckedCreateNestedManyWithoutRestaurantInputObjectSchema } from './PostUncheckedCreateNestedManyWithoutRestaurantInput.schema'
+import { PostUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema as PostUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema } from './PostUncheckedCreateNestedManyWithoutRestaurantsMentionedInput.schema';
+import { CommentUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema as CommentUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema } from './CommentUncheckedCreateNestedManyWithoutRestaurantsMentionedInput.schema'
 
 import { JsonValueSchema as jsonSchema } from '../../helpers/json-helpers';
 
@@ -18,7 +19,8 @@ const makeSchema = () => z.object({
   priceRange: z.string().optional().nullable(),
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   createdAt: z.coerce.date().optional(),
-  posts: z.lazy(() => PostUncheckedCreateNestedManyWithoutRestaurantInputObjectSchema)
+  posts: z.lazy(() => PostUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema),
+  comments: z.lazy(() => CommentUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema)
 }).strict();
 export const RestaurantUncheckedCreateInputObjectSchema: z.ZodType<Prisma.RestaurantUncheckedCreateInput> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantUncheckedCreateInput>;
 export const RestaurantUncheckedCreateInputObjectZodSchema = makeSchema();

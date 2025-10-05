@@ -1,8 +1,7 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostCreaterestaurantsMentionedInputObjectSchema as PostCreaterestaurantsMentionedInputObjectSchema } from './PostCreaterestaurantsMentionedInput.schema';
-import { RestaurantCreateNestedOneWithoutPostsInputObjectSchema as RestaurantCreateNestedOneWithoutPostsInputObjectSchema } from './RestaurantCreateNestedOneWithoutPostsInput.schema';
-import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema'
+import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
+import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.string(),
@@ -14,12 +13,11 @@ const makeSchema = () => z.object({
   upvoteRatio: z.number().optional().nullable(),
   numComments: z.number().int().optional().nullable(),
   url: z.string().optional().nullable(),
-  restaurantsMentioned: z.union([z.lazy(() => PostCreaterestaurantsMentionedInputObjectSchema), z.string().array()]).optional(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  restaurant: z.lazy(() => RestaurantCreateNestedOneWithoutPostsInputObjectSchema).optional(),
-  comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema).optional()
+  comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema).optional(),
+  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema).optional()
 }).strict();
 export const PostCreateWithoutFilesInputObjectSchema: z.ZodType<Prisma.PostCreateWithoutFilesInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCreateWithoutFilesInput>;
 export const PostCreateWithoutFilesInputObjectZodSchema = makeSchema();

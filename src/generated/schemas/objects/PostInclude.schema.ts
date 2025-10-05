@@ -1,14 +1,14 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
-import { RestaurantArgsObjectSchema as RestaurantArgsObjectSchema } from './RestaurantArgs.schema';
 import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
 import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
+import { RestaurantFindManySchema as RestaurantFindManySchema } from '../findManyRestaurant.schema';
 import { PostCountOutputTypeArgsObjectSchema as PostCountOutputTypeArgsObjectSchema } from './PostCountOutputTypeArgs.schema'
 
 const makeSchema = () => z.object({
-  restaurant: z.union([z.boolean(), z.lazy(() => RestaurantArgsObjectSchema)]).optional(),
   comments: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   files: z.union([z.boolean(), z.lazy(() => FileFindManySchema)]).optional(),
+  restaurantsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantFindManySchema)]).optional(),
   _count: z.union([z.boolean(), z.lazy(() => PostCountOutputTypeArgsObjectSchema)]).optional()
 }).strict();
 export const PostIncludeObjectSchema: z.ZodType<Prisma.PostInclude> = makeSchema() as unknown as z.ZodType<Prisma.PostInclude>;

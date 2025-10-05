@@ -2,9 +2,9 @@ import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { SortOrderSchema } from '../enums/SortOrder.schema';
 import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
-import { RestaurantOrderByWithRelationInputObjectSchema as RestaurantOrderByWithRelationInputObjectSchema } from './RestaurantOrderByWithRelationInput.schema';
 import { CommentOrderByRelationAggregateInputObjectSchema as CommentOrderByRelationAggregateInputObjectSchema } from './CommentOrderByRelationAggregateInput.schema';
-import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema'
+import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema';
+import { RestaurantOrderByRelationAggregateInputObjectSchema as RestaurantOrderByRelationAggregateInputObjectSchema } from './RestaurantOrderByRelationAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
@@ -17,14 +17,12 @@ const makeSchema = () => z.object({
   upvoteRatio: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   numComments: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   url: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
-  restaurantsMentioned: SortOrderSchema.optional(),
   createdUtc: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),
-  restaurantId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
-  restaurant: z.lazy(() => RestaurantOrderByWithRelationInputObjectSchema).optional(),
   comments: z.lazy(() => CommentOrderByRelationAggregateInputObjectSchema).optional(),
-  files: z.lazy(() => FileOrderByRelationAggregateInputObjectSchema).optional()
+  files: z.lazy(() => FileOrderByRelationAggregateInputObjectSchema).optional(),
+  restaurantsMentioned: z.lazy(() => RestaurantOrderByRelationAggregateInputObjectSchema).optional()
 }).strict();
 export const PostOrderByWithRelationInputObjectSchema: z.ZodType<Prisma.PostOrderByWithRelationInput> = makeSchema() as unknown as z.ZodType<Prisma.PostOrderByWithRelationInput>;
 export const PostOrderByWithRelationInputObjectZodSchema = makeSchema();

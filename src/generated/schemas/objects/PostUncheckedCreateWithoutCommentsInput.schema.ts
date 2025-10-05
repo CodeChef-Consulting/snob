@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostCreaterestaurantsMentionedInputObjectSchema as PostCreaterestaurantsMentionedInputObjectSchema } from './PostCreaterestaurantsMentionedInput.schema';
-import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema'
+import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema';
+import { RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema as RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantUncheckedCreateNestedManyWithoutPostsInput.schema'
 
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
@@ -14,12 +14,11 @@ const makeSchema = () => z.object({
   upvoteRatio: z.number().optional().nullable(),
   numComments: z.number().int().optional().nullable(),
   url: z.string().optional().nullable(),
-  restaurantsMentioned: z.union([z.lazy(() => PostCreaterestaurantsMentionedInputObjectSchema), z.string().array()]).optional(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  restaurantId: z.number().int().optional().nullable(),
-  files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema).optional()
+  files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema).optional(),
+  restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema).optional()
 }).strict();
 export const PostUncheckedCreateWithoutCommentsInputObjectSchema: z.ZodType<Prisma.PostUncheckedCreateWithoutCommentsInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUncheckedCreateWithoutCommentsInput>;
 export const PostUncheckedCreateWithoutCommentsInputObjectZodSchema = makeSchema();

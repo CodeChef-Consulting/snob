@@ -10,11 +10,11 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     author: z.number(),
     body: z.number(),
     score: z.number(),
-    restaurantsMentioned: z.number(),
     createdUtc: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
-    files: z.number()
+    files: z.number(),
+    restaurantsMentioned: z.number()
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),
@@ -36,7 +36,6 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     author: z.string().nullable(),
     body: z.string().nullable(),
     score: z.number().int().nullable(),
-    restaurantsMentioned: z.array(z.string()).nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
@@ -49,7 +48,6 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     author: z.string().nullable(),
     body: z.string().nullable(),
     score: z.number().int().nullable(),
-    restaurantsMentioned: z.array(z.string()).nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()

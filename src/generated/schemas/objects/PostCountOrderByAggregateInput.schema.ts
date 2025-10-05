@@ -13,11 +13,9 @@ const makeSchema = () => z.object({
   upvoteRatio: SortOrderSchema.optional(),
   numComments: SortOrderSchema.optional(),
   url: SortOrderSchema.optional(),
-  restaurantsMentioned: SortOrderSchema.optional(),
   createdUtc: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
-  updatedAt: SortOrderSchema.optional(),
-  restaurantId: SortOrderSchema.optional()
+  updatedAt: SortOrderSchema.optional()
 }).strict();
 export const PostCountOrderByAggregateInputObjectSchema: z.ZodType<Prisma.PostCountOrderByAggregateInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCountOrderByAggregateInput>;
 export const PostCountOrderByAggregateInputObjectZodSchema = makeSchema();

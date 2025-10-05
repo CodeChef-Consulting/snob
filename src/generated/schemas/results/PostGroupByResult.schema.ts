@@ -10,11 +10,9 @@ export const PostGroupByResultSchema = z.array(z.object({
   upvoteRatio: z.number(),
   numComments: z.number().int(),
   url: z.string(),
-  restaurantsMentioned: z.array(z.string()),
   createdUtc: z.date(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  restaurantId: z.number().int(),
   _count: z.object({
     id: z.number(),
     externalId: z.number(),
@@ -26,28 +24,24 @@ export const PostGroupByResultSchema = z.array(z.object({
     upvoteRatio: z.number(),
     numComments: z.number(),
     url: z.number(),
-    restaurantsMentioned: z.number(),
     createdUtc: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
-    restaurant: z.number(),
-    restaurantId: z.number(),
     comments: z.number(),
-    files: z.number()
+    files: z.number(),
+    restaurantsMentioned: z.number()
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),
     score: z.number().nullable(),
     upvoteRatio: z.number().nullable(),
-    numComments: z.number().nullable(),
-    restaurantId: z.number().nullable()
+    numComments: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
     score: z.number().nullable(),
     upvoteRatio: z.number().nullable(),
-    numComments: z.number().nullable(),
-    restaurantId: z.number().nullable()
+    numComments: z.number().nullable()
   }).nullable().optional(),
   _min: z.object({
     id: z.number().int().nullable(),
@@ -60,11 +54,9 @@ export const PostGroupByResultSchema = z.array(z.object({
     upvoteRatio: z.number().nullable(),
     numComments: z.number().int().nullable(),
     url: z.string().nullable(),
-    restaurantsMentioned: z.array(z.string()).nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
-    updatedAt: z.date().nullable(),
-    restaurantId: z.number().int().nullable()
+    updatedAt: z.date().nullable()
   }).nullable().optional(),
   _max: z.object({
     id: z.number().int().nullable(),
@@ -77,10 +69,8 @@ export const PostGroupByResultSchema = z.array(z.object({
     upvoteRatio: z.number().nullable(),
     numComments: z.number().int().nullable(),
     url: z.string().nullable(),
-    restaurantsMentioned: z.array(z.string()).nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
-    updatedAt: z.date().nullable(),
-    restaurantId: z.number().int().nullable()
+    updatedAt: z.date().nullable()
   }).nullable().optional()
 }));

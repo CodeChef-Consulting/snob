@@ -13,5 +13,6 @@ export const RestaurantUpdateResultSchema = z.nullable(z.object({
   metadata: z.unknown().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  posts: z.array(z.unknown())
+  posts: z.array(z.unknown()),
+  comments: z.array(z.unknown())
 }));

@@ -5,11 +5,11 @@ import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperat
 import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
 import { NullableIntFieldUpdateOperationsInputObjectSchema as NullableIntFieldUpdateOperationsInputObjectSchema } from './NullableIntFieldUpdateOperationsInput.schema';
 import { NullableFloatFieldUpdateOperationsInputObjectSchema as NullableFloatFieldUpdateOperationsInputObjectSchema } from './NullableFloatFieldUpdateOperationsInput.schema';
-import { PostUpdaterestaurantsMentionedInputObjectSchema as PostUpdaterestaurantsMentionedInputObjectSchema } from './PostUpdaterestaurantsMentionedInput.schema';
 import { NullableDateTimeFieldUpdateOperationsInputObjectSchema as NullableDateTimeFieldUpdateOperationsInputObjectSchema } from './NullableDateTimeFieldUpdateOperationsInput.schema';
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
 import { CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema as CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutPostNestedInput.schema';
-import { FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema as FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema } from './FileUncheckedUpdateManyWithoutPostNestedInput.schema'
+import { FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema as FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema } from './FileUncheckedUpdateManyWithoutPostNestedInput.schema';
+import { RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantUncheckedUpdateManyWithoutPostsNestedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -22,13 +22,12 @@ const makeSchema = () => z.object({
   upvoteRatio: z.union([z.number(), z.lazy(() => NullableFloatFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   numComments: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   url: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
-  restaurantsMentioned: z.union([z.lazy(() => PostUpdaterestaurantsMentionedInputObjectSchema), z.string().array()]).optional(),
   createdUtc: z.union([z.coerce.date(), z.lazy(() => NullableDateTimeFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
-  restaurantId: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   comments: z.lazy(() => CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
-  files: z.lazy(() => FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional()
+  files: z.lazy(() => FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
+  restaurantsMentioned: z.lazy(() => RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema).optional()
 }).strict();
 export const PostUncheckedUpdateInputObjectSchema: z.ZodType<Prisma.PostUncheckedUpdateInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUncheckedUpdateInput>;
 export const PostUncheckedUpdateInputObjectZodSchema = makeSchema();

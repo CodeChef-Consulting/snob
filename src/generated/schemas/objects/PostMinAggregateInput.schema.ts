@@ -15,8 +15,7 @@ const makeSchema = () => z.object({
   url: z.literal(true).optional(),
   createdUtc: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
-  updatedAt: z.literal(true).optional(),
-  restaurantId: z.literal(true).optional()
+  updatedAt: z.literal(true).optional()
 }).strict();
 export const PostMinAggregateInputObjectSchema: z.ZodType<Prisma.PostMinAggregateInputType> = makeSchema() as unknown as z.ZodType<Prisma.PostMinAggregateInputType>;
 export const PostMinAggregateInputObjectZodSchema = makeSchema();

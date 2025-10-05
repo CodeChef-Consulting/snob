@@ -11,11 +11,11 @@ export const CommentFindManyResultSchema = z.object({
   author: z.string().optional(),
   body: z.string().optional(),
   score: z.number().int().optional(),
-  restaurantsMentioned: z.array(z.string()),
   createdUtc: z.date().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  files: z.array(z.unknown())
+  files: z.array(z.unknown()),
+  restaurantsMentioned: z.array(z.unknown())
 })),
   pagination: z.object({
   page: z.number().int().min(1),

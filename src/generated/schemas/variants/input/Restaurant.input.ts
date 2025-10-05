@@ -15,7 +15,8 @@ export const RestaurantInputSchema = z.object({
     metadata: z.unknown().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
-    posts: z.array(z.unknown())
+    posts: z.array(z.unknown()),
+    comments: z.array(z.unknown())
 }).strict();
 
 export type RestaurantInputType = z.infer<typeof RestaurantInputSchema>;

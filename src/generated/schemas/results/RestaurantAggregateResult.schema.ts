@@ -13,7 +13,8 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     metadata: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
-    posts: z.number()
+    posts: z.number(),
+    comments: z.number()
   }).optional(),
   _sum: z.object({
     id: z.number().nullable()

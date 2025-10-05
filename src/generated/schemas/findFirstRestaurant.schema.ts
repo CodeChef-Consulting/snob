@@ -24,6 +24,7 @@ export const RestaurantFindFirstSelectSchema: z.ZodType<Prisma.RestaurantSelect>
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
     posts: z.boolean().optional(),
+    comments: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict() as unknown as z.ZodType<Prisma.RestaurantSelect>;
 
@@ -42,6 +43,7 @@ export const RestaurantFindFirstSelectZodSchema = z.object({
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
     posts: z.boolean().optional(),
+    comments: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict();
 

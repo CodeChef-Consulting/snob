@@ -4,6 +4,7 @@ import { PostArgsObjectSchema as PostArgsObjectSchema } from './PostArgs.schema'
 import { CommentArgsObjectSchema as CommentArgsObjectSchema } from './CommentArgs.schema';
 import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
 import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
+import { RestaurantFindManySchema as RestaurantFindManySchema } from '../findManyRestaurant.schema';
 import { CommentCountOutputTypeArgsObjectSchema as CommentCountOutputTypeArgsObjectSchema } from './CommentCountOutputTypeArgs.schema'
 
 const makeSchema = () => z.object({
@@ -11,6 +12,7 @@ const makeSchema = () => z.object({
   parentComment: z.union([z.boolean(), z.lazy(() => CommentArgsObjectSchema)]).optional(),
   replies: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   files: z.union([z.boolean(), z.lazy(() => FileFindManySchema)]).optional(),
+  restaurantsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantFindManySchema)]).optional(),
   _count: z.union([z.boolean(), z.lazy(() => CommentCountOutputTypeArgsObjectSchema)]).optional()
 }).strict();
 export const CommentIncludeObjectSchema: z.ZodType<Prisma.CommentInclude> = makeSchema() as unknown as z.ZodType<Prisma.CommentInclude>;

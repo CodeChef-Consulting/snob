@@ -1,8 +1,8 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
-import { PostCreaterestaurantsMentionedInputObjectSchema as PostCreaterestaurantsMentionedInputObjectSchema } from './PostCreaterestaurantsMentionedInput.schema';
 import { CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema as CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './CommentUncheckedCreateNestedManyWithoutPostInput.schema';
-import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema'
+import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema';
+import { RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema as RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantUncheckedCreateNestedManyWithoutPostsInput.schema'
 
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
@@ -15,12 +15,11 @@ const makeSchema = () => z.object({
   upvoteRatio: z.number().optional().nullable(),
   numComments: z.number().int().optional().nullable(),
   url: z.string().optional().nullable(),
-  restaurantsMentioned: z.union([z.lazy(() => PostCreaterestaurantsMentionedInputObjectSchema), z.string().array()]),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
-  restaurantId: z.number().int().optional().nullable(),
   comments: z.lazy(() => CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema),
-  files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema)
+  files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema),
+  restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema)
 }).strict();
 export const PostUncheckedCreateInputObjectSchema: z.ZodType<Prisma.PostUncheckedCreateInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUncheckedCreateInput>;
 export const PostUncheckedCreateInputObjectZodSchema = makeSchema();

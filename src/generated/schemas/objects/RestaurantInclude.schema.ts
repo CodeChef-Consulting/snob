@@ -1,10 +1,12 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { PostFindManySchema as PostFindManySchema } from '../findManyPost.schema';
+import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
 import { RestaurantCountOutputTypeArgsObjectSchema as RestaurantCountOutputTypeArgsObjectSchema } from './RestaurantCountOutputTypeArgs.schema'
 
 const makeSchema = () => z.object({
   posts: z.union([z.boolean(), z.lazy(() => PostFindManySchema)]).optional(),
+  comments: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   _count: z.union([z.boolean(), z.lazy(() => RestaurantCountOutputTypeArgsObjectSchema)]).optional()
 }).strict();
 export const RestaurantIncludeObjectSchema: z.ZodType<Prisma.RestaurantInclude> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantInclude>;

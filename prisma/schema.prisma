@@ -12,8 +12,8 @@ generator trpc {
 }
 
 generator zod {
-  provider       = "prisma-zod-generator"
-  output         = "../src/generated"
+  provider                         = "prisma-zod-generator"
+  output                           = "../src/generated"
   createOptionalDefaultValuesTypes = true
   createRelationValuesTypes        = true
 }
@@ -24,8 +24,8 @@ datasource db {
 }
 
 model Post {
-  id                   Int       @id @default(autoincrement())
-  externalId           String    @unique
+  id                   Int          @id @default(autoincrement())
+  externalId           String       @unique
   subreddit            String
   author               String?
   title                String?
@@ -34,35 +34,32 @@ model Post {
   upvoteRatio          Float?
   numComments          Int?
   url                  String?
-  restaurantsMentioned String[]
   createdUtc           DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
-  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
-  restaurantId Int?
-
-  comments Comment[]
-  files    File[]
+  comments             Comment[]
+  files                File[]
+  restaurantsMentioned Restaurant[]
 }
 
 model Comment {
-  id                   Int       @id @default(autoincrement())
-  externalId           String    @unique
-  post                 Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id                   Int          @id @default(autoincrement())
+  externalId           String       @unique
+  post                 Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId               Int
-  parentComment        Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentComment        Comment?     @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   parentCommentId      Int?
-  replies              Comment[] @relation("CommentReplies")
+  replies              Comment[]    @relation("CommentReplies")
   author               String?
   body                 String?
   score                Int?
-  restaurantsMentioned String[]
   createdUtc           DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
-  files File[]
+  files                File[]
+  restaurantsMentioned Restaurant[]
 }
 
 model File {
@@ -95,7 +92,8 @@ model Restaurant {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  posts Post[]
+  posts    Post[]
+  comments Comment[]
 }
 
 model ScrapingSession {

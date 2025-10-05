@@ -20,11 +20,11 @@ export const CommentFindFirstOrThrowSelectSchema: z.ZodType<Prisma.CommentSelect
     author: z.boolean().optional(),
     body: z.boolean().optional(),
     score: z.boolean().optional(),
-    restaurantsMentioned: z.boolean().optional(),
     createdUtc: z.boolean().optional(),
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
     files: z.boolean().optional(),
+    restaurantsMentioned: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict() as unknown as z.ZodType<Prisma.CommentSelect>;
 
@@ -39,11 +39,11 @@ export const CommentFindFirstOrThrowSelectZodSchema = z.object({
     author: z.boolean().optional(),
     body: z.boolean().optional(),
     score: z.boolean().optional(),
-    restaurantsMentioned: z.boolean().optional(),
     createdUtc: z.boolean().optional(),
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
     files: z.boolean().optional(),
+    restaurantsMentioned: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict();
 
