@@ -8,7 +8,17 @@ const prisma = new PrismaClient();
 async function backfillScrapingSessions() {
   console.log('Starting backfill of scraping sessions...\n');
 
-  // Get all scraping sessions ordered by creation time (newest first)
+  // First, clear all existing session links
+  console.log('Clearing existing session links...');
+  await prisma.post.updateMany({
+    data: { scrapingSessionId: null },
+  });
+  await prisma.comment.updateMany({
+    data: { scrapingSessionId: null },
+  });
+  console.log('✅ Cleared all session links\n');
+
+  // Get all scraping sessions ordered by creation time (oldest first)
   const sessions = await prisma.scrapingSession.findMany({
     orderBy: { createdAt: 'desc' },
   });
@@ -18,23 +28,24 @@ async function backfillScrapingSessions() {
   let totalPostsUpdated = 0;
   let totalCommentsUpdated = 0;
 
-  // Process sessions in reverse chronological order
+  // Process sessions in chronological order (oldest first)
   for (const session of sessions) {
-    const modeLabel = session.mode === 'search'
-      ? `${session.mode} "${session.searchQuery}"`
-      : session.mode;
+    const modeLabel =
+      session.mode === 'search'
+        ? `${session.mode} "${session.searchQuery}"`
+        : session.mode;
 
-    console.log(`Processing session #${session.id}: ${modeLabel} (${session.timeframe || 'no timeframe'}) - Created: ${session.createdAt.toISOString()}`);
+    console.log(
+      `Processing session #${session.id}: ${modeLabel} (${session.timeframe || 'no timeframe'}) - Created: ${session.createdAt.toISOString()}`
+    );
 
-    // Find posts that were created in the database around the time of this session
+    // Find posts that were created in the database AFTER this session started
     // and don't already have a session assigned
     const posts = await prisma.post.findMany({
       where: {
         scrapingSessionId: null,
         createdAt: {
-          // Posts created within 1 hour before or after the session
-          gte: new Date(session.createdAt.getTime() - 60 * 60 * 1000),
-          lte: new Date(session.createdAt.getTime() + 60 * 60 * 1000),
+          gte: session.createdAt,
         },
       },
     });
@@ -43,7 +54,7 @@ async function backfillScrapingSessions() {
       // Update posts to link to this session
       const postUpdate = await prisma.post.updateMany({
         where: {
-          id: { in: posts.map(p => p.id) },
+          id: { in: posts.map((p) => p.id) },
         },
         data: {
           scrapingSessionId: session.id,
@@ -51,16 +62,18 @@ async function backfillScrapingSessions() {
       });
 
       totalPostsUpdated += postUpdate.count;
-      console.log(`  ✅ Linked ${postUpdate.count} posts to session #${session.id}`);
+      console.log(
+        `  ✅ Linked ${postUpdate.count} posts to session #${session.id}`
+      );
     }
 
-    // Find comments that were created around the time of this session
+    // Find comments that were created in the database AFTER this session started
+    // and don't already have a session assigned
     const comments = await prisma.comment.findMany({
       where: {
         scrapingSessionId: null,
         createdAt: {
-          gte: new Date(session.createdAt.getTime() - 60 * 60 * 1000),
-          lte: new Date(session.createdAt.getTime() + 60 * 60 * 1000),
+          gte: session.createdAt,
         },
       },
     });
@@ -69,7 +82,7 @@ async function backfillScrapingSessions() {
       // Update comments to link to this session
       const commentUpdate = await prisma.comment.updateMany({
         where: {
-          id: { in: comments.map(c => c.id) },
+          id: { in: comments.map((c) => c.id) },
         },
         data: {
           scrapingSessionId: session.id,
@@ -77,7 +90,9 @@ async function backfillScrapingSessions() {
       });
 
       totalCommentsUpdated += commentUpdate.count;
-      console.log(`  ✅ Linked ${commentUpdate.count} comments to session #${session.id}`);
+      console.log(
+        `  ✅ Linked ${commentUpdate.count} comments to session #${session.id}`
+      );
     }
 
     if (posts.length === 0 && comments.length === 0) {
