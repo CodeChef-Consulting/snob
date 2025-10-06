@@ -7,6 +7,7 @@
     "build": "tsc",
     "fetch-comments": "tsx src/scripts/fetchComments.ts",
     "count-posts": "tsx src/scripts/countPosts.ts",
+    "backfill-sessions": "tsx src/scripts/backfillScrapingSessions.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f postgres",

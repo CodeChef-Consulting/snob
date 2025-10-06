@@ -15,7 +15,8 @@ const makeSchema = () => z.object({
   url: z.literal(true).optional(),
   createdUtc: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
-  updatedAt: z.literal(true).optional()
+  updatedAt: z.literal(true).optional(),
+  scrapingSessionId: z.literal(true).optional()
 }).strict();
 export const PostMaxAggregateInputObjectSchema: z.ZodType<Prisma.PostMaxAggregateInputType> = makeSchema() as unknown as z.ZodType<Prisma.PostMaxAggregateInputType>;
 export const PostMaxAggregateInputObjectZodSchema = makeSchema();

@@ -11,7 +11,9 @@ export const ScrapingSessionAggregateResultSchema = z.object({  _count: z.object
     commentsScraped: z.number(),
     completed: z.number(),
     createdAt: z.number(),
-    updatedAt: z.number()
+    updatedAt: z.number(),
+    posts: z.number(),
+    comments: z.number()
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),

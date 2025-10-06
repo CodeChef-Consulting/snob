@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
+import { ScrapingSessionArgsObjectSchema as ScrapingSessionArgsObjectSchema } from './ScrapingSessionArgs.schema';
 import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
 import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
 import { RestaurantFindManySchema as RestaurantFindManySchema } from '../findManyRestaurant.schema';
@@ -19,6 +20,8 @@ const makeSchema = () => z.object({
   createdUtc: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
+  scrapingSession: z.union([z.boolean(), z.lazy(() => ScrapingSessionArgsObjectSchema)]).optional(),
+  scrapingSessionId: z.boolean().optional(),
   comments: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   files: z.union([z.boolean(), z.lazy(() => FileFindManySchema)]).optional(),
   restaurantsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantFindManySchema)]).optional(),

@@ -15,6 +15,8 @@ export const CommentInputSchema = z.object({
     createdUtc: z.date().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
+    scrapingSession: z.unknown().optional().nullable(),
+    scrapingSessionId: z.number().int().optional().nullable(),
     files: z.array(z.unknown()),
     restaurantsMentioned: z.array(z.unknown())
 }).strict();

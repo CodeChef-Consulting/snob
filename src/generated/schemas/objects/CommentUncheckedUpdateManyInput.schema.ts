@@ -17,7 +17,8 @@ const makeSchema = () => z.object({
   score: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   createdUtc: z.union([z.coerce.date(), z.lazy(() => NullableDateTimeFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
-  updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional()
+  updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
+  scrapingSessionId: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable()
 }).strict();
 export const CommentUncheckedUpdateManyInputObjectSchema: z.ZodType<Prisma.CommentUncheckedUpdateManyInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentUncheckedUpdateManyInput>;
 export const CommentUncheckedUpdateManyInputObjectZodSchema = makeSchema();

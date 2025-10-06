@@ -235,6 +235,7 @@ async function fetchComments(options: FetchOptions = {}) {
         author: post.author.name,
         subreddit: subredditName,
         createdUtc: postCreatedAt,
+        scrapingSessionId: session.id,
         updatedAt: new Date(),
       },
       create: {
@@ -248,6 +249,7 @@ async function fetchComments(options: FetchOptions = {}) {
         author: post.author.name,
         subreddit: subredditName,
         createdUtc: postCreatedAt,
+        scrapingSessionId: session.id,
       },
     });
     postsUpdated++;
@@ -297,6 +299,7 @@ async function fetchComments(options: FetchOptions = {}) {
           score: comment.score,
           author: comment.author.name,
           createdUtc: new Date(comment.created_utc * 1000),
+          scrapingSessionId: session.id,
           updatedAt: new Date(),
         },
         create: {
@@ -307,6 +310,7 @@ async function fetchComments(options: FetchOptions = {}) {
           score: comment.score,
           author: comment.author.name,
           createdUtc: new Date(comment.created_utc * 1000),
+          scrapingSessionId: session.id,
         },
       });
       commentsUpdated++;

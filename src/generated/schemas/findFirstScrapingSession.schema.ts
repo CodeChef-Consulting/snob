@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import * as z from 'zod';
+import { ScrapingSessionIncludeObjectSchema as ScrapingSessionIncludeObjectSchema } from './objects/ScrapingSessionInclude.schema';
 import { ScrapingSessionOrderByWithRelationInputObjectSchema as ScrapingSessionOrderByWithRelationInputObjectSchema } from './objects/ScrapingSessionOrderByWithRelationInput.schema';
 import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './objects/ScrapingSessionWhereInput.schema';
 import { ScrapingSessionWhereUniqueInputObjectSchema as ScrapingSessionWhereUniqueInputObjectSchema } from './objects/ScrapingSessionWhereUniqueInput.schema';
@@ -20,7 +21,10 @@ export const ScrapingSessionFindFirstSelectSchema: z.ZodType<Prisma.ScrapingSess
     commentsScraped: z.boolean().optional(),
     completed: z.boolean().optional(),
     createdAt: z.boolean().optional(),
-    updatedAt: z.boolean().optional()
+    updatedAt: z.boolean().optional(),
+    posts: z.boolean().optional(),
+    comments: z.boolean().optional(),
+    _count: z.boolean().optional()
   }).strict() as unknown as z.ZodType<Prisma.ScrapingSessionSelect>;
 
 export const ScrapingSessionFindFirstSelectZodSchema = z.object({
@@ -35,9 +39,12 @@ export const ScrapingSessionFindFirstSelectZodSchema = z.object({
     commentsScraped: z.boolean().optional(),
     completed: z.boolean().optional(),
     createdAt: z.boolean().optional(),
-    updatedAt: z.boolean().optional()
+    updatedAt: z.boolean().optional(),
+    posts: z.boolean().optional(),
+    comments: z.boolean().optional(),
+    _count: z.boolean().optional()
   }).strict();
 
-export const ScrapingSessionFindFirstSchema: z.ZodType<Prisma.ScrapingSessionFindFirstArgs> = z.object({ select: ScrapingSessionFindFirstSelectSchema.optional(),  orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict() as unknown as z.ZodType<Prisma.ScrapingSessionFindFirstArgs>;
+export const ScrapingSessionFindFirstSchema: z.ZodType<Prisma.ScrapingSessionFindFirstArgs> = z.object({ select: ScrapingSessionFindFirstSelectSchema.optional(), include: z.lazy(() => ScrapingSessionIncludeObjectSchema.optional()), orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict() as unknown as z.ZodType<Prisma.ScrapingSessionFindFirstArgs>;
 
-export const ScrapingSessionFindFirstZodSchema = z.object({ select: ScrapingSessionFindFirstSelectSchema.optional(),  orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict();
+export const ScrapingSessionFindFirstZodSchema = z.object({ select: ScrapingSessionFindFirstSelectSchema.optional(), include: z.lazy(() => ScrapingSessionIncludeObjectSchema.optional()), orderBy: z.union([ScrapingSessionOrderByWithRelationInputObjectSchema, ScrapingSessionOrderByWithRelationInputObjectSchema.array()]).optional(), where: ScrapingSessionWhereInputObjectSchema.optional(), cursor: ScrapingSessionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([ScrapingSessionScalarFieldEnumSchema, ScrapingSessionScalarFieldEnumSchema.array()]).optional() }).strict();

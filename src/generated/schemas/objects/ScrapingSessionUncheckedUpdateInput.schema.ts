@@ -5,7 +5,9 @@ import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperat
 import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
 import { NullableDateTimeFieldUpdateOperationsInputObjectSchema as NullableDateTimeFieldUpdateOperationsInputObjectSchema } from './NullableDateTimeFieldUpdateOperationsInput.schema';
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
-import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema'
+import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
+import { PostUncheckedUpdateManyWithoutScrapingSessionNestedInputObjectSchema as PostUncheckedUpdateManyWithoutScrapingSessionNestedInputObjectSchema } from './PostUncheckedUpdateManyWithoutScrapingSessionNestedInput.schema';
+import { CommentUncheckedUpdateManyWithoutScrapingSessionNestedInputObjectSchema as CommentUncheckedUpdateManyWithoutScrapingSessionNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutScrapingSessionNestedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -19,7 +21,9 @@ const makeSchema = () => z.object({
   commentsScraped: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),
   completed: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
-  updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional()
+  updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
+  posts: z.lazy(() => PostUncheckedUpdateManyWithoutScrapingSessionNestedInputObjectSchema).optional(),
+  comments: z.lazy(() => CommentUncheckedUpdateManyWithoutScrapingSessionNestedInputObjectSchema).optional()
 }).strict();
 export const ScrapingSessionUncheckedUpdateInputObjectSchema: z.ZodType<Prisma.ScrapingSessionUncheckedUpdateInput> = makeSchema() as unknown as z.ZodType<Prisma.ScrapingSessionUncheckedUpdateInput>;
 export const ScrapingSessionUncheckedUpdateInputObjectZodSchema = makeSchema();

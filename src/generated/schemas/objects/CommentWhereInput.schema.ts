@@ -10,6 +10,8 @@ import { PostScalarRelationFilterObjectSchema as PostScalarRelationFilterObjectS
 import { PostWhereInputObjectSchema as PostWhereInputObjectSchema } from './PostWhereInput.schema';
 import { CommentNullableScalarRelationFilterObjectSchema as CommentNullableScalarRelationFilterObjectSchema } from './CommentNullableScalarRelationFilter.schema';
 import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema';
+import { ScrapingSessionNullableScalarRelationFilterObjectSchema as ScrapingSessionNullableScalarRelationFilterObjectSchema } from './ScrapingSessionNullableScalarRelationFilter.schema';
+import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './ScrapingSessionWhereInput.schema';
 import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema';
 import { RestaurantListRelationFilterObjectSchema as RestaurantListRelationFilterObjectSchema } from './RestaurantListRelationFilter.schema'
 
@@ -27,9 +29,11 @@ const commentwhereinputSchema = z.object({
   createdUtc: z.union([z.lazy(() => DateTimeNullableFilterObjectSchema), z.coerce.date()]).optional().nullable(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
+  scrapingSessionId: z.union([z.lazy(() => IntNullableFilterObjectSchema), z.number().int()]).optional().nullable(),
   post: z.union([z.lazy(() => PostScalarRelationFilterObjectSchema), z.lazy(() => PostWhereInputObjectSchema)]).optional(),
   parentComment: z.union([z.lazy(() => CommentNullableScalarRelationFilterObjectSchema), z.lazy(() => CommentWhereInputObjectSchema)]).optional(),
   replies: z.lazy(() => CommentListRelationFilterObjectSchema).optional(),
+  scrapingSession: z.union([z.lazy(() => ScrapingSessionNullableScalarRelationFilterObjectSchema), z.lazy(() => ScrapingSessionWhereInputObjectSchema)]).optional(),
   files: z.lazy(() => FileListRelationFilterObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantListRelationFilterObjectSchema).optional()
 }).strict();

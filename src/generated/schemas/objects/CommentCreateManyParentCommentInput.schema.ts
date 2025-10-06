@@ -11,7 +11,8 @@ const makeSchema = () => z.object({
   score: z.number().int().optional().nullable(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional()
+  updatedAt: z.coerce.date().optional(),
+  scrapingSessionId: z.number().int().optional().nullable()
 }).strict();
 export const CommentCreateManyParentCommentInputObjectSchema: z.ZodType<Prisma.CommentCreateManyParentCommentInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentCreateManyParentCommentInput>;
 export const CommentCreateManyParentCommentInputObjectZodSchema = makeSchema();

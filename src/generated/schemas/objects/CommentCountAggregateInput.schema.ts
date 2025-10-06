@@ -13,6 +13,7 @@ const makeSchema = () => z.object({
   createdUtc: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional(),
+  scrapingSessionId: z.literal(true).optional(),
   _all: z.literal(true).optional()
 }).strict();
 export const CommentCountAggregateInputObjectSchema: z.ZodType<Prisma.CommentCountAggregateInputType> = makeSchema() as unknown as z.ZodType<Prisma.CommentCountAggregateInputType>;

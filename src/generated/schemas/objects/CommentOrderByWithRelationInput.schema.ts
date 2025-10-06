@@ -4,6 +4,7 @@ import { SortOrderSchema } from '../enums/SortOrder.schema';
 import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './SortOrderInput.schema';
 import { PostOrderByWithRelationInputObjectSchema as PostOrderByWithRelationInputObjectSchema } from './PostOrderByWithRelationInput.schema';
 import { CommentOrderByRelationAggregateInputObjectSchema as CommentOrderByRelationAggregateInputObjectSchema } from './CommentOrderByRelationAggregateInput.schema';
+import { ScrapingSessionOrderByWithRelationInputObjectSchema as ScrapingSessionOrderByWithRelationInputObjectSchema } from './ScrapingSessionOrderByWithRelationInput.schema';
 import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema';
 import { RestaurantOrderByRelationAggregateInputObjectSchema as RestaurantOrderByRelationAggregateInputObjectSchema } from './RestaurantOrderByRelationAggregateInput.schema'
 
@@ -18,9 +19,11 @@ const commentorderbywithrelationinputSchema = z.object({
   createdUtc: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),
+  scrapingSessionId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   post: z.lazy(() => PostOrderByWithRelationInputObjectSchema).optional(),
   parentComment: z.lazy(() => CommentOrderByWithRelationInputObjectSchema).optional(),
   replies: z.lazy(() => CommentOrderByRelationAggregateInputObjectSchema).optional(),
+  scrapingSession: z.lazy(() => ScrapingSessionOrderByWithRelationInputObjectSchema).optional(),
   files: z.lazy(() => FileOrderByRelationAggregateInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantOrderByRelationAggregateInputObjectSchema).optional()
 }).strict();

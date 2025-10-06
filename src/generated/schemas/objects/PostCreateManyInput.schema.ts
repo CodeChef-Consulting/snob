@@ -15,7 +15,8 @@ const makeSchema = () => z.object({
   url: z.string().optional().nullable(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional()
+  updatedAt: z.coerce.date().optional(),
+  scrapingSessionId: z.number().int().optional().nullable()
 }).strict();
 export const PostCreateManyInputObjectSchema: z.ZodType<Prisma.PostCreateManyInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCreateManyInput>;
 export const PostCreateManyInputObjectZodSchema = makeSchema();

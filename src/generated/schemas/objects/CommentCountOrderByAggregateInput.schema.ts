@@ -12,7 +12,8 @@ const makeSchema = () => z.object({
   score: SortOrderSchema.optional(),
   createdUtc: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
-  updatedAt: SortOrderSchema.optional()
+  updatedAt: SortOrderSchema.optional(),
+  scrapingSessionId: SortOrderSchema.optional()
 }).strict();
 export const CommentCountOrderByAggregateInputObjectSchema: z.ZodType<Prisma.CommentCountOrderByAggregateInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentCountOrderByAggregateInput>;
 export const CommentCountOrderByAggregateInputObjectZodSchema = makeSchema();

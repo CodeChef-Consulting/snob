@@ -23,6 +23,8 @@ export const CommentFindManySelectSchema: z.ZodType<Prisma.CommentSelect> = z.ob
     createdUtc: z.boolean().optional(),
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
+    scrapingSession: z.boolean().optional(),
+    scrapingSessionId: z.boolean().optional(),
     files: z.boolean().optional(),
     restaurantsMentioned: z.boolean().optional(),
     _count: z.boolean().optional()
@@ -42,6 +44,8 @@ export const CommentFindManySelectZodSchema = z.object({
     createdUtc: z.boolean().optional(),
     createdAt: z.boolean().optional(),
     updatedAt: z.boolean().optional(),
+    scrapingSession: z.boolean().optional(),
+    scrapingSessionId: z.boolean().optional(),
     files: z.boolean().optional(),
     restaurantsMentioned: z.boolean().optional(),
     _count: z.boolean().optional()

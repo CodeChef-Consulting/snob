@@ -11,5 +11,7 @@ export const ScrapingSessionCreateResultSchema = z.object({
   commentsScraped: z.number().int(),
   completed: z.boolean(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
+  posts: z.array(z.unknown()),
+  comments: z.array(z.unknown())
 });

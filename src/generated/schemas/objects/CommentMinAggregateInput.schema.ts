@@ -12,7 +12,8 @@ const makeSchema = () => z.object({
   score: z.literal(true).optional(),
   createdUtc: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
-  updatedAt: z.literal(true).optional()
+  updatedAt: z.literal(true).optional(),
+  scrapingSessionId: z.literal(true).optional()
 }).strict();
 export const CommentMinAggregateInputObjectSchema: z.ZodType<Prisma.CommentMinAggregateInputType> = makeSchema() as unknown as z.ZodType<Prisma.CommentMinAggregateInputType>;
 export const CommentMinAggregateInputObjectZodSchema = makeSchema();

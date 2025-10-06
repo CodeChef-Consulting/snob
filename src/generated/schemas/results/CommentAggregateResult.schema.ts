@@ -13,6 +13,8 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     createdUtc: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
+    scrapingSession: z.number(),
+    scrapingSessionId: z.number(),
     files: z.number(),
     restaurantsMentioned: z.number()
   }).optional(),
@@ -20,13 +22,15 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     id: z.number().nullable(),
     postId: z.number().nullable(),
     parentCommentId: z.number().nullable(),
-    score: z.number().nullable()
+    score: z.number().nullable(),
+    scrapingSessionId: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
     postId: z.number().nullable(),
     parentCommentId: z.number().nullable(),
-    score: z.number().nullable()
+    score: z.number().nullable(),
+    scrapingSessionId: z.number().nullable()
   }).nullable().optional(),
   _min: z.object({
     id: z.number().int().nullable(),
@@ -38,7 +42,8 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     score: z.number().int().nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
-    updatedAt: z.date().nullable()
+    updatedAt: z.date().nullable(),
+    scrapingSessionId: z.number().int().nullable()
   }).nullable().optional(),
   _max: z.object({
     id: z.number().int().nullable(),
@@ -50,5 +55,6 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     score: z.number().int().nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
-    updatedAt: z.date().nullable()
+    updatedAt: z.date().nullable(),
+    scrapingSessionId: z.number().int().nullable()
   }).nullable().optional()});

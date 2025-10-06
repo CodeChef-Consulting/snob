@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
-
+import { PostCreateNestedManyWithoutScrapingSessionInputObjectSchema as PostCreateNestedManyWithoutScrapingSessionInputObjectSchema } from './PostCreateNestedManyWithoutScrapingSessionInput.schema';
+import { CommentCreateNestedManyWithoutScrapingSessionInputObjectSchema as CommentCreateNestedManyWithoutScrapingSessionInputObjectSchema } from './CommentCreateNestedManyWithoutScrapingSessionInput.schema'
 
 const makeSchema = () => z.object({
   subreddit: z.string(),
@@ -12,7 +13,9 @@ const makeSchema = () => z.object({
   postsScraped: z.number().int().optional(),
   commentsScraped: z.number().int().optional(),
   completed: z.boolean().optional(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  posts: z.lazy(() => PostCreateNestedManyWithoutScrapingSessionInputObjectSchema),
+  comments: z.lazy(() => CommentCreateNestedManyWithoutScrapingSessionInputObjectSchema)
 }).strict();
 export const ScrapingSessionCreateInputObjectSchema: z.ZodType<Prisma.ScrapingSessionCreateInput> = makeSchema() as unknown as z.ZodType<Prisma.ScrapingSessionCreateInput>;
 export const ScrapingSessionCreateInputObjectZodSchema = makeSchema();

@@ -13,6 +13,8 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     createdUtc: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
+    scrapingSession: z.number(),
+    scrapingSessionId: z.number(),
     comments: z.number(),
     files: z.number(),
     restaurantsMentioned: z.number()
@@ -21,13 +23,15 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     id: z.number().nullable(),
     score: z.number().nullable(),
     upvoteRatio: z.number().nullable(),
-    numComments: z.number().nullable()
+    numComments: z.number().nullable(),
+    scrapingSessionId: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
     score: z.number().nullable(),
     upvoteRatio: z.number().nullable(),
-    numComments: z.number().nullable()
+    numComments: z.number().nullable(),
+    scrapingSessionId: z.number().nullable()
   }).nullable().optional(),
   _min: z.object({
     id: z.number().int().nullable(),
@@ -42,7 +46,8 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     url: z.string().nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
-    updatedAt: z.date().nullable()
+    updatedAt: z.date().nullable(),
+    scrapingSessionId: z.number().int().nullable()
   }).nullable().optional(),
   _max: z.object({
     id: z.number().int().nullable(),
@@ -57,5 +62,6 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     url: z.string().nullable(),
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
-    updatedAt: z.date().nullable()
+    updatedAt: z.date().nullable(),
+    scrapingSessionId: z.number().int().nullable()
   }).nullable().optional()});

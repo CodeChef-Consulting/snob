@@ -15,6 +15,8 @@ export const PostModelSchema = z.object({
     createdUtc: z.date().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
+    scrapingSession: z.unknown().nullable(),
+    scrapingSessionId: z.number().int().nullable(),
     comments: z.array(z.unknown()),
     files: z.array(z.unknown()),
     restaurantsMentioned: z.array(z.unknown())

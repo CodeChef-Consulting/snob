@@ -25,6 +25,7 @@ const makeSchema = () => z.object({
   createdUtc: z.union([z.coerce.date(), z.lazy(() => NullableDateTimeFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
+  scrapingSessionId: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   comments: z.lazy(() => CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema).optional()

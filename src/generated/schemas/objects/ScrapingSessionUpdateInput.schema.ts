@@ -5,7 +5,9 @@ import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringF
 import { NullableDateTimeFieldUpdateOperationsInputObjectSchema as NullableDateTimeFieldUpdateOperationsInputObjectSchema } from './NullableDateTimeFieldUpdateOperationsInput.schema';
 import { IntFieldUpdateOperationsInputObjectSchema as IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
-import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema'
+import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
+import { PostUpdateManyWithoutScrapingSessionNestedInputObjectSchema as PostUpdateManyWithoutScrapingSessionNestedInputObjectSchema } from './PostUpdateManyWithoutScrapingSessionNestedInput.schema';
+import { CommentUpdateManyWithoutScrapingSessionNestedInputObjectSchema as CommentUpdateManyWithoutScrapingSessionNestedInputObjectSchema } from './CommentUpdateManyWithoutScrapingSessionNestedInput.schema'
 
 const makeSchema = () => z.object({
   subreddit: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -18,7 +20,9 @@ const makeSchema = () => z.object({
   commentsScraped: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),
   completed: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
-  updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional()
+  updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
+  posts: z.lazy(() => PostUpdateManyWithoutScrapingSessionNestedInputObjectSchema).optional(),
+  comments: z.lazy(() => CommentUpdateManyWithoutScrapingSessionNestedInputObjectSchema).optional()
 }).strict();
 export const ScrapingSessionUpdateInputObjectSchema: z.ZodType<Prisma.ScrapingSessionUpdateInput> = makeSchema() as unknown as z.ZodType<Prisma.ScrapingSessionUpdateInput>;
 export const ScrapingSessionUpdateInputObjectZodSchema = makeSchema();

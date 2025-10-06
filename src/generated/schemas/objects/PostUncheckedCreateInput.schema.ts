@@ -17,6 +17,7 @@ const makeSchema = () => z.object({
   url: z.string().optional().nullable(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
+  scrapingSessionId: z.number().int().optional().nullable(),
   comments: z.lazy(() => CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema),
   files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema),
   restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema)

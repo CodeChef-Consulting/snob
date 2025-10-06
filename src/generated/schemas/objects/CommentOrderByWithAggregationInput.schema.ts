@@ -19,6 +19,7 @@ const makeSchema = () => z.object({
   createdUtc: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),
+  scrapingSessionId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   _count: z.lazy(() => CommentCountOrderByAggregateInputObjectSchema).optional(),
   _avg: z.lazy(() => CommentAvgOrderByAggregateInputObjectSchema).optional(),
   _max: z.lazy(() => CommentMaxOrderByAggregateInputObjectSchema).optional(),

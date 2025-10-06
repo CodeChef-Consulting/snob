@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { PostCreateNestedOneWithoutCommentsInputObjectSchema as PostCreateNestedOneWithoutCommentsInputObjectSchema } from './PostCreateNestedOneWithoutCommentsInput.schema';
 import { CommentCreateNestedOneWithoutRepliesInputObjectSchema as CommentCreateNestedOneWithoutRepliesInputObjectSchema } from './CommentCreateNestedOneWithoutRepliesInput.schema';
 import { CommentCreateNestedManyWithoutParentCommentInputObjectSchema as CommentCreateNestedManyWithoutParentCommentInputObjectSchema } from './CommentCreateNestedManyWithoutParentCommentInput.schema';
+import { ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutCommentsInput.schema';
 import { FileCreateNestedManyWithoutCommentInputObjectSchema as FileCreateNestedManyWithoutCommentInputObjectSchema } from './FileCreateNestedManyWithoutCommentInput.schema'
 
 const makeSchema = () => z.object({
@@ -16,6 +17,7 @@ const makeSchema = () => z.object({
   post: z.lazy(() => PostCreateNestedOneWithoutCommentsInputObjectSchema),
   parentComment: z.lazy(() => CommentCreateNestedOneWithoutRepliesInputObjectSchema).optional(),
   replies: z.lazy(() => CommentCreateNestedManyWithoutParentCommentInputObjectSchema).optional(),
+  scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema).optional(),
   files: z.lazy(() => FileCreateNestedManyWithoutCommentInputObjectSchema).optional()
 }).strict();
 export const CommentCreateWithoutRestaurantsMentionedInputObjectSchema: z.ZodType<Prisma.CommentCreateWithoutRestaurantsMentionedInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentCreateWithoutRestaurantsMentionedInput>;

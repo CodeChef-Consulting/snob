@@ -24,8 +24,8 @@ datasource db {
 }
 
 model Post {
-  id                   Int          @id @default(autoincrement())
-  externalId           String       @unique
+  id                   Int               @id @default(autoincrement())
+  externalId           String            @unique
   subreddit            String
   author               String?
   title                String?
@@ -35,31 +35,39 @@ model Post {
   numComments          Int?
   url                  String?
   createdUtc           DateTime?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  scrapingSession      ScrapingSession?  @relation(fields: [scrapingSessionId], references: [id])
+  scrapingSessionId    Int?
 
   comments             Comment[]
   files                File[]
   restaurantsMentioned Restaurant[]
+
+  @@index([scrapingSessionId])
 }
 
 model Comment {
-  id                   Int          @id @default(autoincrement())
-  externalId           String       @unique
-  post                 Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id                   Int               @id @default(autoincrement())
+  externalId           String            @unique
+  post                 Post              @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId               Int
-  parentComment        Comment?     @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentComment        Comment?          @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   parentCommentId      Int?
-  replies              Comment[]    @relation("CommentReplies")
+  replies              Comment[]         @relation("CommentReplies")
   author               String?
   body                 String?
   score                Int?
   createdUtc           DateTime?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  scrapingSession      ScrapingSession?  @relation(fields: [scrapingSessionId], references: [id])
+  scrapingSessionId    Int?
 
   files                File[]
   restaurantsMentioned Restaurant[]
+
+  @@index([scrapingSessionId])
 }
 
 model File {
@@ -100,7 +108,7 @@ model ScrapingSession {
   id                Int       @id @default(autoincrement())
   subreddit         String
   mode              String    @default("new") // new, top, controversial, search
-  timeframe         String?   // all, year (for top/controversial)
+  timeframe         String?   // all, year (for top/controversial/search)
   searchQuery       String?   // for search mode
   lastPostId        String?
   lastPostTimestamp DateTime?
@@ -109,6 +117,9 @@ model ScrapingSession {
   completed         Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  posts             Post[]
+  comments          Comment[]
 
   @@index([subreddit, mode, timeframe, searchQuery])
   @@index([createdAt])
