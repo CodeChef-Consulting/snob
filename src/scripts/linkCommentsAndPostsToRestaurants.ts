@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { intersection } from 'lodash';
 
 const prisma = new PrismaClient();
 
@@ -14,8 +15,102 @@ interface LinkingStats {
   commentsLinked: number;
 }
 
+// Helper function to normalize text - remove all non-letter characters and lowercase
+function normalizeText(text: string): string {
+  return text.toLowerCase().replace(/[^a-z]/g, '');
+}
+
+// Helper function to extract words from normalized text
+function extractWords(normalizedText: string): string[] {
+  // Split by spaces from original text, then normalize each word
+  const words: string[] = [];
+  let currentWord = '';
+
+  for (let i = 0; i < normalizedText.length; i++) {
+    const char = normalizedText[i];
+    if (char.match(/[a-z]/)) {
+      currentWord += char;
+    } else if (currentWord) {
+      words.push(currentWord);
+      currentWord = '';
+    }
+  }
+
+  if (currentWord) {
+    words.push(currentWord);
+  }
+
+  return words;
+}
+
+// Convert normalized restaurant name to word array
+function getRestaurantWords(text: string): string[] {
+  // First normalize to remove special chars, keeping spaces
+  const normalized = text.toLowerCase().replace(/[^a-z\s]/g, '');
+  // Split by whitespace and filter empty strings
+  return normalized.split(/\s+/).filter(word => word.length > 0);
+}
+
+// Get essential words from restaurant name (remove common filler words)
+function getEssentialRestaurantWords(restaurantName: string): string[] {
+  const commonWords = new Set([
+    'restaurant', 'cafe', 'bar', 'grill', 'kitchen', 'bistro', 'eatery',
+    'diner', 'pizzeria', 'bakery', 'the', 'and', 'of', 'at', 'in'
+  ]);
+
+  const words = getRestaurantWords(restaurantName);
+  // Filter out common filler words, but keep at least one word
+  const essentialWords = words.filter(word => !commonWords.has(word));
+
+  // If all words were filtered out, return original words
+  return essentialWords.length > 0 ? essentialWords : words;
+}
+
 async function linkCommentsAndPostsToRestaurants() {
   try {
+    // Check for --clear flag
+    const shouldClear = process.argv.includes('--clear');
+
+    if (shouldClear) {
+      console.log('Clearing existing restaurant connections...\n');
+
+      // Get all posts and clear their restaurant connections
+      const allPosts = await prisma.post.findMany({
+        select: { id: true },
+      });
+
+      for (const post of allPosts) {
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            restaurantsMentioned: {
+              set: [],
+            },
+          },
+        });
+      }
+
+      // Get all comments and clear their restaurant connections
+      const allComments = await prisma.comment.findMany({
+        select: { id: true },
+      });
+
+      for (const comment of allComments) {
+        await prisma.comment.update({
+          where: { id: comment.id },
+          data: {
+            restaurantsMentioned: {
+              set: [],
+            },
+          },
+        });
+      }
+
+      console.log(
+        `Cleared connections for ${allPosts.length} posts and ${allComments.length} comments.\n`
+      );
+    }
+
     console.log('Starting restaurant linking process...\n');
 
     const stats: LinkingStats = {
@@ -30,7 +125,7 @@ async function linkCommentsAndPostsToRestaurants() {
       commentsLinked: 0,
     };
 
-    // Get all restaurants and create a lookup map (case-insensitive)
+    // Get all restaurants and create a lookup map
     const restaurants = await prisma.restaurant.findMany({
       select: {
         id: true,
@@ -40,64 +135,70 @@ async function linkCommentsAndPostsToRestaurants() {
 
     console.log(`Loaded ${restaurants.length} restaurants from database\n`);
 
-    // Create lookup maps for exact matching
-    const restaurantByName = new Map<string, number>();
-    const restaurantByLowerName = new Map<string, number>();
+    // Create lookup with restaurant words
+    const validRestaurants = [];
 
     for (const restaurant of restaurants) {
-      restaurantByName.set(restaurant.name, restaurant.id);
-      restaurantByLowerName.set(
-        restaurant.name.toLowerCase().trim(),
-        restaurant.id
-      );
+      const essentialWords = getEssentialRestaurantWords(restaurant.name);
+      // Skip restaurants with no valid words in their name
+      if (essentialWords.length === 0) {
+        continue;
+      }
+      validRestaurants.push({ ...restaurant, words: essentialWords });
     }
 
-    // Process posts with restaurantsMentioned
+    console.log(`Using ${validRestaurants.length} restaurants with valid names for matching\n`);
+
+    // Process posts - search for restaurant names in title and body
     const posts = await prisma.post.findMany({
       select: {
         id: true,
-        restaurantsMentioned: true,
+        title: true,
+        body: true,
       },
     });
 
-    console.log(`Found ${posts.length} posts with restaurant mentions\n`);
+    console.log(`Found ${posts.length} posts to analyze\n`);
 
     for (const post of posts) {
-      // Skip posts with no mentions
-      if (!post.restaurantsMentioned || post.restaurantsMentioned.length === 0) {
-        continue;
-      }
-
       stats.postsProcessed++;
-      stats.totalMentions += post.restaurantsMentioned.length;
 
       const matchedRestaurantIds: number[] = [];
       const unmatchedForThisPost: string[] = [];
 
-      // restaurantsMentioned now contains restaurant IDs
-      for (const restaurantId of post.restaurantsMentioned) {
-        if (restaurantId) {
-          matchedRestaurantIds.push(restaurantId);
+      // Combine title and body for searching
+      const searchText = `${post.title || ''} ${post.body || ''}`;
+      const searchWords = getRestaurantWords(searchText);
+
+      if (searchWords.length === 0) {
+        continue;
+      }
+
+      // Search for restaurant names using word intersection
+      for (const restaurant of validRestaurants) {
+        // Check if all restaurant words appear in the search text
+        const commonWords = intersection(restaurant.words, searchWords);
+
+        // Match only if all restaurant words are found
+        if (commonWords.length === restaurant.words.length) {
+          matchedRestaurantIds.push(restaurant.id);
           stats.exactMatches++;
         }
       }
+
+      stats.totalMentions += matchedRestaurantIds.length;
 
       // Update post with all matched restaurants (many-to-many)
       if (matchedRestaurantIds.length > 0) {
         await prisma.post.update({
           where: { id: post.id },
           data: {
-            restaurants: {
+            restaurantsMentioned: {
               connect: matchedRestaurantIds.map((id) => ({ id })),
             },
           },
         });
         stats.postsLinked++;
-      }
-
-      // Track posts with unmatched mentions
-      if (unmatchedForThisPost.length > 0) {
-        stats.postsWithUnmatched++;
       }
 
       // Progress update
@@ -108,32 +209,37 @@ async function linkCommentsAndPostsToRestaurants() {
       }
     }
 
-    // Process comments with restaurantsMentioned
+    // Process comments - search for restaurant names in body
     const comments = await prisma.comment.findMany({
       select: {
         id: true,
-        restaurantsMentioned: true,
+        body: true,
       },
     });
 
-    console.log(
-      `\nFound ${comments.length} comments with restaurant mentions\n`
-    );
+    console.log(`\nFound ${comments.length} comments to analyze\n`);
 
     for (const comment of comments) {
-      // Skip comments with no mentions
-      if (!comment.restaurantsMentioned || comment.restaurantsMentioned.length === 0) {
-        continue;
-      }
-
       stats.commentsProcessed++;
 
       const matchedRestaurantIds: number[] = [];
 
-      // restaurantsMentioned now contains restaurant IDs
-      for (const restaurantId of comment.restaurantsMentioned) {
-        if (restaurantId) {
-          matchedRestaurantIds.push(restaurantId);
+      // Get comment body text
+      const searchText = comment.body || '';
+      const searchWords = getRestaurantWords(searchText);
+
+      if (searchWords.length === 0) {
+        continue;
+      }
+
+      // Search for restaurant names using word intersection
+      for (const restaurant of validRestaurants) {
+        // Check if all restaurant words appear in the search text
+        const commonWords = intersection(restaurant.words, searchWords);
+
+        // Match only if all restaurant words are found
+        if (commonWords.length === restaurant.words.length) {
+          matchedRestaurantIds.push(restaurant.id);
         }
       }
 
@@ -142,7 +248,7 @@ async function linkCommentsAndPostsToRestaurants() {
         await prisma.comment.update({
           where: { id: comment.id },
           data: {
-            restaurants: {
+            restaurantsMentioned: {
               connect: matchedRestaurantIds.map((id) => ({ id })),
             },
           },

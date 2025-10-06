@@ -87,32 +87,134 @@ function extractMediaFromCommentBody(body: string): MediaFile[] {
   return mediaFiles;
 }
 
-async function fetchComments(subredditName: string = 'FoodLosAngeles') {
-  // Create new session
-  const session = await prisma.scrapingSession.create({
-    data: { subreddit: subredditName },
+type FetchMode = 'new' | 'top' | 'controversial' | 'search';
+
+interface FetchOptions {
+  subredditName?: string;
+  mode?: FetchMode;
+  searchQuery?: string;
+  timeframe?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
+}
+
+async function fetchComments(options: FetchOptions = {}) {
+  const {
+    subredditName = 'FoodLosAngeles',
+    mode = 'new',
+    searchQuery = '',
+    timeframe = 'all',
+  } = options;
+
+  // Only 'new' mode doesn't use timeframe
+  const effectiveTimeframe = mode === 'new' ? null : timeframe;
+
+  // Check if we already have a completed session for this exact query
+  const existingSession = await prisma.scrapingSession.findFirst({
+    where: {
+      subreddit: subredditName,
+      mode,
+      timeframe: effectiveTimeframe,
+      searchQuery: mode === 'search' ? searchQuery : null,
+      completed: true,
+    },
+    orderBy: { createdAt: 'desc' },
   });
 
-  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+  if (existingSession) {
+    const timeframeLabel = effectiveTimeframe ? ` (${effectiveTimeframe})` : '';
+    console.log(`✅ Already scraped ${mode}${timeframeLabel} posts${mode === 'search' ? ` for "${searchQuery}"` : ''}`);
+    console.log(`   Last run: ${existingSession.createdAt.toISOString()}`);
+    console.log(`   Posts: ${existingSession.postsScraped}, Comments: ${existingSession.commentsScraped}`);
+    console.log(`\n   Skipping to avoid duplicate API calls. Delete this session to re-scrape.\n`);
+    return;
+  }
 
-  // Fetch recent posts (up to 2 weeks)
-  const posts: Submission[] = await r
-    .getSubreddit(subredditName)
-    .getNew({ limit: 100 });
+  // Create new session
+  const session = await prisma.scrapingSession.create({
+    data: {
+      subreddit: subredditName,
+      mode,
+      timeframe: effectiveTimeframe,
+      searchQuery: mode === 'search' ? searchQuery : null,
+    },
+  });
 
   let latestPostId: string | null = null;
   let latestPostTimestamp: Date | null = null;
   let postsUpdated = 0;
   let commentsUpdated = 0;
 
-  for (const post of posts) {
-    const postCreatedAt = new Date(post.created_utc * 1000);
+  // Fetch up to 1000 posts using pagination
+  let allPosts: Submission[] = [];
+  let after: string | undefined = undefined;
+  const batchSize = 100;
+  const maxPosts = 1000;
 
-    // Stop if post is older than 2 weeks
-    if (postCreatedAt < twoWeeksAgo) {
-      console.log(`Reached 2-week threshold at ${post.id}`);
+  const modeLabel = mode === 'search' ? `search "${searchQuery}"` : mode;
+  console.log(`Fetching posts (mode: ${modeLabel}, timeframe: ${timeframe})...`);
+
+  while (allPosts.length < maxPosts) {
+    const options: any = { limit: batchSize };
+    if (after) {
+      options.after = after;
+    }
+
+    let posts: Submission[] = [];
+    const subreddit = r.getSubreddit(subredditName);
+
+    try {
+      switch (mode) {
+        case 'new':
+          posts = await subreddit.getNew(options);
+          break;
+        case 'top':
+          posts = await subreddit.getTop({ ...options, time: timeframe });
+          break;
+        case 'controversial':
+          posts = await subreddit.getControversial({ ...options, time: timeframe });
+          break;
+        case 'search':
+          if (!searchQuery) {
+            throw new Error('searchQuery is required for search mode');
+          }
+          posts = await subreddit.search({
+            query: searchQuery,
+            ...options,
+            time: timeframe,
+            sort: 'relevance'
+          });
+          break;
+      }
+    } catch (error) {
+      console.error(`Error fetching posts:`, error);
       break;
     }
+
+    if (posts.length === 0) {
+      console.log('No more posts available');
+      break;
+    }
+
+    allPosts = allPosts.concat(posts);
+    console.log(`Fetched ${posts.length} posts (total: ${allPosts.length})`);
+
+    if (posts.length < batchSize) {
+      break;
+    }
+
+    // @ts-ignore - accessing internal property for pagination
+    after = posts._query.after;
+    if (!after) {
+      break;
+    }
+
+    // Small delay to avoid rate limiting
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  console.log(`\nProcessing ${allPosts.length} posts with comments...\n`);
+
+  for (const post of allPosts) {
+    const postCreatedAt = new Date(post.created_utc * 1000);
 
     // Track latest post
     if (!latestPostTimestamp || postCreatedAt > latestPostTimestamp) {
@@ -233,26 +335,37 @@ async function fetchComments(subredditName: string = 'FoodLosAngeles') {
     }
 
     console.log(
-      `Post ${post.id} (${postCreatedAt.toISOString()}): ${comments.comments.length} comments`
+      `[${postsUpdated}/${allPosts.length}] Post ${post.id} (${postCreatedAt.toISOString()}): ${comments.comments.length} comments`
     );
   }
 
-  // Save session checkpoint
-  if (latestPostId && latestPostTimestamp) {
-    await prisma.scrapingSession.update({
-      where: { id: session.id },
-      data: {
-        lastPostId: latestPostId,
-        lastPostTimestamp: latestPostTimestamp,
-      },
-    });
-  }
+  // Mark session as completed
+  await prisma.scrapingSession.update({
+    where: { id: session.id },
+    data: {
+      lastPostId: latestPostId,
+      lastPostTimestamp: latestPostTimestamp,
+      postsScraped: postsUpdated,
+      commentsScraped: commentsUpdated,
+      completed: true,
+    },
+  });
 
   console.log(
-    `Completed: ${postsUpdated} posts, ${commentsUpdated} comments (last: ${latestPostId})`
+    `\n✅ Completed: ${postsUpdated} posts, ${commentsUpdated} comments (last: ${latestPostId})`
   );
 }
 
-fetchComments()
+// Parse CLI arguments
+const args = process.argv.slice(2);
+const mode = (args[0] || 'new') as FetchMode;
+const searchQuery = args[1] || '';
+const timeframe = (args[2] || 'all') as FetchOptions['timeframe'];
+
+fetchComments({
+  mode,
+  searchQuery: mode === 'search' ? searchQuery : undefined,
+  timeframe,
+})
   .catch(console.error)
   .finally(() => prisma.$disconnect());

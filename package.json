@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "fetch-comments": "ts-node src/fetchComments.ts",
+    "fetch-comments": "tsx src/scripts/fetchComments.ts",
+    "count-posts": "tsx src/scripts/countPosts.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f postgres",
@@ -25,6 +26,7 @@
     "@prisma/client": "^6.16.3",
     "@trpc/server": "^11.0.0",
     "csv-parse": "^6.1.0",
+    "lodash": "^4.17.21",
     "snoowrap": "^1.23.0",
     "zod": "^4.1.11"
   },

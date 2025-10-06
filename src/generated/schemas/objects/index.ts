@@ -3,6 +3,9 @@
  * Auto-generated - do not edit manually
  */
 
+export * from './BoolFieldUpdateOperationsInput.schema';
+export * from './BoolFilter.schema';
+export * from './BoolWithAggregatesFilter.schema';
 export * from './CommentArgs.schema';
 export * from './CommentAvgAggregateInput.schema';
 export * from './CommentAvgOrderByAggregateInput.schema';
@@ -169,6 +172,8 @@ export * from './IntNullableWithAggregatesFilter.schema';
 export * from './IntWithAggregatesFilter.schema';
 export * from './JsonNullableFilter.schema';
 export * from './JsonNullableWithAggregatesFilter.schema';
+export * from './NestedBoolFilter.schema';
+export * from './NestedBoolWithAggregatesFilter.schema';
 export * from './NestedDateTimeFilter.schema';
 export * from './NestedDateTimeNullableFilter.schema';
 export * from './NestedDateTimeNullableWithAggregatesFilter.schema';

@@ -6,8 +6,14 @@ import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './Sort
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
   subreddit: SortOrderSchema.optional(),
+  mode: SortOrderSchema.optional(),
+  timeframe: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  searchQuery: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   lastPostId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   lastPostTimestamp: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  postsScraped: SortOrderSchema.optional(),
+  commentsScraped: SortOrderSchema.optional(),
+  completed: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional()
 }).strict();

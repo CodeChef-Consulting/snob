@@ -99,11 +99,17 @@ model Restaurant {
 model ScrapingSession {
   id                Int       @id @default(autoincrement())
   subreddit         String
+  mode              String    @default("new") // new, top, controversial, search
+  timeframe         String?   // all, year (for top/controversial)
+  searchQuery       String?   // for search mode
   lastPostId        String?
   lastPostTimestamp DateTime?
+  postsScraped      Int       @default(0)
+  commentsScraped   Int       @default(0)
+  completed         Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  @@index([subreddit])
+  @@index([subreddit, mode, timeframe, searchQuery])
   @@index([createdAt])
 }

@@ -18,7 +18,9 @@
       "Bash(psql:*)",
       "Bash(lsof:*)",
       "Bash(pnpm add:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(dotenvx run:*)",
+      "Bash(tsx:*)"
     ],
     "deny": [],
     "ask": []

@@ -5,8 +5,14 @@ import type { Prisma } from '@prisma/client';
 const makeSchema = () => z.object({
   id: z.literal(true).optional(),
   subreddit: z.literal(true).optional(),
+  mode: z.literal(true).optional(),
+  timeframe: z.literal(true).optional(),
+  searchQuery: z.literal(true).optional(),
   lastPostId: z.literal(true).optional(),
   lastPostTimestamp: z.literal(true).optional(),
+  postsScraped: z.literal(true).optional(),
+  commentsScraped: z.literal(true).optional(),
+  completed: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional(),
   _all: z.literal(true).optional()

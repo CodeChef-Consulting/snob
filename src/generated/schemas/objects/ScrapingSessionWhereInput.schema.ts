@@ -4,6 +4,7 @@ import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.sche
 import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
 import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
 import { DateTimeNullableFilterObjectSchema as DateTimeNullableFilterObjectSchema } from './DateTimeNullableFilter.schema';
+import { BoolFilterObjectSchema as BoolFilterObjectSchema } from './BoolFilter.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
 
 const scrapingsessionwhereinputSchema = z.object({
@@ -12,8 +13,14 @@ const scrapingsessionwhereinputSchema = z.object({
   NOT: z.union([z.lazy(() => ScrapingSessionWhereInputObjectSchema), z.lazy(() => ScrapingSessionWhereInputObjectSchema).array()]).optional(),
   id: z.union([z.lazy(() => IntFilterObjectSchema), z.number().int()]).optional(),
   subreddit: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
+  mode: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
+  timeframe: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
+  searchQuery: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   lastPostId: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   lastPostTimestamp: z.union([z.lazy(() => DateTimeNullableFilterObjectSchema), z.coerce.date()]).optional().nullable(),
+  postsScraped: z.union([z.lazy(() => IntFilterObjectSchema), z.number().int()]).optional(),
+  commentsScraped: z.union([z.lazy(() => IntFilterObjectSchema), z.number().int()]).optional(),
+  completed: z.union([z.lazy(() => BoolFilterObjectSchema), z.boolean()]).optional(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional()
 }).strict();
