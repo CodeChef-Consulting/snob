@@ -1,5 +1,5 @@
 import * as z from 'zod';
 
-export const PostScalarFieldEnumSchema = z.enum(['id', 'externalId', 'subreddit', 'author', 'title', 'body', 'score', 'upvoteRatio', 'numComments', 'url', 'createdUtc', 'createdAt', 'updatedAt', 'scrapingSessionId'])
+export const PostScalarFieldEnumSchema = z.enum(['id', 'externalId', 'subreddit', 'author', 'title', 'body', 'score', 'ups', 'downs', 'upvoteRatio', 'numComments', 'gilded', 'permalink', 'createdUtc', 'createdAt', 'updatedAt', 'scrapingSessionId'])
 
 export type PostScalarFieldEnum = z.infer<typeof PostScalarFieldEnumSchema>;

@@ -5,6 +5,8 @@
 
 export * from './BoolFieldUpdateOperationsInput.schema';
 export * from './BoolFilter.schema';
+export * from './BoolNullableFilter.schema';
+export * from './BoolNullableWithAggregatesFilter.schema';
 export * from './BoolWithAggregatesFilter.schema';
 export * from './CommentArgs.schema';
 export * from './CommentAvgAggregateInput.schema';
@@ -188,6 +190,8 @@ export * from './IntWithAggregatesFilter.schema';
 export * from './JsonNullableFilter.schema';
 export * from './JsonNullableWithAggregatesFilter.schema';
 export * from './NestedBoolFilter.schema';
+export * from './NestedBoolNullableFilter.schema';
+export * from './NestedBoolNullableWithAggregatesFilter.schema';
 export * from './NestedBoolWithAggregatesFilter.schema';
 export * from './NestedDateTimeFilter.schema';
 export * from './NestedDateTimeNullableFilter.schema';
@@ -205,6 +209,7 @@ export * from './NestedStringFilter.schema';
 export * from './NestedStringNullableFilter.schema';
 export * from './NestedStringNullableWithAggregatesFilter.schema';
 export * from './NestedStringWithAggregatesFilter.schema';
+export * from './NullableBoolFieldUpdateOperationsInput.schema';
 export * from './NullableDateTimeFieldUpdateOperationsInput.schema';
 export * from './NullableFloatFieldUpdateOperationsInput.schema';
 export * from './NullableIntFieldUpdateOperationsInput.schema';

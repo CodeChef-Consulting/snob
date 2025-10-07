@@ -7,6 +7,9 @@ const makeSchema = () => z.object({
   postId: SortOrderSchema.optional(),
   parentCommentId: SortOrderSchema.optional(),
   score: SortOrderSchema.optional(),
+  ups: SortOrderSchema.optional(),
+  depth: SortOrderSchema.optional(),
+  controversiality: SortOrderSchema.optional(),
   scrapingSessionId: SortOrderSchema.optional()
 }).strict();
 export const CommentAvgOrderByAggregateInputObjectSchema: z.ZodType<Prisma.CommentAvgOrderByAggregateInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentAvgOrderByAggregateInput>;

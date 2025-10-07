@@ -10,6 +10,12 @@ const makeSchema = () => z.object({
   author: z.string().optional().nullable(),
   body: z.string().optional().nullable(),
   score: z.number().int().optional().nullable(),
+  ups: z.number().int().optional().nullable(),
+  depth: z.number().int().optional().nullable(),
+  controversiality: z.number().int().optional().nullable(),
+  isSubmitter: z.boolean().optional().nullable(),
+  scoreHidden: z.boolean().optional().nullable(),
+  permalink: z.string().optional().nullable(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()

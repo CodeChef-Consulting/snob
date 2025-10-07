@@ -31,9 +31,12 @@ model Post {
   title                String?
   body                 String?
   score                Int?
+  ups                  Int?
+  downs                Int?
   upvoteRatio          Float?
   numComments          Int?
-  url                  String?
+  gilded               Int?
+  permalink            String?
   createdUtc           DateTime?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
@@ -58,6 +61,12 @@ model Comment {
   author               String?
   body                 String?
   score                Int?
+  ups                  Int?
+  depth                Int?
+  controversiality     Int?
+  isSubmitter          Boolean?
+  scoreHidden          Boolean?
+  permalink            String?
   createdUtc           DateTime?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt

@@ -1,5 +1,5 @@
 {
-  "name": "reddit-scraper",
+  "name": "snob",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -37,7 +37,6 @@
     "prisma": "^6.16.3",
     "prisma-trpc-generator": "^2.4.0",
     "prisma-zod-generator": "^1.26.0",
-    "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
     "typescript": "^5.9.3"
   }

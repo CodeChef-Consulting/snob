@@ -1,4 +1,4 @@
-# Reddit Scraper
+# Snob
 
 Reddit restaurant data scraper with Prisma and tRPC.
 
@@ -13,7 +13,7 @@ Reddit restaurant data scraper with Prisma and tRPC.
 ### 1. Install Dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Database Setup
@@ -22,13 +22,13 @@ The project uses PostgreSQL running in Docker on port 5434.
 
 ```bash
 # Start PostgreSQL container
-npm run docker:up
+pnpm docker:up
 
 # Initialize database schema
-npm run db:push
+pnpm db:push
 
 # Or do both in one command
-npm run db:setup
+pnpm db:setup
 ```
 
 ### 3. Environment Variables
@@ -36,49 +36,49 @@ npm run db:setup
 Environment variables are encrypted using dotenvx. The `.env` file contains:
 
 - Reddit API credentials (encrypted)
-- Database URL: `postgresql://user:password@localhost:5434/reddit_scraper?schema=public`
+- Database URL: `postgresql://user:password@localhost:5434/snob?schema=public`
 
 ## Available Scripts
 
 ### Docker Commands
 
-- `npm run docker:up` - Start PostgreSQL container
-- `npm run docker:down` - Stop PostgreSQL container
-- `npm run docker:logs` - View PostgreSQL logs
-- `npm run docker:restart` - Restart PostgreSQL container
+- `pnpm docker:up` - Start PostgreSQL container
+- `pnpm docker:down` - Stop PostgreSQL container
+- `pnpm docker:logs` - View PostgreSQL logs
+- `pnpm docker:restart` - Restart PostgreSQL container
 
 ### Database Commands
 
-- `npm run db:setup` - Start Docker and initialize database
-- `npm run db:push` - Push schema changes to database
-- `npm run db:migrate` - Run database migrations
-- `npm run db:generate` - Generate Prisma client and tRPC routers
-- `npm run db:studio` - Open Prisma Studio (database GUI)
+- `pnpm db:setup` - Start Docker and initialize database
+- `pnpm db:push` - Push schema changes to database
+- `pnpm db:migrate` - Run database migrations
+- `pnpm db:generate` - Generate Prisma client and tRPC routers
+- `pnpm db:studio` - Open Prisma Studio (database GUI)
 
 ### Development
 
-- `npm run dev` - Run development server with hot reload
-- `npm run build` - Build TypeScript
-- `npm run fetch-comments` - Fetch comments from Reddit
+- `pnpm dev` - Run development server with hot reload
+- `pnpm build` - Build TypeScript
+- `pnpm fetch-comments` - Fetch comments from Reddit
 
 ## Database Access
 
 Connect to the database directly:
 
 ```bash
-psql "postgresql://user:password@localhost:5434/reddit_scraper"
+psql "postgresql://user:password@localhost:5434/snob"
 ```
 
 Or use Prisma Studio:
 
 ```bash
-npm run db:studio
+pnpm db:studio
 ```
 
 ## Project Structure
 
 ```
-reddit-scraper/
+snob/
 ├── src/
 │   ├── generated/      # Auto-generated Prisma and tRPC files
 │   └── index.ts        # Main application entry
