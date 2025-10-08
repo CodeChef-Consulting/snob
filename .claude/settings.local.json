@@ -26,7 +26,8 @@
       "Bash(pnpm tsx:*)",
       "Bash(pnpm remove:*)",
       "Bash(pnpm db:push:*)",
-      "Bash(killall:*)"
+      "Bash(killall:*)",
+      "Bash(PGPASSWORD=password psql:*)"
     ],
     "deny": [],
     "ask": []

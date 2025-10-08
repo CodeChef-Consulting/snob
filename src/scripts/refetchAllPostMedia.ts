@@ -7,10 +7,14 @@ import { createRedditClient, extractMediaUrls } from '../utils/reddit';
 const prisma = new PrismaClient();
 const r = createRedditClient();
 
-async function refetchAllPostMedia() {
+async function refetchAllPostMedia(minimumPostId?: number) {
   console.log('Fetching all posts from database...');
+  if (minimumPostId) {
+    console.log(`Resuming from post ID: ${minimumPostId}`);
+  }
 
   const posts = await prisma.post.findMany({
+    where: minimumPostId ? { id: { gte: minimumPostId } } : undefined,
     select: { id: true, externalId: true, title: true },
     orderBy: { id: 'asc' },
   });
@@ -21,6 +25,8 @@ async function refetchAllPostMedia() {
   let newMediaCount = 0;
   let updatedMediaCount = 0;
   let errorCount = 0;
+  let lastSuccessfulPostId: number | null = null;
+  let lastSuccessfulExternalId: string | null = null;
 
   for (const dbPost of posts) {
     try {
@@ -37,6 +43,8 @@ async function refetchAllPostMedia() {
       const mediaFiles = extractMediaUrls(submission);
 
       if (mediaFiles.length === 0) {
+        lastSuccessfulPostId = dbPost.id;
+        lastSuccessfulExternalId = dbPost.externalId;
         continue;
       }
 
@@ -58,18 +66,10 @@ async function refetchAllPostMedia() {
       );
 
       const newMediaFiles = [];
-      const existingMediaUpdates = [];
 
       for (const media of mediaFiles) {
         const key = `${dbPost.id}:${media.url}`;
-        if (existingMediaSet.has(key)) {
-          existingMediaUpdates.push({
-            postId: dbPost.id,
-            fileUrl: media.url,
-            fileType: media.type,
-            metadata: media.metadata,
-          });
-        } else {
+        if (!existingMediaSet.has(key)) {
           newMediaFiles.push({
             postId: dbPost.id,
             fileUrl: media.url,
@@ -79,7 +79,7 @@ async function refetchAllPostMedia() {
         }
       }
 
-      // Batch create new media files
+      // Batch create new media files (skip updates since we're only adding missing gallery images)
       if (newMediaFiles.length > 0) {
         await prisma.file.createMany({
           data: newMediaFiles,
@@ -92,33 +92,29 @@ async function refetchAllPostMedia() {
         );
       }
 
-      // Batch update existing media files
-      if (existingMediaUpdates.length > 0) {
-        await Promise.all(
-          existingMediaUpdates.map((media) =>
-            prisma.file.update({
-              where: {
-                postId_fileUrl: {
-                  postId: media.postId,
-                  fileUrl: media.fileUrl,
-                },
-              },
-              data: {
-                fileType: media.fileType,
-                metadata: media.metadata,
-              },
-            })
-          )
-        );
-        updatedMediaCount += existingMediaUpdates.length;
-      }
+      lastSuccessfulPostId = dbPost.id;
+      lastSuccessfulExternalId = dbPost.externalId;
     } catch (error: any) {
+      // Check for rate limiting errors
+      if (error.message?.toLowerCase().includes('ratelimit')) {
+        console.error(
+          `\n🚨 RATE LIMIT ERROR at post ${dbPost.externalId} (ID: ${dbPost.id})`
+        );
+        console.error(
+          `Last successful post: ${lastSuccessfulExternalId} (ID: ${lastSuccessfulPostId})`
+        );
+        console.error(
+          `Resume from post ID: ${lastSuccessfulPostId ? lastSuccessfulPostId + 1 : dbPost.id}`
+        );
+        throw error; // Re-throw to stop execution
+      }
+
       errorCount++;
       console.error(
-        `   ❌ Error processing post ${dbPost.externalId}:`,
+        `   ❌ Error processing post ${dbPost.id} (${dbPost.externalId}):`,
         error.message
       );
-      continue;
+      break;
     }
   }
 
@@ -127,8 +123,16 @@ async function refetchAllPostMedia() {
   console.log(`New media files added: ${newMediaCount}`);
   console.log(`Existing media files updated: ${updatedMediaCount}`);
   console.log(`Errors: ${errorCount}`);
+  console.log(
+    `Last successful post: ${lastSuccessfulExternalId} (ID: ${lastSuccessfulPostId})`
+  );
 }
 
-refetchAllPostMedia()
+// Get minimumPostId from command line argument if provided
+const minimumPostId = process.argv[2]
+  ? parseInt(process.argv[2], 10)
+  : undefined;
+
+refetchAllPostMedia(minimumPostId)
   .catch(console.error)
   .finally(() => prisma.$disconnect());
