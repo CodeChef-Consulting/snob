@@ -23,7 +23,6 @@ async function refetchAllPostMedia(minimumPostId?: number) {
 
   let processed = 0;
   let newMediaCount = 0;
-  let updatedMediaCount = 0;
   let errorCount = 0;
   let lastSuccessfulPostId: number | null = null;
   let lastSuccessfulExternalId: string | null = null;
@@ -96,17 +95,18 @@ async function refetchAllPostMedia(minimumPostId?: number) {
       lastSuccessfulExternalId = dbPost.externalId;
     } catch (error: any) {
       // Check for rate limiting errors
-      if (error.message?.toLowerCase().includes('ratelimit')) {
+      if (
+        error.message?.toLowerCase().includes('ratelimit') ||
+        error.statusCode === 429 ||
+        error.message?.toLowerCase().includes('429')
+      ) {
         console.error(
           `\n🚨 RATE LIMIT ERROR at post ${dbPost.externalId} (ID: ${dbPost.id})`
         );
-        console.error(
-          `Last successful post: ${lastSuccessfulExternalId} (ID: ${lastSuccessfulPostId})`
-        );
-        console.error(
-          `Resume from post ID: ${lastSuccessfulPostId ? lastSuccessfulPostId + 1 : dbPost.id}`
-        );
-        throw error; // Re-throw to stop execution
+        console.error('Waiting 60 seconds before continuing...');
+        await new Promise((resolve) => setTimeout(resolve, 60000));
+        console.log('Resuming...\n');
+        continue; // Skip to next post after waiting
       }
 
       errorCount++;
@@ -121,7 +121,6 @@ async function refetchAllPostMedia(minimumPostId?: number) {
   console.log('\n=== Summary ===');
   console.log(`Total posts processed: ${processed}`);
   console.log(`New media files added: ${newMediaCount}`);
-  console.log(`Existing media files updated: ${updatedMediaCount}`);
   console.log(`Errors: ${errorCount}`);
   console.log(
     `Last successful post: ${lastSuccessfulExternalId} (ID: ${lastSuccessfulPostId})`
