@@ -12,6 +12,35 @@ export interface MediaFile {
 export function extractMediaUrls(post: Submission): MediaFile[] {
   const mediaFiles: MediaFile[] = [];
 
+  // Handle gallery posts (multiple images)
+  if ((post as any).is_gallery && (post as any).media_metadata) {
+    const mediaMetadata = (post as any).media_metadata;
+    Object.entries(mediaMetadata).forEach(([id, data]: [string, any]) => {
+      if (data.status === 'valid' && data.s) {
+        const url = (data.s.u || data.s.gif || data.s.mp4)?.replace(
+          /&amp;/g,
+          '&'
+        );
+        if (url) {
+          const type = data.e === 'AnimatedImage' || data.s.gif ? 'video' : 'image';
+          mediaFiles.push({
+            url,
+            type,
+            metadata: {
+              source: 'gallery',
+              media_id: id,
+              mime_type: data.m,
+              width: data.s.x,
+              height: data.s.y,
+            },
+          });
+        }
+      }
+    });
+    return mediaFiles; // Return early for galleries
+  }
+
+  // Handle single image posts
   if (post.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(post.url)) {
     mediaFiles.push({
       url: post.url,
@@ -20,6 +49,7 @@ export function extractMediaUrls(post: Submission): MediaFile[] {
     });
   }
 
+  // Handle video posts
   if (post.is_video && post.media?.reddit_video?.fallback_url) {
     mediaFiles.push({
       url: post.media.reddit_video.fallback_url,
@@ -32,7 +62,8 @@ export function extractMediaUrls(post: Submission): MediaFile[] {
     });
   }
 
-  if (post.preview?.images) {
+  // Handle preview images (fallback for non-gallery posts)
+  if (post.preview?.images && !mediaFiles.length) {
     post.preview.images.forEach((image) => {
       if (image.source?.url) {
         const url = image.source.url.replace(/&amp;/g, '&');
@@ -87,8 +118,6 @@ export function createRedditClient(): snoowrap {
     username: process.env.REDDIT_USERNAME!,
     password: process.env.REDDIT_PASSWORD!,
   });
-
-  r.config({ requestDelay: 100, continueAfterRatelimitError: false });
 
   return r;
 }

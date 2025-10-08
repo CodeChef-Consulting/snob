@@ -198,27 +198,64 @@ async function fetchComments(options: FetchOptions = {}) {
     });
     postsUpdated++;
 
-    // Update post media
+    // Update post media - batch operations
     const postMediaUrls = extractMediaUrls(post);
-    for (const media of postMediaUrls) {
-      await prisma.file.upsert({
+    if (postMediaUrls.length > 0) {
+      const existingPostMedia = await prisma.file.findMany({
         where: {
-          postId_fileUrl: {
-            postId: dbPost.id,
-            fileUrl: media.url,
-          },
-        },
-        update: {
-          fileType: media.type,
-          metadata: media.metadata,
-        },
-        create: {
           postId: dbPost.id,
-          fileUrl: media.url,
-          fileType: media.type,
-          metadata: media.metadata,
+          fileUrl: { in: postMediaUrls.map((m) => m.url) },
         },
+        select: { fileUrl: true },
       });
+
+      const existingPostMediaUrls = new Set(
+        existingPostMedia.map((m) => m.fileUrl)
+      );
+
+      const newPostMedia = postMediaUrls
+        .filter((m) => !existingPostMediaUrls.has(m.url))
+        .map((m) => ({
+          postId: dbPost.id,
+          fileUrl: m.url,
+          fileType: m.type,
+          metadata: m.metadata,
+        }));
+
+      const existingPostMediaUpdates = postMediaUrls
+        .filter((m) => existingPostMediaUrls.has(m.url))
+        .map((m) => ({
+          postId: dbPost.id,
+          fileUrl: m.url,
+          fileType: m.type,
+          metadata: m.metadata,
+        }));
+
+      if (newPostMedia.length > 0) {
+        await prisma.file.createMany({
+          data: newPostMedia,
+          skipDuplicates: true,
+        });
+      }
+
+      if (existingPostMediaUpdates.length > 0) {
+        await Promise.all(
+          existingPostMediaUpdates.map((media) =>
+            prisma.file.update({
+              where: {
+                postId_fileUrl: {
+                  postId: media.postId,
+                  fileUrl: media.fileUrl,
+                },
+              },
+              data: {
+                fileType: media.fileType,
+                metadata: media.metadata,
+              },
+            })
+          )
+        );
+      }
     }
 
     // Fetch top-level comments first (1 API call per post)
@@ -334,8 +371,14 @@ async function fetchComments(options: FetchOptions = {}) {
       allDbComments.map((c) => [c.externalId, c.id])
     );
 
-    // Process media files in parallel
-    const mediaUpserts = [];
+    // Process media files - collect all media first
+    const allMediaFiles: Array<{
+      commentId: number;
+      fileUrl: string;
+      fileType: string;
+      metadata: any;
+    }> = [];
+
     for (const comment of allComments) {
       const dbCommentId = commentIdMap.get(comment.id as string);
       if (!dbCommentId) continue;
@@ -344,31 +387,72 @@ async function fetchComments(options: FetchOptions = {}) {
         comment.body as string
       );
       for (const media of commentMediaUrls) {
-        mediaUpserts.push(
-          prisma.file.upsert({
-            where: {
-              commentId_fileUrl: {
-                commentId: dbCommentId,
-                fileUrl: media.url,
-              },
-            },
-            update: {
-              fileType: media.type,
-              metadata: media.metadata,
-            },
-            create: {
-              commentId: dbCommentId,
-              fileUrl: media.url,
-              fileType: media.type,
-              metadata: media.metadata,
-            },
-          })
-        );
+        allMediaFiles.push({
+          commentId: dbCommentId,
+          fileUrl: media.url,
+          fileType: media.type,
+          metadata: media.metadata,
+        });
       }
     }
 
-    if (mediaUpserts.length > 0) {
-      await Promise.all(mediaUpserts);
+    // Check which media files already exist
+    if (allMediaFiles.length > 0) {
+      const mediaFileKeys = allMediaFiles.map((m) => ({
+        commentId: m.commentId,
+        fileUrl: m.fileUrl,
+      }));
+
+      const existingMediaFiles = await prisma.file.findMany({
+        where: {
+          OR: mediaFileKeys,
+        },
+        select: { commentId: true, fileUrl: true },
+      });
+
+      const existingMediaSet = new Set(
+        existingMediaFiles.map((m) => `${m.commentId}:${m.fileUrl}`)
+      );
+
+      const newMediaFiles = [];
+      const existingMediaUpdates = [];
+
+      for (const media of allMediaFiles) {
+        const key = `${media.commentId}:${media.fileUrl}`;
+        if (existingMediaSet.has(key)) {
+          existingMediaUpdates.push(media);
+        } else {
+          newMediaFiles.push(media);
+        }
+      }
+
+      // Batch create new media files
+      if (newMediaFiles.length > 0) {
+        await prisma.file.createMany({
+          data: newMediaFiles,
+          skipDuplicates: true,
+        });
+      }
+
+      // Batch update existing media files
+      if (existingMediaUpdates.length > 0) {
+        await Promise.all(
+          existingMediaUpdates.map((media) =>
+            prisma.file.update({
+              where: {
+                commentId_fileUrl: {
+                  commentId: media.commentId,
+                  fileUrl: media.fileUrl,
+                },
+              },
+              data: {
+                fileType: media.fileType,
+                metadata: media.metadata,
+              },
+            })
+          )
+        );
+      }
     }
 
     console.log(

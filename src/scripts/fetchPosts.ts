@@ -67,9 +67,10 @@ async function fetchPosts(options: FetchOptions = {}) {
 
   let latestPostId: string | null = null;
   let latestPostTimestamp: Date | null = null;
-  let postsUpdated = 0;
+  let totalPostsProcessed = 0;
+  let totalNewPosts = 0;
+  let totalUpdatedPosts = 0;
 
-  let allPosts: Submission[] = [];
   let after: string | undefined = undefined;
   const batchSize = 100;
   const maxPosts = 1000;
@@ -79,7 +80,7 @@ async function fetchPosts(options: FetchOptions = {}) {
     `Fetching posts (mode: ${modeLabel}, timeframe: ${timeframe})...`
   );
 
-  while (allPosts.length < maxPosts) {
+  while (totalPostsProcessed < maxPosts) {
     const options: any = { limit: batchSize };
     if (after) {
       options.after = after;
@@ -124,8 +125,189 @@ async function fetchPosts(options: FetchOptions = {}) {
       break;
     }
 
-    allPosts = allPosts.concat(posts);
-    console.log(`Fetched ${posts.length} posts (total: ${allPosts.length})`);
+    console.log(`\nFetched ${posts.length} posts, processing batch...`);
+
+    // Process this batch immediately
+    const externalIds = posts.map((p) => p.id as string);
+    const existingPosts = await prisma.post.findMany({
+      where: { externalId: { in: externalIds } },
+      select: { externalId: true, id: true },
+    });
+
+    const existingExternalIds = new Set(
+      existingPosts.map((p) => p.externalId)
+    );
+
+    // Separate posts into new and existing
+    const newPosts = [];
+    const existingPostUpdates = [];
+
+    for (const post of posts) {
+      const postCreatedAt = new Date((post.created_utc as number) * 1000);
+
+      if (!latestPostTimestamp || postCreatedAt > latestPostTimestamp) {
+        latestPostId = post.id as string;
+        latestPostTimestamp = postCreatedAt;
+      }
+
+      const postData = {
+        externalId: post.id as string,
+        title: post.title as string,
+        body: (post.selftext as string) || null,
+        score: post.score as number,
+        ups: post.ups as number,
+        downs: post.downs as number,
+        upvoteRatio: post.upvote_ratio as number,
+        numComments: post.num_comments as number,
+        gilded: post.gilded as number,
+        permalink: post.permalink as string,
+        author: post.author.name as string,
+        subreddit: subredditName,
+        createdUtc: postCreatedAt,
+        scrapingSessionId: session.id,
+        commentsFullyScraped: false,
+      };
+
+      if (existingExternalIds.has(post.id as string)) {
+        existingPostUpdates.push(postData);
+      } else {
+        newPosts.push(postData);
+      }
+    }
+
+    // Batch create new posts
+    if (newPosts.length > 0) {
+      await prisma.post.createMany({
+        data: newPosts,
+        skipDuplicates: true,
+      });
+      totalNewPosts += newPosts.length;
+    }
+
+    // Batch update existing posts
+    if (existingPostUpdates.length > 0) {
+      for (const postData of existingPostUpdates) {
+        await prisma.post.update({
+          where: { externalId: postData.externalId },
+          data: {
+            title: postData.title,
+            body: postData.body,
+            score: postData.score,
+            ups: postData.ups,
+            downs: postData.downs,
+            upvoteRatio: postData.upvoteRatio,
+            numComments: postData.numComments,
+            gilded: postData.gilded,
+            permalink: postData.permalink,
+            author: postData.author,
+            subreddit: postData.subreddit,
+            createdUtc: postData.createdUtc,
+            scrapingSessionId: postData.scrapingSessionId,
+            commentsFullyScraped: postData.commentsFullyScraped,
+            updatedAt: new Date(),
+          },
+        });
+      }
+      totalUpdatedPosts += existingPostUpdates.length;
+    }
+
+    // Fetch post IDs for this batch
+    const batchDbPosts = await prisma.post.findMany({
+      where: { externalId: { in: externalIds } },
+      select: { id: true, externalId: true },
+    });
+
+    const postIdMap = new Map(
+      batchDbPosts.map((p) => [p.externalId, p.id])
+    );
+
+    // Process media files for this batch
+    // First, collect all media file data
+    const allMediaFiles: Array<{
+      postId: number;
+      fileUrl: string;
+      fileType: string;
+      metadata: any;
+    }> = [];
+
+    for (const post of posts) {
+      const dbPostId = postIdMap.get(post.id as string);
+      if (!dbPostId) continue;
+
+      const postMediaUrls = extractMediaUrls(post);
+      for (const media of postMediaUrls) {
+        allMediaFiles.push({
+          postId: dbPostId,
+          fileUrl: media.url,
+          fileType: media.type,
+          metadata: media.metadata,
+        });
+      }
+    }
+
+    // Check which media files already exist
+    if (allMediaFiles.length > 0) {
+      const mediaFileKeys = allMediaFiles.map((m) => ({
+        postId: m.postId,
+        fileUrl: m.fileUrl,
+      }));
+
+      const existingMediaFiles = await prisma.file.findMany({
+        where: {
+          OR: mediaFileKeys,
+        },
+        select: { postId: true, fileUrl: true },
+      });
+
+      const existingMediaSet = new Set(
+        existingMediaFiles.map((m) => `${m.postId}:${m.fileUrl}`)
+      );
+
+      const newMediaFiles = [];
+      const existingMediaUpdates = [];
+
+      for (const media of allMediaFiles) {
+        const key = `${media.postId}:${media.fileUrl}`;
+        if (existingMediaSet.has(key)) {
+          existingMediaUpdates.push(media);
+        } else {
+          newMediaFiles.push(media);
+        }
+      }
+
+      // Batch create new media files
+      if (newMediaFiles.length > 0) {
+        await prisma.file.createMany({
+          data: newMediaFiles,
+          skipDuplicates: true,
+        });
+      }
+
+      // Batch update existing media files
+      if (existingMediaUpdates.length > 0) {
+        await Promise.all(
+          existingMediaUpdates.map((media) =>
+            prisma.file.update({
+              where: {
+                postId_fileUrl: {
+                  postId: media.postId,
+                  fileUrl: media.fileUrl,
+                },
+              },
+              data: {
+                fileType: media.fileType,
+                metadata: media.metadata,
+              },
+            })
+          )
+        );
+      }
+    }
+
+    totalPostsProcessed += posts.length;
+    console.log(
+      `✅ Batch complete: ${newPosts.length} new, ${existingPostUpdates.length} updated, ${allMediaFiles.length} media files (total: ${totalPostsProcessed})`
+    );
 
     if (posts.length < batchSize) {
       break;
@@ -141,142 +323,8 @@ async function fetchPosts(options: FetchOptions = {}) {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
-  console.log(`\nProcessing ${allPosts.length} posts (metadata only)...\n`);
-
-  // Check which posts already exist in DB (1 query for all posts)
-  const externalIds = allPosts.map((p) => p.id as string);
-  const existingPosts = await prisma.post.findMany({
-    where: { externalId: { in: externalIds } },
-    select: { externalId: true, id: true },
-  });
-
-  const existingExternalIds = new Set(existingPosts.map((p) => p.externalId));
-  const existingPostMap = new Map(
-    existingPosts.map((p) => [p.externalId, p.id])
-  );
-
-  // Separate posts into new and existing
-  const newPosts = [];
-  const existingPostUpdates = [];
-
-  for (const post of allPosts) {
-    const postCreatedAt = new Date((post.created_utc as number) * 1000);
-
-    if (!latestPostTimestamp || postCreatedAt > latestPostTimestamp) {
-      latestPostId = post.id as string;
-      latestPostTimestamp = postCreatedAt;
-    }
-
-    const postData = {
-      externalId: post.id as string,
-      title: post.title as string,
-      body: (post.selftext as string) || null,
-      score: post.score as number,
-      ups: post.ups as number,
-      downs: post.downs as number,
-      upvoteRatio: post.upvote_ratio as number,
-      numComments: post.num_comments as number,
-      gilded: post.gilded as number,
-      permalink: post.permalink as string,
-      author: post.author.name as string,
-      subreddit: subredditName,
-      createdUtc: postCreatedAt,
-      scrapingSessionId: session.id,
-      commentsFullyScraped: false,
-    };
-
-    if (existingExternalIds.has(post.id as string)) {
-      existingPostUpdates.push(postData);
-    } else {
-      newPosts.push(postData);
-    }
-  }
-
-  // Batch create new posts (single query!)
-  if (newPosts.length > 0) {
-    console.log(`Creating ${newPosts.length} new posts...`);
-    await prisma.post.createMany({
-      data: newPosts,
-      skipDuplicates: true,
-    });
-  }
-
-  // Batch update existing posts (much faster than individual upserts)
-  if (existingPostUpdates.length > 0) {
-    console.log(`Updating ${existingPostUpdates.length} existing posts...`);
-    // Update in batches since updateMany doesn't support per-record data
-    for (const postData of existingPostUpdates) {
-      await prisma.post.update({
-        where: { externalId: postData.externalId },
-        data: {
-          title: postData.title,
-          body: postData.body,
-          score: postData.score,
-          ups: postData.ups,
-          downs: postData.downs,
-          upvoteRatio: postData.upvoteRatio,
-          numComments: postData.numComments,
-          gilded: postData.gilded,
-          permalink: postData.permalink,
-          author: postData.author,
-          subreddit: postData.subreddit,
-          createdUtc: postData.createdUtc,
-          scrapingSessionId: postData.scrapingSessionId,
-          commentsFullyScraped: postData.commentsFullyScraped,
-          updatedAt: new Date(),
-        },
-      });
-    }
-  }
-
-  postsUpdated = allPosts.length;
-
-  // Fetch all post IDs for media file association
-  const allDbPosts = await prisma.post.findMany({
-    where: { externalId: { in: externalIds } },
-    select: { id: true, externalId: true },
-  });
-
-  const postIdMap = new Map(allDbPosts.map((p) => [p.externalId, p.id]));
-
-  // Process media files in batches
-  console.log(`Processing media files...`);
-  const mediaUpserts = [];
-  for (const post of allPosts) {
-    const dbPostId = postIdMap.get(post.id as string);
-    if (!dbPostId) continue;
-
-    const postMediaUrls = extractMediaUrls(post);
-    for (const media of postMediaUrls) {
-      mediaUpserts.push(
-        prisma.file.upsert({
-          where: {
-            postId_fileUrl: {
-              postId: dbPostId,
-              fileUrl: media.url,
-            },
-          },
-          update: {
-            fileType: media.type,
-            metadata: media.metadata,
-          },
-          create: {
-            postId: dbPostId,
-            fileUrl: media.url,
-            fileType: media.type,
-            metadata: media.metadata,
-          },
-        })
-      );
-    }
-  }
-
-  if (mediaUpserts.length > 0) {
-    await Promise.all(mediaUpserts);
-  }
-
   console.log(
-    `✅ Processed ${postsUpdated} posts (${newPosts.length} new, ${existingPostUpdates.length} updated)`
+    `\n✅ Processed ${totalPostsProcessed} posts (${totalNewPosts} new, ${totalUpdatedPosts} updated)`
   );
 
   await prisma.scrapingSession.update({
@@ -284,13 +332,13 @@ async function fetchPosts(options: FetchOptions = {}) {
     data: {
       lastPostId: latestPostId,
       lastPostTimestamp: latestPostTimestamp,
-      postsScraped: postsUpdated,
+      postsScraped: totalPostsProcessed,
       completed: true,
     },
   });
 
   console.log(
-    `\n✅ Completed: ${postsUpdated} posts scraped (comments marked for later scraping)`
+    `\n✅ Completed: ${totalPostsProcessed} posts scraped (comments marked for later scraping)`
   );
 }
 
