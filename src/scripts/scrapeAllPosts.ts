@@ -3,6 +3,8 @@ dotenv.config();
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 const execAsync = promisify(exec);
 
@@ -12,6 +14,14 @@ interface ScrapeTask {
   searchQuery?: string;
   description: string;
 }
+
+// Read search queries from file
+const searchQueriesPath = join(process.cwd(), 'search-queries.txt');
+const searchQueriesContent = readFileSync(searchQueriesPath, 'utf-8');
+const searchQueries = searchQueriesContent
+  .split('\n')
+  .map((line) => line.trim())
+  .filter((line) => line.length > 0);
 
 const tasks: ScrapeTask[] = [
   // New posts (no timeframe)
@@ -33,7 +43,15 @@ const tasks: ScrapeTask[] = [
     description: 'Controversial posts (past year)',
   },
 
-  // Search queries (from runSearchQueries)
+  // Search queries (from search-queries.txt)
+  ...searchQueries.map((query) => ({
+    mode: 'search' as const,
+    searchQuery: query,
+    timeframe: 'all' as const,
+    description: `Search: "${query}"`,
+  })),
+
+  // Additional sentiment-based search queries
   {
     mode: 'search',
     searchQuery: 'best',
@@ -42,21 +60,15 @@ const tasks: ScrapeTask[] = [
   },
   {
     mode: 'search',
-    searchQuery: 'worst',
+    searchQuery: 'underrated',
     timeframe: 'all',
-    description: 'Search: "worst"',
+    description: 'Search: "underrated"',
   },
   {
     mode: 'search',
     searchQuery: 'overrated',
     timeframe: 'all',
     description: 'Search: "overrated"',
-  },
-  {
-    mode: 'search',
-    searchQuery: 'underrated',
-    timeframe: 'all',
-    description: 'Search: "underrated"',
   },
   {
     mode: 'search',
@@ -72,12 +84,6 @@ const tasks: ScrapeTask[] = [
   },
   {
     mode: 'search',
-    searchQuery: 'avoid',
-    timeframe: 'all',
-    description: 'Search: "avoid"',
-  },
-  {
-    mode: 'search',
     searchQuery: 'disappointing',
     timeframe: 'all',
     description: 'Search: "disappointing"',
@@ -87,12 +93,6 @@ const tasks: ScrapeTask[] = [
     searchQuery: 'amazing',
     timeframe: 'all',
     description: 'Search: "amazing"',
-  },
-  {
-    mode: 'search',
-    searchQuery: 'terrible',
-    timeframe: 'all',
-    description: 'Search: "terrible"',
   },
 ];
 
@@ -104,7 +104,7 @@ async function runAllScrapes() {
 
   for (const task of tasks) {
     const taskNum = completed + failed + 1;
-    console.log(`\n[${ taskNum}/${tasks.length}] ${task.description}`);
+    console.log(`\n[${taskNum}/${tasks.length}] ${task.description}`);
     console.log('─'.repeat(60));
 
     try {
