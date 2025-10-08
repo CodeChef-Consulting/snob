@@ -10,7 +10,6 @@ export const ScrapingSessionInputSchema = z.object({
     lastPostId: z.string().optional().nullable(),
     lastPostTimestamp: z.date().optional().nullable(),
     postsScraped: z.number().int(),
-    commentsScraped: z.number().int(),
     completed: z.boolean(),
     createdAt: z.date(),
     updatedAt: z.date(),

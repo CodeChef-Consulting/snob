@@ -11,3 +11,5 @@ import { CommentUncheckedUpdateInputObjectSchema as CommentUncheckedUpdateInputO
 export const CommentUpsertOneSchema: z.ZodType<Prisma.CommentUpsertArgs> = z.object({ select: CommentSelectObjectSchema.optional(), include: CommentIncludeObjectSchema.optional(), where: CommentWhereUniqueInputObjectSchema, create: z.union([ CommentCreateInputObjectSchema, CommentUncheckedCreateInputObjectSchema ]), update: z.union([ CommentUpdateInputObjectSchema, CommentUncheckedUpdateInputObjectSchema ]) }).strict() as unknown as z.ZodType<Prisma.CommentUpsertArgs>;
 
 export const CommentUpsertOneZodSchema = z.object({ select: CommentSelectObjectSchema.optional(), include: CommentIncludeObjectSchema.optional(), where: CommentWhereUniqueInputObjectSchema, create: z.union([ CommentCreateInputObjectSchema, CommentUncheckedCreateInputObjectSchema ]), update: z.union([ CommentUpdateInputObjectSchema, CommentUncheckedUpdateInputObjectSchema ]) }).strict();
+// Alias for prisma-trpc-generator compatibility
+export const CommentUpsertSchema = CommentUpsertOneSchema;

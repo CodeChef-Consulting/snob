@@ -9,7 +9,6 @@ export const ScrapingSessionFindManyResultSchema = z.object({
   lastPostId: z.string().optional(),
   lastPostTimestamp: z.date().optional(),
   postsScraped: z.number().int(),
-  commentsScraped: z.number().int(),
   completed: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),

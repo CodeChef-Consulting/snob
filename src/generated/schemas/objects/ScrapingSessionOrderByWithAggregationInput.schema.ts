@@ -17,7 +17,6 @@ const makeSchema = () => z.object({
   lastPostId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   lastPostTimestamp: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   postsScraped: SortOrderSchema.optional(),
-  commentsScraped: SortOrderSchema.optional(),
   completed: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),

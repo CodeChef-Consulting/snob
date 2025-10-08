@@ -18,6 +18,8 @@ export const PostFindFirstResultSchema = z.nullable(z.object({
   updatedAt: z.date(),
   scrapingSession: z.unknown().optional(),
   scrapingSessionId: z.number().int().optional(),
+  commentsLastScrapedAt: z.date().optional(),
+  commentsFullyScraped: z.boolean(),
   comments: z.array(z.unknown()),
   files: z.array(z.unknown()),
   restaurantsMentioned: z.array(z.unknown())

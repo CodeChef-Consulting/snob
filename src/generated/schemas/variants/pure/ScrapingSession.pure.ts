@@ -10,7 +10,6 @@ export const ScrapingSessionModelSchema = z.object({
     lastPostId: z.string().nullable(),
     lastPostTimestamp: z.date().nullable(),
     postsScraped: z.number().int(),
-    commentsScraped: z.number().int(),
     completed: z.boolean(),
     createdAt: z.date(),
     updatedAt: z.date(),

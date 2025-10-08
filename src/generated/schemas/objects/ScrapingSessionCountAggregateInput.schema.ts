@@ -11,7 +11,6 @@ const makeSchema = () => z.object({
   lastPostId: z.literal(true).optional(),
   lastPostTimestamp: z.literal(true).optional(),
   postsScraped: z.literal(true).optional(),
-  commentsScraped: z.literal(true).optional(),
   completed: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional(),

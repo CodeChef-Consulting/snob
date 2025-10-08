@@ -18,7 +18,9 @@ const makeSchema = () => z.object({
   permalink: z.string().optional().nullable(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional()
+  updatedAt: z.coerce.date().optional(),
+  commentsLastScrapedAt: z.coerce.date().optional().nullable(),
+  commentsFullyScraped: z.boolean().optional()
 }).strict();
 export const PostCreateManyScrapingSessionInputObjectSchema: z.ZodType<Prisma.PostCreateManyScrapingSessionInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCreateManyScrapingSessionInput>;
 export const PostCreateManyScrapingSessionInputObjectZodSchema = makeSchema();

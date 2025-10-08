@@ -18,6 +18,8 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     updatedAt: z.number(),
     scrapingSession: z.number(),
     scrapingSessionId: z.number(),
+    commentsLastScrapedAt: z.number(),
+    commentsFullyScraped: z.number(),
     comments: z.number(),
     files: z.number(),
     restaurantsMentioned: z.number()
@@ -59,7 +61,8 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable(),
-    scrapingSessionId: z.number().int().nullable()
+    scrapingSessionId: z.number().int().nullable(),
+    commentsLastScrapedAt: z.date().nullable()
   }).nullable().optional(),
   _max: z.object({
     id: z.number().int().nullable(),
@@ -78,5 +81,6 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable(),
-    scrapingSessionId: z.number().int().nullable()
+    scrapingSessionId: z.number().int().nullable(),
+    commentsLastScrapedAt: z.date().nullable()
   }).nullable().optional()});

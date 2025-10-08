@@ -43,11 +43,16 @@ model Post {
   scrapingSession      ScrapingSession?  @relation(fields: [scrapingSessionId], references: [id])
   scrapingSessionId    Int?
 
+  // Comment scraping tracking
+  commentsLastScrapedAt DateTime?        // When comments were last fetched
+  commentsFullyScraped  Boolean          @default(false) // All nested comments fetched
+
   comments             Comment[]
   files                File[]
   restaurantsMentioned Restaurant[]
 
   @@index([scrapingSessionId])
+  @@index([commentsFullyScraped]) // For querying posts that need comment scraping
 }
 
 model Comment {
@@ -119,11 +124,13 @@ model ScrapingSession {
   mode              String    @default("new") // new, top, controversial, search
   timeframe         String?   // all, year (for top/controversial/search)
   searchQuery       String?   // for search mode
-  lastPostId        String?
-  lastPostTimestamp DateTime?
+
+  // Post scraping tracking only
+  lastPostId        String?   // Last post processed (for resumability)
+  lastPostTimestamp DateTime? // Timestamp of last post processed
   postsScraped      Int       @default(0)
-  commentsScraped   Int       @default(0)
-  completed         Boolean   @default(false)
+  completed         Boolean   @default(false) // All posts scraped
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -132,4 +139,5 @@ model ScrapingSession {
 
   @@index([subreddit, mode, timeframe, searchQuery])
   @@index([createdAt])
+  @@index([completed])
 }

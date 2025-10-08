@@ -1,7 +1,7 @@
 import dotenv from '@dotenvx/dotenvx';
 dotenv.config();
 
-import snoowrap, { Comment, Submission } from 'snoowrap';
+import snoowrap, { Submission } from 'snoowrap';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -14,7 +14,6 @@ const r = new snoowrap({
   password: process.env.REDDIT_PASSWORD!,
 });
 
-// Configure minimal request delay with manual expansion control
 r.config({ requestDelay: 100, continueAfterRatelimitError: false });
 
 interface MediaFile {
@@ -26,7 +25,6 @@ interface MediaFile {
 function extractMediaUrls(post: Submission): MediaFile[] {
   const mediaFiles: MediaFile[] = [];
 
-  // Handle direct image URLs
   if (post.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(post.url)) {
     mediaFiles.push({
       url: post.url,
@@ -35,7 +33,6 @@ function extractMediaUrls(post: Submission): MediaFile[] {
     });
   }
 
-  // Handle Reddit video
   if (post.is_video && post.media?.reddit_video?.fallback_url) {
     mediaFiles.push({
       url: post.media.reddit_video.fallback_url,
@@ -48,7 +45,6 @@ function extractMediaUrls(post: Submission): MediaFile[] {
     });
   }
 
-  // Handle preview images
   if (post.preview?.images) {
     post.preview.images.forEach((image) => {
       if (image.source?.url) {
@@ -71,25 +67,6 @@ function extractMediaUrls(post: Submission): MediaFile[] {
   return mediaFiles;
 }
 
-function extractMediaFromCommentBody(body: string): MediaFile[] {
-  const mediaFiles: MediaFile[] = [];
-  const urlRegex = /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|mp4|webm))/gi;
-  const matches = body.match(urlRegex);
-
-  if (matches) {
-    matches.forEach((url) => {
-      const type = /\.(mp4|webm)$/i.test(url) ? 'video' : 'image';
-      mediaFiles.push({
-        url,
-        type,
-        metadata: { source: 'comment_body' },
-      });
-    });
-  }
-
-  return mediaFiles;
-}
-
 type FetchMode = 'new' | 'top' | 'controversial' | 'search';
 
 interface FetchOptions {
@@ -99,7 +76,7 @@ interface FetchOptions {
   timeframe?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
 }
 
-async function fetchComments(options: FetchOptions = {}) {
+async function fetchPosts(options: FetchOptions = {}) {
   const {
     subredditName = 'FoodLosAngeles',
     mode = 'new',
@@ -107,10 +84,10 @@ async function fetchComments(options: FetchOptions = {}) {
     timeframe = 'all',
   } = options;
 
-  // Only 'new' mode doesn't use timeframe
   const effectiveTimeframe = mode === 'new' ? null : timeframe;
 
-  // Check if we already have a completed session for this exact query
+  // Only check for sessions created after 2025-01-07 (schema change date)
+  const schemaChangeDate = new Date('2025-01-07T00:00:00Z');
   const existingSession = await prisma.scrapingSession.findFirst({
     where: {
       subreddit: subredditName,
@@ -118,6 +95,9 @@ async function fetchComments(options: FetchOptions = {}) {
       timeframe: effectiveTimeframe,
       searchQuery: mode === 'search' ? searchQuery : null,
       completed: true,
+      createdAt: {
+        gte: schemaChangeDate,
+      },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -135,7 +115,6 @@ async function fetchComments(options: FetchOptions = {}) {
     return;
   }
 
-  // Create new session
   const session = await prisma.scrapingSession.create({
     data: {
       subreddit: subredditName,
@@ -148,9 +127,7 @@ async function fetchComments(options: FetchOptions = {}) {
   let latestPostId: string | null = null;
   let latestPostTimestamp: Date | null = null;
   let postsUpdated = 0;
-  let commentsUpdated = 0;
 
-  // Fetch up to 1000 posts using pagination
   let allPosts: Submission[] = [];
   let after: string | undefined = undefined;
   const batchSize = 100;
@@ -213,28 +190,25 @@ async function fetchComments(options: FetchOptions = {}) {
       break;
     }
 
-    // @ts-ignore - accessing internal property for pagination
+    // @ts-ignore
     after = posts._query.after;
     if (!after) {
       break;
     }
 
-    // Small delay to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  console.log(`\nProcessing ${allPosts.length} posts with comments...\n`);
+  console.log(`\nProcessing ${allPosts.length} posts (metadata only)...\n`);
 
   for (const post of allPosts) {
     const postCreatedAt = new Date((post.created_utc as number) * 1000);
 
-    // Track latest post
     if (!latestPostTimestamp || postCreatedAt > latestPostTimestamp) {
       latestPostId = post.id as string;
       latestPostTimestamp = postCreatedAt;
     }
 
-    // Upsert post with current data and mark comments as scraped
     const dbPost = await prisma.post.upsert({
       where: { externalId: post.id as string },
       update: {
@@ -251,8 +225,7 @@ async function fetchComments(options: FetchOptions = {}) {
         subreddit: subredditName,
         createdUtc: postCreatedAt,
         scrapingSessionId: session.id,
-        commentsLastScrapedAt: new Date(),
-        commentsFullyScraped: true,
+        commentsFullyScraped: false,
         updatedAt: new Date(),
       },
       create: {
@@ -270,13 +243,11 @@ async function fetchComments(options: FetchOptions = {}) {
         subreddit: subredditName,
         createdUtc: postCreatedAt,
         scrapingSessionId: session.id,
-        commentsLastScrapedAt: new Date(),
-        commentsFullyScraped: true,
+        commentsFullyScraped: false,
       },
     });
     postsUpdated++;
 
-    // Update post media
     const postMediaUrls = extractMediaUrls(post);
     for (const media of postMediaUrls) {
       await prisma.file.upsert({
@@ -299,118 +270,24 @@ async function fetchComments(options: FetchOptions = {}) {
       });
     }
 
-    // Fetch top-level comments first (1 API call per post)
-    const topLevelComments = await post.comments.fetchAll();
-
-    // Recursively process all comments and their nested replies
-    async function processComment(comment: Comment) {
-      let parentDbCommentId: number | null = null;
-      const parentId = comment.parent_id as string;
-      if (parentId.startsWith('t1_')) {
-        const parentExternalId = parentId.replace('t1_', '');
-        const parentComment = await prisma.comment.findUnique({
-          where: { externalId: parentExternalId },
-          select: { id: true },
-        });
-        parentDbCommentId = parentComment?.id || null;
-      }
-
-      const dbComment = await prisma.comment.upsert({
-        where: { externalId: comment.id as string },
-        update: {
-          body: (comment.body as string) || '',
-          score: comment.score as number,
-          ups: comment.ups as number,
-          depth: comment.depth as number,
-          controversiality: comment.controversiality as number,
-          isSubmitter: comment.is_submitter as boolean,
-          scoreHidden: comment.score_hidden as boolean,
-          permalink: comment.permalink as string,
-          author: comment.author.name as string,
-          createdUtc: new Date((comment.created_utc as number) * 1000),
-          scrapingSessionId: session.id,
-          updatedAt: new Date(),
-        },
-        create: {
-          externalId: comment.id as string,
-          postId: dbPost.id,
-          parentCommentId: parentDbCommentId,
-          body: (comment.body as string) || '',
-          score: comment.score as number,
-          ups: comment.ups as number,
-          depth: comment.depth as number,
-          controversiality: comment.controversiality as number,
-          isSubmitter: comment.is_submitter as boolean,
-          scoreHidden: comment.score_hidden as boolean,
-          permalink: comment.permalink as string,
-          author: comment.author.name as string,
-          createdUtc: new Date((comment.created_utc as number) * 1000),
-          scrapingSessionId: session.id,
-        },
-      });
-      commentsUpdated++;
-
-      const commentMediaUrls = extractMediaFromCommentBody(
-        comment.body as string
-      );
-      for (const media of commentMediaUrls) {
-        await prisma.file.upsert({
-          where: {
-            commentId_fileUrl: {
-              commentId: dbComment.id,
-              fileUrl: media.url,
-            },
-          },
-          update: {
-            fileType: media.type,
-            metadata: media.metadata,
-          },
-          create: {
-            commentId: dbComment.id,
-            fileUrl: media.url,
-            fileType: media.type,
-            metadata: media.metadata,
-          },
-        });
-      }
-
-      // Fetch and process nested replies if they exist
-      if (comment.replies && comment.replies.length > 0) {
-        // Expand replies for this comment thread
-        const expandedReplies = await comment.replies.fetchAll();
-        for (const reply of expandedReplies as Comment[]) {
-          await processComment(reply);
-        }
-      }
-    }
-
-    // Process all top-level comments and their nested replies
-    for (const comment of topLevelComments as Comment[]) {
-      await processComment(comment);
-    }
-
     console.log(
-      `[${postsUpdated}/${allPosts.length}] Post ${post.id} (${postCreatedAt.toISOString()}): ${commentsUpdated} total comments processed`
+      `[${postsUpdated}/${allPosts.length}] Post ${post.id} (${postCreatedAt.toISOString()}): ${post.num_comments} comments to scrape later`
     );
 
-    // Update session progress after each post completes
     await prisma.scrapingSession.update({
       where: { id: session.id },
       data: {
         lastPostId: post.id as string,
         lastPostTimestamp: postCreatedAt,
         postsScraped: postsUpdated,
-        commentsScraped: commentsUpdated,
       },
     });
 
-    // Add delay to avoid rate limiting (2 seconds between posts)
     if (postsUpdated < allPosts.length) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
-  // Mark session as completed (all posts scraped)
   await prisma.scrapingSession.update({
     where: { id: session.id },
     data: {
@@ -422,17 +299,16 @@ async function fetchComments(options: FetchOptions = {}) {
   });
 
   console.log(
-    `\n✅ Completed: ${postsUpdated} posts, ${commentsUpdated} comments (last: ${latestPostId})`
+    `\n✅ Completed: ${postsUpdated} posts scraped (comments marked for later scraping)`
   );
 }
 
-// Parse CLI arguments
 const args = process.argv.slice(2);
 const mode = (args[0] || 'new') as FetchMode;
 const searchQuery = args[1] || '';
 const timeframe = (args[2] || 'all') as FetchOptions['timeframe'];
 
-fetchComments({
+fetchPosts({
   mode,
   searchQuery: mode === 'search' ? searchQuery : undefined,
   timeframe,

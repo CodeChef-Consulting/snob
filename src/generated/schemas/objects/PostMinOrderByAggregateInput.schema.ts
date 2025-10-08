@@ -19,7 +19,9 @@ const makeSchema = () => z.object({
   createdUtc: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),
-  scrapingSessionId: SortOrderSchema.optional()
+  scrapingSessionId: SortOrderSchema.optional(),
+  commentsLastScrapedAt: SortOrderSchema.optional(),
+  commentsFullyScraped: SortOrderSchema.optional()
 }).strict();
 export const PostMinOrderByAggregateInputObjectSchema: z.ZodType<Prisma.PostMinOrderByAggregateInput> = makeSchema() as unknown as z.ZodType<Prisma.PostMinOrderByAggregateInput>;
 export const PostMinOrderByAggregateInputObjectZodSchema = makeSchema();

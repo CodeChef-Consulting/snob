@@ -25,6 +25,8 @@ const makeSchema = () => z.object({
   updatedAt: z.boolean().optional(),
   scrapingSession: z.union([z.boolean(), z.lazy(() => ScrapingSessionArgsObjectSchema)]).optional(),
   scrapingSessionId: z.boolean().optional(),
+  commentsLastScrapedAt: z.boolean().optional(),
+  commentsFullyScraped: z.boolean().optional(),
   comments: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   files: z.union([z.boolean(), z.lazy(() => FileFindManySchema)]).optional(),
   restaurantsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantFindManySchema)]).optional(),

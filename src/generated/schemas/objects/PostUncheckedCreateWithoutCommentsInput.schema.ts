@@ -21,6 +21,8 @@ const makeSchema = () => z.object({
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   scrapingSessionId: z.number().int().optional().nullable(),
+  commentsLastScrapedAt: z.coerce.date().optional().nullable(),
+  commentsFullyScraped: z.boolean().optional(),
   files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema).optional()
 }).strict();

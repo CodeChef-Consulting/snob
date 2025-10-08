@@ -20,6 +20,8 @@ const makeSchema = () => z.object({
   permalink: z.string().optional().nullable(),
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
+  commentsLastScrapedAt: z.coerce.date().optional().nullable(),
+  commentsFullyScraped: z.boolean().optional(),
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema).optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema),
   files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema),

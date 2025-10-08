@@ -25,7 +25,8 @@
       "Bash(git push:*)",
       "Bash(pnpm tsx:*)",
       "Bash(pnpm remove:*)",
-      "Bash(pnpm db:push:*)"
+      "Bash(pnpm db:push:*)",
+      "Bash(killall:*)"
     ],
     "deny": [],
     "ask": []

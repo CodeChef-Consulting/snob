@@ -8,7 +8,6 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
   lastPostId: z.string(),
   lastPostTimestamp: z.date(),
   postsScraped: z.number().int(),
-  commentsScraped: z.number().int(),
   completed: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -21,7 +20,6 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
     lastPostId: z.number(),
     lastPostTimestamp: z.number(),
     postsScraped: z.number(),
-    commentsScraped: z.number(),
     completed: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
@@ -30,13 +28,11 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),
-    postsScraped: z.number().nullable(),
-    commentsScraped: z.number().nullable()
+    postsScraped: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
-    postsScraped: z.number().nullable(),
-    commentsScraped: z.number().nullable()
+    postsScraped: z.number().nullable()
   }).nullable().optional(),
   _min: z.object({
     id: z.number().int().nullable(),
@@ -47,7 +43,6 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
     lastPostId: z.string().nullable(),
     lastPostTimestamp: z.date().nullable(),
     postsScraped: z.number().int().nullable(),
-    commentsScraped: z.number().int().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
   }).nullable().optional(),
@@ -60,7 +55,6 @@ export const ScrapingSessionGroupByResultSchema = z.array(z.object({
     lastPostId: z.string().nullable(),
     lastPostTimestamp: z.date().nullable(),
     postsScraped: z.number().int().nullable(),
-    commentsScraped: z.number().int().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
   }).nullable().optional()

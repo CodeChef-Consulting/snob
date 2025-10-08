@@ -20,6 +20,8 @@ const makeSchema = () => z.object({
   createdUtc: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  commentsLastScrapedAt: z.coerce.date().optional().nullable(),
+  commentsFullyScraped: z.boolean().optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema).optional(),
   files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema).optional()

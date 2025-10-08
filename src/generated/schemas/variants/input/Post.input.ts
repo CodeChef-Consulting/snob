@@ -20,6 +20,8 @@ export const PostInputSchema = z.object({
     updatedAt: z.date(),
     scrapingSession: z.unknown().optional().nullable(),
     scrapingSessionId: z.number().int().optional().nullable(),
+    commentsLastScrapedAt: z.date().optional().nullable(),
+    commentsFullyScraped: z.boolean(),
     comments: z.array(z.unknown()),
     files: z.array(z.unknown()),
     restaurantsMentioned: z.array(z.unknown())

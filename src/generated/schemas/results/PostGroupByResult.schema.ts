@@ -17,6 +17,8 @@ export const PostGroupByResultSchema = z.array(z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   scrapingSessionId: z.number().int(),
+  commentsLastScrapedAt: z.date(),
+  commentsFullyScraped: z.boolean(),
   _count: z.object({
     id: z.number(),
     externalId: z.number(),
@@ -36,6 +38,8 @@ export const PostGroupByResultSchema = z.array(z.object({
     updatedAt: z.number(),
     scrapingSession: z.number(),
     scrapingSessionId: z.number(),
+    commentsLastScrapedAt: z.number(),
+    commentsFullyScraped: z.number(),
     comments: z.number(),
     files: z.number(),
     restaurantsMentioned: z.number()
@@ -77,7 +81,8 @@ export const PostGroupByResultSchema = z.array(z.object({
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable(),
-    scrapingSessionId: z.number().int().nullable()
+    scrapingSessionId: z.number().int().nullable(),
+    commentsLastScrapedAt: z.date().nullable()
   }).nullable().optional(),
   _max: z.object({
     id: z.number().int().nullable(),
@@ -96,6 +101,7 @@ export const PostGroupByResultSchema = z.array(z.object({
     createdUtc: z.date().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable(),
-    scrapingSessionId: z.number().int().nullable()
+    scrapingSessionId: z.number().int().nullable(),
+    commentsLastScrapedAt: z.date().nullable()
   }).nullable().optional()
 }));

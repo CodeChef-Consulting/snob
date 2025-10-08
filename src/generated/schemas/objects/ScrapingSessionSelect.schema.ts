@@ -13,7 +13,6 @@ const makeSchema = () => z.object({
   lastPostId: z.boolean().optional(),
   lastPostTimestamp: z.boolean().optional(),
   postsScraped: z.boolean().optional(),
-  commentsScraped: z.boolean().optional(),
   completed: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
