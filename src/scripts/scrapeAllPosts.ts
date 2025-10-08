@@ -130,18 +130,19 @@ async function runAllScrapes() {
 
       completed++;
       console.log(`✅ Completed ${task.description}`);
+
+      // Only delay if we actually scraped (not skipped)
+      const wasSkipped = stdout?.includes('Already scraped') || stdout?.includes('Skipping');
+      if (taskNum < tasks.length && !wasSkipped) {
+        console.log('\nWaiting 5 seconds before next task...');
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     } catch (error: any) {
       failed++;
       console.error(`❌ Failed ${task.description}`);
       console.error(`Error: ${error.message}`);
       if (error.stdout) console.log(error.stdout);
       if (error.stderr) console.error(error.stderr);
-    }
-
-    // Add delay between tasks to avoid rate limiting
-    if (taskNum < tasks.length) {
-      console.log('\nWaiting 5 seconds before next task...');
-      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 

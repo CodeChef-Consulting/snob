@@ -1,45 +1,15 @@
 import dotenv from '@dotenvx/dotenvx';
 dotenv.config();
 
-import snoowrap, { Comment, Submission } from 'snoowrap';
+import { Comment } from 'snoowrap';
 import { PrismaClient } from '@prisma/client';
+import {
+  createRedditClient,
+  extractMediaFromCommentBody,
+} from '../utils/reddit';
 
 const prisma = new PrismaClient();
-
-const r = new snoowrap({
-  userAgent: process.env.REDDIT_USER_AGENT!,
-  clientId: process.env.REDDIT_CLIENT_ID!,
-  clientSecret: process.env.REDDIT_CLIENT_SECRET!,
-  username: process.env.REDDIT_USERNAME!,
-  password: process.env.REDDIT_PASSWORD!,
-});
-
-r.config({ requestDelay: 100, continueAfterRatelimitError: false });
-
-interface MediaFile {
-  url: string;
-  type: string;
-  metadata?: any;
-}
-
-function extractMediaFromCommentBody(body: string): MediaFile[] {
-  const mediaFiles: MediaFile[] = [];
-  const urlRegex = /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|mp4|webm))/gi;
-  const matches = body.match(urlRegex);
-
-  if (matches) {
-    matches.forEach((url) => {
-      const type = /\.(mp4|webm)$/i.test(url) ? 'video' : 'image';
-      mediaFiles.push({
-        url,
-        type,
-        metadata: { source: 'comment_body' },
-      });
-    });
-  }
-
-  return mediaFiles;
-}
+const r = createRedditClient();
 
 interface FetchOptions {
   subredditName?: string;

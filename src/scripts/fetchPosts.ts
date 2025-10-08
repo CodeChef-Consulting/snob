@@ -1,71 +1,12 @@
 import dotenv from '@dotenvx/dotenvx';
 dotenv.config();
 
-import snoowrap, { Submission } from 'snoowrap';
+import { Submission } from 'snoowrap';
 import { PrismaClient } from '@prisma/client';
+import { createRedditClient, extractMediaUrls } from '../utils/reddit';
 
 const prisma = new PrismaClient();
-
-const r = new snoowrap({
-  userAgent: process.env.REDDIT_USER_AGENT!,
-  clientId: process.env.REDDIT_CLIENT_ID!,
-  clientSecret: process.env.REDDIT_CLIENT_SECRET!,
-  username: process.env.REDDIT_USERNAME!,
-  password: process.env.REDDIT_PASSWORD!,
-});
-
-r.config({ requestDelay: 100, continueAfterRatelimitError: false });
-
-interface MediaFile {
-  url: string;
-  type: string;
-  metadata?: any;
-}
-
-function extractMediaUrls(post: Submission): MediaFile[] {
-  const mediaFiles: MediaFile[] = [];
-
-  if (post.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(post.url)) {
-    mediaFiles.push({
-      url: post.url,
-      type: 'image',
-      metadata: { source: 'post_url' },
-    });
-  }
-
-  if (post.is_video && post.media?.reddit_video?.fallback_url) {
-    mediaFiles.push({
-      url: post.media.reddit_video.fallback_url,
-      type: 'video',
-      metadata: {
-        source: 'reddit_video',
-        duration: post.media.reddit_video.duration,
-        is_gif: post.media.reddit_video.is_gif,
-      },
-    });
-  }
-
-  if (post.preview?.images) {
-    post.preview.images.forEach((image) => {
-      if (image.source?.url) {
-        const url = image.source.url.replace(/&amp;/g, '&');
-        if (!mediaFiles.some((f) => f.url === url)) {
-          mediaFiles.push({
-            url,
-            type: 'image',
-            metadata: {
-              source: 'preview',
-              width: image.source.width,
-              height: image.source.height,
-            },
-          });
-        }
-      }
-    });
-  }
-
-  return mediaFiles;
-}
+const r = createRedditClient();
 
 type FetchMode = 'new' | 'top' | 'controversial' | 'search';
 
@@ -196,10 +137,27 @@ async function fetchPosts(options: FetchOptions = {}) {
       break;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Reduced delay between API batches
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   console.log(`\nProcessing ${allPosts.length} posts (metadata only)...\n`);
+
+  // Check which posts already exist in DB (1 query for all posts)
+  const externalIds = allPosts.map((p) => p.id as string);
+  const existingPosts = await prisma.post.findMany({
+    where: { externalId: { in: externalIds } },
+    select: { externalId: true, id: true },
+  });
+
+  const existingExternalIds = new Set(existingPosts.map((p) => p.externalId));
+  const existingPostMap = new Map(
+    existingPosts.map((p) => [p.externalId, p.id])
+  );
+
+  // Separate posts into new and existing
+  const newPosts = [];
+  const existingPostUpdates = [];
 
   for (const post of allPosts) {
     const postCreatedAt = new Date((post.created_utc as number) * 1000);
@@ -209,84 +167,117 @@ async function fetchPosts(options: FetchOptions = {}) {
       latestPostTimestamp = postCreatedAt;
     }
 
-    const dbPost = await prisma.post.upsert({
-      where: { externalId: post.id as string },
-      update: {
-        title: post.title as string,
-        body: (post.selftext as string) || null,
-        score: post.score as number,
-        ups: post.ups as number,
-        downs: post.downs as number,
-        upvoteRatio: post.upvote_ratio as number,
-        numComments: post.num_comments as number,
-        gilded: post.gilded as number,
-        permalink: post.permalink as string,
-        author: post.author.name as string,
-        subreddit: subredditName,
-        createdUtc: postCreatedAt,
-        scrapingSessionId: session.id,
-        commentsFullyScraped: false,
-        updatedAt: new Date(),
-      },
-      create: {
-        externalId: post.id as string,
-        title: post.title as string,
-        body: (post.selftext as string) || null,
-        score: post.score as number,
-        ups: post.ups as number,
-        downs: post.downs as number,
-        upvoteRatio: post.upvote_ratio as number,
-        numComments: post.num_comments as number,
-        gilded: post.gilded as number,
-        permalink: post.permalink as string,
-        author: post.author.name as string,
-        subreddit: subredditName,
-        createdUtc: postCreatedAt,
-        scrapingSessionId: session.id,
-        commentsFullyScraped: false,
-      },
-    });
-    postsUpdated++;
+    const postData = {
+      externalId: post.id as string,
+      title: post.title as string,
+      body: (post.selftext as string) || null,
+      score: post.score as number,
+      ups: post.ups as number,
+      downs: post.downs as number,
+      upvoteRatio: post.upvote_ratio as number,
+      numComments: post.num_comments as number,
+      gilded: post.gilded as number,
+      permalink: post.permalink as string,
+      author: post.author.name as string,
+      subreddit: subredditName,
+      createdUtc: postCreatedAt,
+      scrapingSessionId: session.id,
+      commentsFullyScraped: false,
+    };
 
-    const postMediaUrls = extractMediaUrls(post);
-    for (const media of postMediaUrls) {
-      await prisma.file.upsert({
-        where: {
-          postId_fileUrl: {
-            postId: dbPost.id,
-            fileUrl: media.url,
-          },
-        },
-        update: {
-          fileType: media.type,
-          metadata: media.metadata,
-        },
-        create: {
-          postId: dbPost.id,
-          fileUrl: media.url,
-          fileType: media.type,
-          metadata: media.metadata,
+    if (existingExternalIds.has(post.id as string)) {
+      existingPostUpdates.push(postData);
+    } else {
+      newPosts.push(postData);
+    }
+  }
+
+  // Batch create new posts (single query!)
+  if (newPosts.length > 0) {
+    console.log(`Creating ${newPosts.length} new posts...`);
+    await prisma.post.createMany({
+      data: newPosts,
+      skipDuplicates: true,
+    });
+  }
+
+  // Batch update existing posts (much faster than individual upserts)
+  if (existingPostUpdates.length > 0) {
+    console.log(`Updating ${existingPostUpdates.length} existing posts...`);
+    // Update in batches since updateMany doesn't support per-record data
+    for (const postData of existingPostUpdates) {
+      await prisma.post.update({
+        where: { externalId: postData.externalId },
+        data: {
+          title: postData.title,
+          body: postData.body,
+          score: postData.score,
+          ups: postData.ups,
+          downs: postData.downs,
+          upvoteRatio: postData.upvoteRatio,
+          numComments: postData.numComments,
+          gilded: postData.gilded,
+          permalink: postData.permalink,
+          author: postData.author,
+          subreddit: postData.subreddit,
+          createdUtc: postData.createdUtc,
+          scrapingSessionId: postData.scrapingSessionId,
+          commentsFullyScraped: postData.commentsFullyScraped,
+          updatedAt: new Date(),
         },
       });
     }
+  }
 
-    console.log(
-      `[${postsUpdated}/${allPosts.length}] Post ${post.id} (${postCreatedAt.toISOString()}): ${post.num_comments} comments to scrape later`
-    );
+  postsUpdated = allPosts.length;
 
-    await prisma.scrapingSession.update({
-      where: { id: session.id },
-      data: {
-        lastPostId: post.id as string,
-        lastPostTimestamp: postCreatedAt,
-        postsScraped: postsUpdated,
-      },
-    });
+  // Fetch all post IDs for media file association
+  const allDbPosts = await prisma.post.findMany({
+    where: { externalId: { in: externalIds } },
+    select: { id: true, externalId: true },
+  });
 
-    if (postsUpdated < allPosts.length) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+  const postIdMap = new Map(allDbPosts.map((p) => [p.externalId, p.id]));
+
+  // Process media files in batches
+  console.log(`Processing media files...`);
+  const mediaUpserts = [];
+  for (const post of allPosts) {
+    const dbPostId = postIdMap.get(post.id as string);
+    if (!dbPostId) continue;
+
+    const postMediaUrls = extractMediaUrls(post);
+    for (const media of postMediaUrls) {
+      mediaUpserts.push(
+        prisma.file.upsert({
+          where: {
+            postId_fileUrl: {
+              postId: dbPostId,
+              fileUrl: media.url,
+            },
+          },
+          update: {
+            fileType: media.type,
+            metadata: media.metadata,
+          },
+          create: {
+            postId: dbPostId,
+            fileUrl: media.url,
+            fileType: media.type,
+            metadata: media.metadata,
+          },
+        })
+      );
     }
   }
+
+  if (mediaUpserts.length > 0) {
+    await Promise.all(mediaUpserts);
+  }
+
+  console.log(
+    `✅ Processed ${postsUpdated} posts (${newPosts.length} new, ${existingPostUpdates.length} updated)`
+  );
 
   await prisma.scrapingSession.update({
     where: { id: session.id },
