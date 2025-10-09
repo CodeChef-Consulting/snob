@@ -12,7 +12,7 @@ import {
 const prisma = new PrismaClient();
 
 // Toggle which tests to run
-const TEST_COMMENTS = [164];
+const TEST_COMMENTS = [106152];
 const TEST_POSTS = [];
 
 async function testSentiments() {
