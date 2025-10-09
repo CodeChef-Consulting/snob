@@ -19,6 +19,7 @@ interface FetchOptions {
   mode?: FetchMode;
   searchQuery?: string;
   timeframe?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
+  createOnly?: boolean;
 }
 
 async function fetchComments(options: FetchOptions = {}) {
@@ -27,6 +28,7 @@ async function fetchComments(options: FetchOptions = {}) {
     mode = 'new',
     searchQuery = '',
     timeframe = 'all',
+    createOnly = false,
   } = options;
 
   // Only 'new' mode doesn't use timeframe
@@ -44,7 +46,7 @@ async function fetchComments(options: FetchOptions = {}) {
     orderBy: { createdAt: 'desc' },
   });
 
-  if (existingSession) {
+  if (existingSession && existingSession.mode !== 'new') {
     const timeframeLabel = effectiveTimeframe ? ` (${effectiveTimeframe})` : '';
     console.log(
       `✅ Already scraped ${mode}${timeframeLabel} posts${mode === 'search' ? ` for "${searchQuery}"` : ''}`
@@ -76,11 +78,12 @@ async function fetchComments(options: FetchOptions = {}) {
   let allPosts: Submission[] = [];
   let after: string | undefined = undefined;
   const batchSize = 100;
-  const maxPosts = 1000;
+  const maxPosts = mode === 'new' ? 100 : 1000;
 
   const modeLabel = mode === 'search' ? `search "${searchQuery}"` : mode;
+  const createOnlyLabel = createOnly ? ' [CREATE ONLY - skipping updates]' : '';
   console.log(
-    `Fetching posts (mode: ${modeLabel}, timeframe: ${timeframe})...`
+    `Fetching posts (mode: ${modeLabel}, timeframe: ${timeframe})${createOnlyLabel}...`
   );
 
   while (allPosts.length < maxPosts) {
@@ -147,6 +150,20 @@ async function fetchComments(options: FetchOptions = {}) {
 
   console.log(`\nProcessing ${allPosts.length} posts with comments...\n`);
 
+  // If createOnly mode, fetch all existing post IDs upfront for fast lookup
+  let existingPostIds = new Set<string>();
+  if (createOnly) {
+    const postExternalIds = allPosts.map((p) => p.id as string);
+    const existingPosts = await prisma.post.findMany({
+      where: { externalId: { in: postExternalIds } },
+      select: { externalId: true },
+    });
+    existingPostIds = new Set(existingPosts.map((p) => p.externalId));
+    console.log(
+      `Found ${existingPostIds.size} existing posts (will skip in createOnly mode)\n`
+    );
+  }
+
   for (const post of allPosts) {
     const postCreatedAt = new Date((post.created_utc as number) * 1000);
 
@@ -154,6 +171,14 @@ async function fetchComments(options: FetchOptions = {}) {
     if (!latestPostTimestamp || postCreatedAt > latestPostTimestamp) {
       latestPostId = post.id as string;
       latestPostTimestamp = postCreatedAt;
+    }
+
+    // If createOnly mode, skip posts that already exist
+    if (createOnly && existingPostIds.has(post.id as string)) {
+      console.log(
+        `[${postsUpdated + 1}/${allPosts.length}] Post ${post.id} already exists, skipping (createOnly mode)`
+      );
+      continue;
     }
 
     // Upsert post with current data and mark comments as scraped
@@ -284,7 +309,9 @@ async function fetchComments(options: FetchOptions = {}) {
       select: { externalId: true, id: true },
     });
 
-    const existingExternalIds = new Set(existingComments.map((c) => c.externalId));
+    const existingExternalIds = new Set(
+      existingComments.map((c) => c.externalId)
+    );
 
     // Separate new vs existing comments
     const newComments = [];
@@ -456,7 +483,7 @@ async function fetchComments(options: FetchOptions = {}) {
     }
 
     console.log(
-      `[${postsUpdated}/${allPosts.length}] Post ${post.id} (${postCreatedAt.toISOString()}): ${commentsUpdated} total comments processed`
+      `[${postsUpdated}/${allPosts.length}] Post ${post.id} (${postCreatedAt.toISOString()}): ${allComments.length} comments processed`
     );
 
     // Update session progress after each post completes
@@ -466,7 +493,6 @@ async function fetchComments(options: FetchOptions = {}) {
         lastPostId: post.id as string,
         lastPostTimestamp: postCreatedAt,
         postsScraped: postsUpdated,
-        commentsScraped: commentsUpdated,
       },
     });
 
@@ -497,11 +523,13 @@ const args = process.argv.slice(2);
 const mode = (args[0] || 'new') as FetchMode;
 const searchQuery = args[1] || '';
 const timeframe = (args[2] || 'all') as FetchOptions['timeframe'];
+const createOnly = args[3] === 'true';
 
 fetchComments({
   mode,
   searchQuery: mode === 'search' ? searchQuery : undefined,
   timeframe,
+  createOnly,
 })
   .catch(console.error)
   .finally(() => prisma.$disconnect());

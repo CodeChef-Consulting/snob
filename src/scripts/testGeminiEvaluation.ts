@@ -12,7 +12,7 @@ import {
 const prisma = new PrismaClient();
 
 // Test configuration - supports both id and externalId
-const TEST_COMMENTS: Array<number | string> = ['mdk84uw'];
+const TEST_COMMENTS: Array<number | string> = ['niif15h'];
 const TEST_POSTS: Array<{ id: number | string; shouldTraversePost?: boolean }> =
   [];
 
@@ -124,7 +124,7 @@ async function testEvaluations() {
 
         const topComments = await prisma.comment.findMany({
           where: { postId: post.id },
-          include: { parentComment: true },
+          include: { parentComment: true, post: true },
           orderBy: { ups: 'desc' },
           take: 5,
         });
