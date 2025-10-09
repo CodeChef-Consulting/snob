@@ -27,7 +27,10 @@
       "Bash(pnpm remove:*)",
       "Bash(pnpm db:push:*)",
       "Bash(killall:*)",
-      "Bash(PGPASSWORD=password psql:*)"
+      "Bash(PGPASSWORD=password psql:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm uninstall:*)",
+      "Bash(pnpm exec:*)"
     ],
     "deny": [],
     "ask": []
