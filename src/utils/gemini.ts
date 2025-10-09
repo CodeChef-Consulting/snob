@@ -17,17 +17,13 @@ function getGenAI(): GoogleGenAI {
 }
 
 export interface CommentSentimentInput {
-  post_title: string;
-  post_text: string;
-  post_upvotes: number;
   comment_text: string;
-  comment_upvotes: number;
-  parent_text?: string;
+  post_title: string;
 }
 
 export interface PostSentimentInput {
+  post_title: string;
   post_text: string;
-  post_upvotes: number;
 }
 
 export interface SentimentResult {
@@ -71,38 +67,25 @@ function parseSentimentResponse(responseText: string): SentimentResult {
  * Convert a Post from the database to PostSentimentInput
  */
 export function postToSentimentInput(post: Post): PostSentimentInput {
-  const post_text = [post.title, post.body].filter(Boolean).join('\n\n');
-
   return {
-    post_text,
-    post_upvotes: post.ups || 0,
+    post_title: post.title || '',
+    post_text: post.body || '',
   };
 }
 
 /**
  * Convert a Comment from the database to CommentSentimentInput
- * Requires the associated post and optional parent comment
  */
-export async function commentToSentimentInput(
-  comment: Comment,
-  post: Post,
-  parentComment?: Comment | null
-): Promise<CommentSentimentInput> {
-  const post_text = [post.title, post.body].filter(Boolean).join('\n\n');
-
+export function commentToSentimentInput(
+  comment: Comment
+): CommentSentimentInput {
   return {
-    post_title: post.title || '',
-    post_text,
-    post_upvotes: post.ups || 0,
     comment_text: comment.body || '',
-    comment_upvotes: comment.ups || 0,
-    parent_text: parentComment?.body || undefined,
   };
 }
 
 /**
- * Fetch and convert a Comment with its context from the database
- * This is a convenience method that handles all the lookups
+ * Fetch and convert a Comment from the database
  */
 export async function fetchCommentForSentiment(
   prisma: PrismaClient,
@@ -110,17 +93,13 @@ export async function fetchCommentForSentiment(
 ): Promise<CommentSentimentInput> {
   const comment = await prisma.comment.findUnique({
     where: { id: commentId },
-    include: {
-      post: true,
-      parentComment: true,
-    },
   });
 
   if (!comment) {
     throw new Error(`Comment ${commentId} not found`);
   }
 
-  return commentToSentimentInput(comment, comment.post, comment.parentComment);
+  return commentToSentimentInput(comment);
 }
 
 /**
@@ -166,64 +145,51 @@ export async function evaluateComment(
  * Helper to create comment prompt
  */
 function createCommentPrompt(input: CommentSentimentInput): string {
-  return `Read the following Reddit comment (and relevant context) and output your evaluation.
+  return `You are a foodie browsing Reddit to find the best places to eat. Read the following Reddit comment on a food related post and output your sentiment evaluation.
 
-Primary Comment Info to Evaluate:
 Comment text: ${input.comment_text}
-Comment upvotes: ${input.comment_upvotes}
 
-Secondary Comment Info for Context:
-Parent comment text (if any): ${input.parent_text || 'None'}
-Post title: ${input.post_title}
-Post text: ${input.post_text}
-Post upvotes: ${input.post_upvotes}
+Post title (use mainly for context): ${input.post_title}
 
 Output exactly one field:
 
-1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned.
+1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned?
    -1 = definitely avoid, 0 = neutral, 1 = definitely want to visit.
-   A post saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
+   Focus ONLY on an impression of **taste and quality of the food**. Ignore ambiance, service, hype, or other experiences.
+   A comment saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
    If sentiment is unclear or purely factual, score 0.
 
 **Important:**
 - Base your evaluation only on the text given.
-- Upvotes indicate engagement and reliability, so the sentiment (whether positive or negative) should be stronger; 5+ upvotes is notable, 10+ is substantial.
+- Assume that even if there isn't a restaurant mentioned in context, the comment is still about food.
 - If the text seems irrelevant to restaurant opinions, set rawAiScore to 0.
 - Round numeric values to two decimal places.
-- Output exactly in this format:
-  rawAiScore
-  Example:
-  0.45`;
+- Output exactly in this format (example): 0.45`;
 }
 
 /**
  * Helper to create post prompt
  */
 function createPostPrompt(input: PostSentimentInput): string {
-  return `Read the following Reddit post and output your evaluation.
+  return `You are a foodie browsing Reddit to find the best places to eat. Read the following food related post and output your sentiment evaluation.
 
+Post title: ${input.post_title}
 Post text: ${input.post_text}
-Post upvotes: ${input.post_upvotes}
 
 Output exactly one field:
 
-1) rawAiScore (-1 to 1): How positively this post makes you want to visit the restaurant(s) mentioned.
-   -1 = definitely avoid
-   0 = neutral (no real opinion or unclear sentiment)
-   1 = definitely want to try
-   Posts that describe a restaurant as overhyped or just okay should lean negative (around -0.1 to -0.4).
-   If sentiment is unclear or factual, score 0.
+1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned?
+   -1 = definitely avoid, 0 = neutral, 1 = definitely want to visit.
+   Focus ONLY on an impression of **taste and quality of the food**. Ignore ambiance, service, hype, or other experiences.
+   A comment saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
+   If sentiment is unclear or purely factual, score 0.
 
 **Important:**
 - Base your evaluation only on the text given.
-- If multiple restaurants are mentioned, assume mixed or less decisive sentiment (bias toward 0).
-- Upvotes indicate engagement and reliability, so the sentiment (whether positive or negative) should be stronger; 5+ upvotes is notable, 10+ is substantial.
-- If the text is irrelevant to restaurant opinions, set rawAiScore to 0.
+- Assume that even if there isn't a restaurant mentioned in context, the comment is still about food.
+- If the text seems irrelevant to restaurant opinions, set rawAiScore to 0.
 - Round numeric values to two decimal places.
-- Output exactly in this format:
-  rawAiScore
-  Example:
-  0.45`;
+- Output exactly in this format (example): 0.45`;
 }
 
 /**
