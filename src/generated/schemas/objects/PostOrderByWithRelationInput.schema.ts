@@ -5,7 +5,8 @@ import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './Sort
 import { ScrapingSessionOrderByWithRelationInputObjectSchema as ScrapingSessionOrderByWithRelationInputObjectSchema } from './ScrapingSessionOrderByWithRelationInput.schema';
 import { CommentOrderByRelationAggregateInputObjectSchema as CommentOrderByRelationAggregateInputObjectSchema } from './CommentOrderByRelationAggregateInput.schema';
 import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema';
-import { RestaurantOrderByRelationAggregateInputObjectSchema as RestaurantOrderByRelationAggregateInputObjectSchema } from './RestaurantOrderByRelationAggregateInput.schema'
+import { RestaurantOrderByRelationAggregateInputObjectSchema as RestaurantOrderByRelationAggregateInputObjectSchema } from './RestaurantOrderByRelationAggregateInput.schema';
+import { RestaurantExtractionOrderByWithRelationInputObjectSchema as RestaurantExtractionOrderByWithRelationInputObjectSchema } from './RestaurantExtractionOrderByWithRelationInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
@@ -30,7 +31,8 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionOrderByWithRelationInputObjectSchema).optional(),
   comments: z.lazy(() => CommentOrderByRelationAggregateInputObjectSchema).optional(),
   files: z.lazy(() => FileOrderByRelationAggregateInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantOrderByRelationAggregateInputObjectSchema).optional()
+  restaurantsMentioned: z.lazy(() => RestaurantOrderByRelationAggregateInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionOrderByWithRelationInputObjectSchema).optional()
 }).strict();
 export const PostOrderByWithRelationInputObjectSchema: z.ZodType<Prisma.PostOrderByWithRelationInput> = makeSchema() as unknown as z.ZodType<Prisma.PostOrderByWithRelationInput>;
 export const PostOrderByWithRelationInputObjectZodSchema = makeSchema();

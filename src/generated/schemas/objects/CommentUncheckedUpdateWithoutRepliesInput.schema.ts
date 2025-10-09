@@ -8,7 +8,8 @@ import { NullableBoolFieldUpdateOperationsInputObjectSchema as NullableBoolField
 import { NullableDateTimeFieldUpdateOperationsInputObjectSchema as NullableDateTimeFieldUpdateOperationsInputObjectSchema } from './NullableDateTimeFieldUpdateOperationsInput.schema';
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
 import { FileUncheckedUpdateManyWithoutCommentNestedInputObjectSchema as FileUncheckedUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUncheckedUpdateManyWithoutCommentNestedInput.schema';
-import { RestaurantUncheckedUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUncheckedUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUncheckedUpdateManyWithoutCommentsNestedInput.schema'
+import { RestaurantUncheckedUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUncheckedUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUncheckedUpdateManyWithoutCommentsNestedInput.schema';
+import { RestaurantExtractionUncheckedUpdateOneWithoutCommentNestedInputObjectSchema as RestaurantExtractionUncheckedUpdateOneWithoutCommentNestedInputObjectSchema } from './RestaurantExtractionUncheckedUpdateOneWithoutCommentNestedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -29,7 +30,8 @@ const makeSchema = () => z.object({
   updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   scrapingSessionId: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   files: z.lazy(() => FileUncheckedUpdateManyWithoutCommentNestedInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantUncheckedUpdateManyWithoutCommentsNestedInputObjectSchema).optional()
+  restaurantsMentioned: z.lazy(() => RestaurantUncheckedUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedUpdateOneWithoutCommentNestedInputObjectSchema).optional()
 }).strict();
 export const CommentUncheckedUpdateWithoutRepliesInputObjectSchema: z.ZodType<Prisma.CommentUncheckedUpdateWithoutRepliesInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentUncheckedUpdateWithoutRepliesInput>;
 export const CommentUncheckedUpdateWithoutRepliesInputObjectZodSchema = makeSchema();

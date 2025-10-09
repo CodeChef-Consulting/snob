@@ -24,7 +24,8 @@ export const CommentResultSchema = z.object({
     scrapingSession: z.unknown().nullable(),
     scrapingSessionId: z.number().int().nullable(),
     files: z.array(z.unknown()),
-    restaurantsMentioned: z.array(z.unknown())
+    restaurantsMentioned: z.array(z.unknown()),
+    restaurantExtraction: z.unknown().nullable()
 }).strict();
 
 export type CommentResultType = z.infer<typeof CommentResultSchema>;

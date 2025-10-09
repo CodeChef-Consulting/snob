@@ -14,7 +14,9 @@ import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjec
 import { ScrapingSessionNullableScalarRelationFilterObjectSchema as ScrapingSessionNullableScalarRelationFilterObjectSchema } from './ScrapingSessionNullableScalarRelationFilter.schema';
 import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './ScrapingSessionWhereInput.schema';
 import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema';
-import { RestaurantListRelationFilterObjectSchema as RestaurantListRelationFilterObjectSchema } from './RestaurantListRelationFilter.schema'
+import { RestaurantListRelationFilterObjectSchema as RestaurantListRelationFilterObjectSchema } from './RestaurantListRelationFilter.schema';
+import { RestaurantExtractionNullableScalarRelationFilterObjectSchema as RestaurantExtractionNullableScalarRelationFilterObjectSchema } from './RestaurantExtractionNullableScalarRelationFilter.schema';
+import { RestaurantExtractionWhereInputObjectSchema as RestaurantExtractionWhereInputObjectSchema } from './RestaurantExtractionWhereInput.schema'
 
 const commentwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => CommentWhereInputObjectSchema), z.lazy(() => CommentWhereInputObjectSchema).array()]).optional(),
@@ -42,7 +44,8 @@ const commentwhereinputSchema = z.object({
   replies: z.lazy(() => CommentListRelationFilterObjectSchema).optional(),
   scrapingSession: z.union([z.lazy(() => ScrapingSessionNullableScalarRelationFilterObjectSchema), z.lazy(() => ScrapingSessionWhereInputObjectSchema)]).optional(),
   files: z.lazy(() => FileListRelationFilterObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantListRelationFilterObjectSchema).optional()
+  restaurantsMentioned: z.lazy(() => RestaurantListRelationFilterObjectSchema).optional(),
+  restaurantExtraction: z.union([z.lazy(() => RestaurantExtractionNullableScalarRelationFilterObjectSchema), z.lazy(() => RestaurantExtractionWhereInputObjectSchema)]).optional()
 }).strict();
 export const CommentWhereInputObjectSchema: z.ZodType<Prisma.CommentWhereInput> = commentwhereinputSchema as unknown as z.ZodType<Prisma.CommentWhereInput>;
 export const CommentWhereInputObjectZodSchema = commentwhereinputSchema;

@@ -23,7 +23,8 @@ export const PostFindManyResultSchema = z.object({
   commentsFullyScraped: z.boolean(),
   comments: z.array(z.unknown()),
   files: z.array(z.unknown()),
-  restaurantsMentioned: z.array(z.unknown())
+  restaurantsMentioned: z.array(z.unknown()),
+  restaurantExtraction: z.unknown().optional()
 })),
   pagination: z.object({
   page: z.number().int().min(1),

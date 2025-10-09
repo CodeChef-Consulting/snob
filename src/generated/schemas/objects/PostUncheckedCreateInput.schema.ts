@@ -2,7 +2,8 @@ import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema as CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './CommentUncheckedCreateNestedManyWithoutPostInput.schema';
 import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema';
-import { RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema as RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantUncheckedCreateNestedManyWithoutPostsInput.schema'
+import { RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema as RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantUncheckedCreateNestedManyWithoutPostsInput.schema';
+import { RestaurantExtractionUncheckedCreateNestedOneWithoutPostInputObjectSchema as RestaurantExtractionUncheckedCreateNestedOneWithoutPostInputObjectSchema } from './RestaurantExtractionUncheckedCreateNestedOneWithoutPostInput.schema'
 
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
@@ -25,7 +26,8 @@ const makeSchema = () => z.object({
   commentsFullyScraped: z.boolean().optional(),
   comments: z.lazy(() => CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema),
   files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema),
-  restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema)
+  restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutPostsInputObjectSchema),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedCreateNestedOneWithoutPostInputObjectSchema).optional()
 }).strict();
 export const PostUncheckedCreateInputObjectSchema: z.ZodType<Prisma.PostUncheckedCreateInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUncheckedCreateInput>;
 export const PostUncheckedCreateInputObjectZodSchema = makeSchema();

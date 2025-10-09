@@ -1,7 +1,8 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema as CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './CommentUncheckedCreateNestedManyWithoutPostInput.schema';
-import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema'
+import { FileUncheckedCreateNestedManyWithoutPostInputObjectSchema as FileUncheckedCreateNestedManyWithoutPostInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutPostInput.schema';
+import { RestaurantExtractionUncheckedCreateNestedOneWithoutPostInputObjectSchema as RestaurantExtractionUncheckedCreateNestedOneWithoutPostInputObjectSchema } from './RestaurantExtractionUncheckedCreateNestedOneWithoutPostInput.schema'
 
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
@@ -24,7 +25,8 @@ const makeSchema = () => z.object({
   commentsLastScrapedAt: z.coerce.date().optional().nullable(),
   commentsFullyScraped: z.boolean().optional(),
   comments: z.lazy(() => CommentUncheckedCreateNestedManyWithoutPostInputObjectSchema).optional(),
-  files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema).optional()
+  files: z.lazy(() => FileUncheckedCreateNestedManyWithoutPostInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedCreateNestedOneWithoutPostInputObjectSchema).optional()
 }).strict();
 export const PostUncheckedCreateWithoutRestaurantsMentionedInputObjectSchema: z.ZodType<Prisma.PostUncheckedCreateWithoutRestaurantsMentionedInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUncheckedCreateWithoutRestaurantsMentionedInput>;
 export const PostUncheckedCreateWithoutRestaurantsMentionedInputObjectZodSchema = makeSchema();

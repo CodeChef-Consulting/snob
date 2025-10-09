@@ -33,6 +33,7 @@ export const PostFindFirstOrThrowSelectSchema: z.ZodType<Prisma.PostSelect> = z.
     comments: z.boolean().optional(),
     files: z.boolean().optional(),
     restaurantsMentioned: z.boolean().optional(),
+    restaurantExtraction: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict() as unknown as z.ZodType<Prisma.PostSelect>;
 
@@ -60,6 +61,7 @@ export const PostFindFirstOrThrowSelectZodSchema = z.object({
     comments: z.boolean().optional(),
     files: z.boolean().optional(),
     restaurantsMentioned: z.boolean().optional(),
+    restaurantExtraction: z.boolean().optional(),
     _count: z.boolean().optional()
   }).strict();
 

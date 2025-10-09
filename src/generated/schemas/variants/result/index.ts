@@ -7,4 +7,5 @@ export { PostResultSchema } from './Post.result';
 export { CommentResultSchema } from './Comment.result';
 export { FileResultSchema } from './File.result';
 export { RestaurantResultSchema } from './Restaurant.result';
+export { RestaurantExtractionResultSchema } from './RestaurantExtraction.result';
 export { ScrapingSessionResultSchema } from './ScrapingSession.result';

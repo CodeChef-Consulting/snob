@@ -3,6 +3,7 @@ import { postsRouter } from "./Post.router";
 import { commentsRouter } from "./Comment.router";
 import { filesRouter } from "./File.router";
 import { restaurantsRouter } from "./Restaurant.router";
+import { restaurantextractionsRouter } from "./RestaurantExtraction.router";
 import { scrapingsessionsRouter } from "./ScrapingSession.router";
 
     export const appRouter = t.router({
@@ -10,5 +11,6 @@ import { scrapingsessionsRouter } from "./ScrapingSession.router";
       comment: commentsRouter,
       file: filesRouter,
       restaurant: restaurantsRouter,
+      restaurantextraction: restaurantextractionsRouter,
       scrapingsession: scrapingsessionsRouter})
     

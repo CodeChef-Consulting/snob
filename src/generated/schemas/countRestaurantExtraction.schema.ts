@@ -1,0 +1,10 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { RestaurantExtractionOrderByWithRelationInputObjectSchema as RestaurantExtractionOrderByWithRelationInputObjectSchema } from './objects/RestaurantExtractionOrderByWithRelationInput.schema';
+import { RestaurantExtractionWhereInputObjectSchema as RestaurantExtractionWhereInputObjectSchema } from './objects/RestaurantExtractionWhereInput.schema';
+import { RestaurantExtractionWhereUniqueInputObjectSchema as RestaurantExtractionWhereUniqueInputObjectSchema } from './objects/RestaurantExtractionWhereUniqueInput.schema';
+import { RestaurantExtractionCountAggregateInputObjectSchema as RestaurantExtractionCountAggregateInputObjectSchema } from './objects/RestaurantExtractionCountAggregateInput.schema';
+
+export const RestaurantExtractionCountSchema: z.ZodType<Prisma.RestaurantExtractionCountArgs> = z.object({ orderBy: z.union([RestaurantExtractionOrderByWithRelationInputObjectSchema, RestaurantExtractionOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantExtractionWhereInputObjectSchema.optional(), cursor: RestaurantExtractionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), RestaurantExtractionCountAggregateInputObjectSchema ]).optional() }).strict() as unknown as z.ZodType<Prisma.RestaurantExtractionCountArgs>;
+
+export const RestaurantExtractionCountZodSchema = z.object({ orderBy: z.union([RestaurantExtractionOrderByWithRelationInputObjectSchema, RestaurantExtractionOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantExtractionWhereInputObjectSchema.optional(), cursor: RestaurantExtractionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), RestaurantExtractionCountAggregateInputObjectSchema ]).optional() }).strict();

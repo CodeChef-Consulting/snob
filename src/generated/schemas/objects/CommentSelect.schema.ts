@@ -6,6 +6,7 @@ import { CommentFindManySchema as CommentFindManySchema } from '../findManyComme
 import { ScrapingSessionArgsObjectSchema as ScrapingSessionArgsObjectSchema } from './ScrapingSessionArgs.schema';
 import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
 import { RestaurantFindManySchema as RestaurantFindManySchema } from '../findManyRestaurant.schema';
+import { RestaurantExtractionArgsObjectSchema as RestaurantExtractionArgsObjectSchema } from './RestaurantExtractionArgs.schema';
 import { CommentCountOutputTypeArgsObjectSchema as CommentCountOutputTypeArgsObjectSchema } from './CommentCountOutputTypeArgs.schema'
 
 const makeSchema = () => z.object({
@@ -32,6 +33,7 @@ const makeSchema = () => z.object({
   scrapingSessionId: z.boolean().optional(),
   files: z.union([z.boolean(), z.lazy(() => FileFindManySchema)]).optional(),
   restaurantsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantFindManySchema)]).optional(),
+  restaurantExtraction: z.union([z.boolean(), z.lazy(() => RestaurantExtractionArgsObjectSchema)]).optional(),
   _count: z.union([z.boolean(), z.lazy(() => CommentCountOutputTypeArgsObjectSchema)]).optional()
 }).strict();
 export const CommentSelectObjectSchema: z.ZodType<Prisma.CommentSelect> = makeSchema() as unknown as z.ZodType<Prisma.CommentSelect>;

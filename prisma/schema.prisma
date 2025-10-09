@@ -50,6 +50,7 @@ model Post {
   comments             Comment[]
   files                File[]
   restaurantsMentioned Restaurant[]
+  restaurantExtraction RestaurantExtraction?
 
   @@index([scrapingSessionId])
   @@index([commentsFullyScraped]) // For querying posts that need comment scraping
@@ -80,6 +81,7 @@ model Comment {
 
   files                File[]
   restaurantsMentioned Restaurant[]
+  restaurantExtraction RestaurantExtraction?
 
   @@index([scrapingSessionId])
 }
@@ -116,6 +118,34 @@ model Restaurant {
 
   posts    Post[]
   comments Comment[]
+}
+
+model RestaurantExtraction {
+  id                   Int      @id @default(autoincrement())
+
+  // Link to either post or comment (one must be set)
+  post                 Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId               Int?
+  comment              Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId            Int?
+
+  // Extraction results (matching RestaurantExtractionResult interface)
+  restaurantsMentioned String   // Comma-separated or "NONE"
+  primaryRestaurant    String   // Single restaurant name or "NONE"
+  dishesMentioned      String   // Comma-separated or "NONE"
+  isSubjective         Boolean
+
+  // Metadata
+  extractedAt          DateTime @default(now())
+  model                String?  // e.g., "gemini-2.5-flash"
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([postId])      // One extraction per post
+  @@unique([commentId])   // One extraction per comment
+  @@index([isSubjective]) // For filtering subjective content
+  @@index([extractedAt])  // For tracking extraction progress
 }
 
 model ScrapingSession {

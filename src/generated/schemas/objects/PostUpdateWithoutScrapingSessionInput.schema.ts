@@ -9,7 +9,8 @@ import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOp
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
 import { CommentUpdateManyWithoutPostNestedInputObjectSchema as CommentUpdateManyWithoutPostNestedInputObjectSchema } from './CommentUpdateManyWithoutPostNestedInput.schema';
 import { FileUpdateManyWithoutPostNestedInputObjectSchema as FileUpdateManyWithoutPostNestedInputObjectSchema } from './FileUpdateManyWithoutPostNestedInput.schema';
-import { RestaurantUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutPostsNestedInput.schema'
+import { RestaurantUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutPostsNestedInput.schema';
+import { RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutPostNestedInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -31,7 +32,8 @@ const makeSchema = () => z.object({
   commentsFullyScraped: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   comments: z.lazy(() => CommentUpdateManyWithoutPostNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutPostNestedInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutPostsNestedInputObjectSchema).optional()
+  restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutPostsNestedInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema).optional()
 }).strict();
 export const PostUpdateWithoutScrapingSessionInputObjectSchema: z.ZodType<Prisma.PostUpdateWithoutScrapingSessionInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUpdateWithoutScrapingSessionInput>;
 export const PostUpdateWithoutScrapingSessionInputObjectZodSchema = makeSchema();

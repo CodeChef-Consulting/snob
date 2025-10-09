@@ -10,7 +10,8 @@ import { PostUpdateOneRequiredWithoutCommentsNestedInputObjectSchema as PostUpda
 import { CommentUpdateOneWithoutRepliesNestedInputObjectSchema as CommentUpdateOneWithoutRepliesNestedInputObjectSchema } from './CommentUpdateOneWithoutRepliesNestedInput.schema';
 import { CommentUpdateManyWithoutParentCommentNestedInputObjectSchema as CommentUpdateManyWithoutParentCommentNestedInputObjectSchema } from './CommentUpdateManyWithoutParentCommentNestedInput.schema';
 import { FileUpdateManyWithoutCommentNestedInputObjectSchema as FileUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUpdateManyWithoutCommentNestedInput.schema';
-import { RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutCommentsNestedInput.schema'
+import { RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutCommentsNestedInput.schema';
+import { RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutCommentNestedInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -30,7 +31,8 @@ const makeSchema = () => z.object({
   parentComment: z.lazy(() => CommentUpdateOneWithoutRepliesNestedInputObjectSchema).optional(),
   replies: z.lazy(() => CommentUpdateManyWithoutParentCommentNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutCommentNestedInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema).optional()
+  restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional()
 }).strict();
 export const CommentUpdateWithoutScrapingSessionInputObjectSchema: z.ZodType<Prisma.CommentUpdateWithoutScrapingSessionInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentUpdateWithoutScrapingSessionInput>;
 export const CommentUpdateWithoutScrapingSessionInputObjectZodSchema = makeSchema();

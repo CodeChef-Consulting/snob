@@ -4,7 +4,8 @@ import { PostCreateNestedOneWithoutCommentsInputObjectSchema as PostCreateNested
 import { CommentCreateNestedOneWithoutRepliesInputObjectSchema as CommentCreateNestedOneWithoutRepliesInputObjectSchema } from './CommentCreateNestedOneWithoutRepliesInput.schema';
 import { CommentCreateNestedManyWithoutParentCommentInputObjectSchema as CommentCreateNestedManyWithoutParentCommentInputObjectSchema } from './CommentCreateNestedManyWithoutParentCommentInput.schema';
 import { ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutCommentsInput.schema';
-import { FileCreateNestedManyWithoutCommentInputObjectSchema as FileCreateNestedManyWithoutCommentInputObjectSchema } from './FileCreateNestedManyWithoutCommentInput.schema'
+import { FileCreateNestedManyWithoutCommentInputObjectSchema as FileCreateNestedManyWithoutCommentInputObjectSchema } from './FileCreateNestedManyWithoutCommentInput.schema';
+import { RestaurantExtractionCreateNestedOneWithoutCommentInputObjectSchema as RestaurantExtractionCreateNestedOneWithoutCommentInputObjectSchema } from './RestaurantExtractionCreateNestedOneWithoutCommentInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.string(),
@@ -24,7 +25,8 @@ const makeSchema = () => z.object({
   parentComment: z.lazy(() => CommentCreateNestedOneWithoutRepliesInputObjectSchema).optional(),
   replies: z.lazy(() => CommentCreateNestedManyWithoutParentCommentInputObjectSchema).optional(),
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema).optional(),
-  files: z.lazy(() => FileCreateNestedManyWithoutCommentInputObjectSchema).optional()
+  files: z.lazy(() => FileCreateNestedManyWithoutCommentInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionCreateNestedOneWithoutCommentInputObjectSchema).optional()
 }).strict();
 export const CommentCreateWithoutRestaurantsMentionedInputObjectSchema: z.ZodType<Prisma.CommentCreateWithoutRestaurantsMentionedInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentCreateWithoutRestaurantsMentionedInput>;
 export const CommentCreateWithoutRestaurantsMentionedInputObjectZodSchema = makeSchema();

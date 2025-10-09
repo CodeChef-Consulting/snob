@@ -3,7 +3,8 @@ import type { Prisma } from '@prisma/client';
 import { ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutPostsInput.schema';
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
 import { FileCreateNestedManyWithoutPostInputObjectSchema as FileCreateNestedManyWithoutPostInputObjectSchema } from './FileCreateNestedManyWithoutPostInput.schema';
-import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema'
+import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema';
+import { RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema as RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema } from './RestaurantExtractionCreateNestedOneWithoutPostInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.string(),
@@ -25,7 +26,8 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema).optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema),
   files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema),
-  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema)
+  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema).optional()
 }).strict();
 export const PostCreateInputObjectSchema: z.ZodType<Prisma.PostCreateInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCreateInput>;
 export const PostCreateInputObjectZodSchema = makeSchema();

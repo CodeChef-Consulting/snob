@@ -2,7 +2,8 @@ import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutPostsInput.schema';
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
-import { FileCreateNestedManyWithoutPostInputObjectSchema as FileCreateNestedManyWithoutPostInputObjectSchema } from './FileCreateNestedManyWithoutPostInput.schema'
+import { FileCreateNestedManyWithoutPostInputObjectSchema as FileCreateNestedManyWithoutPostInputObjectSchema } from './FileCreateNestedManyWithoutPostInput.schema';
+import { RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema as RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema } from './RestaurantExtractionCreateNestedOneWithoutPostInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.string(),
@@ -24,7 +25,8 @@ const makeSchema = () => z.object({
   commentsFullyScraped: z.boolean().optional(),
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema).optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema).optional(),
-  files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema).optional()
+  files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema).optional(),
+  restaurantExtraction: z.lazy(() => RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema).optional()
 }).strict();
 export const PostCreateWithoutRestaurantsMentionedInputObjectSchema: z.ZodType<Prisma.PostCreateWithoutRestaurantsMentionedInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCreateWithoutRestaurantsMentionedInput>;
 export const PostCreateWithoutRestaurantsMentionedInputObjectZodSchema = makeSchema();
