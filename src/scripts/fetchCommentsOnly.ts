@@ -277,7 +277,18 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
       // Note: fetchCommentsOnly doesn't update ScrapingSession
       // ScrapingSession only tracks post scraping
       // Comment progress is tracked via Post.commentsFullyScraped
-    } catch (error) {
+    } catch (error: any) {
+      // Check for rate limiting errors
+      if (error.message?.toLowerCase().includes('ratelimit')) {
+        console.error(
+          `\n🚨 RATE LIMIT ERROR at post ${dbPost.externalId} (ID: ${dbPost.id})`
+        );
+        console.error('Waiting 60 seconds before continuing...');
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        console.log('Resuming...\n');
+        continue; // Skip to next post after waiting
+      }
+
       console.error(`   ❌ Error processing post ${dbPost.externalId}:`, error);
       continue;
     }
