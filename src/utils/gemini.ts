@@ -216,7 +216,7 @@ export async function evaluatePost(
 /**
  * Helper function to parse restaurant extraction response
  */
-function parseRestaurantExtractionResponse(
+export function parseRestaurantExtractionResponse(
   responseText: string
 ): RestaurantExtractionResult {
   const lines = responseText.split('\n').map((line) => line.trim());
@@ -259,7 +259,7 @@ function parseRestaurantExtractionResponse(
 /**
  * Create prompt for comment restaurant extraction
  */
-function createCommentExtractionPrompt(input: CommentExtractionInput): string {
+export function createCommentExtractionPrompt(input: CommentExtractionInput): string {
   const parts = ['Read the following Reddit post and comment carefully:\n'];
 
   parts.push(`Post title:\n${input.post_title}\n`);
@@ -296,7 +296,7 @@ isSubjective: true/false
 /**
  * Create prompt for post restaurant extraction
  */
-function createPostExtractionPrompt(input: PostExtractionInput): string {
+export function createPostExtractionPrompt(input: PostExtractionInput): string {
   const parts = ['Read the following Reddit post carefully:\n'];
 
   parts.push(`Post title:\n${input.post_title}\n`);

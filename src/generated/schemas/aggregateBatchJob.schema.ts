@@ -1,0 +1,14 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { BatchJobOrderByWithRelationInputObjectSchema as BatchJobOrderByWithRelationInputObjectSchema } from './objects/BatchJobOrderByWithRelationInput.schema';
+import { BatchJobWhereInputObjectSchema as BatchJobWhereInputObjectSchema } from './objects/BatchJobWhereInput.schema';
+import { BatchJobWhereUniqueInputObjectSchema as BatchJobWhereUniqueInputObjectSchema } from './objects/BatchJobWhereUniqueInput.schema';
+import { BatchJobCountAggregateInputObjectSchema as BatchJobCountAggregateInputObjectSchema } from './objects/BatchJobCountAggregateInput.schema';
+import { BatchJobMinAggregateInputObjectSchema as BatchJobMinAggregateInputObjectSchema } from './objects/BatchJobMinAggregateInput.schema';
+import { BatchJobMaxAggregateInputObjectSchema as BatchJobMaxAggregateInputObjectSchema } from './objects/BatchJobMaxAggregateInput.schema';
+import { BatchJobAvgAggregateInputObjectSchema as BatchJobAvgAggregateInputObjectSchema } from './objects/BatchJobAvgAggregateInput.schema';
+import { BatchJobSumAggregateInputObjectSchema as BatchJobSumAggregateInputObjectSchema } from './objects/BatchJobSumAggregateInput.schema';
+
+export const BatchJobAggregateSchema: z.ZodType<Prisma.BatchJobAggregateArgs> = z.object({ orderBy: z.union([BatchJobOrderByWithRelationInputObjectSchema, BatchJobOrderByWithRelationInputObjectSchema.array()]).optional(), where: BatchJobWhereInputObjectSchema.optional(), cursor: BatchJobWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), BatchJobCountAggregateInputObjectSchema ]).optional(), _min: BatchJobMinAggregateInputObjectSchema.optional(), _max: BatchJobMaxAggregateInputObjectSchema.optional(), _avg: BatchJobAvgAggregateInputObjectSchema.optional(), _sum: BatchJobSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.BatchJobAggregateArgs>;
+
+export const BatchJobAggregateZodSchema = z.object({ orderBy: z.union([BatchJobOrderByWithRelationInputObjectSchema, BatchJobOrderByWithRelationInputObjectSchema.array()]).optional(), where: BatchJobWhereInputObjectSchema.optional(), cursor: BatchJobWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), BatchJobCountAggregateInputObjectSchema ]).optional(), _min: BatchJobMinAggregateInputObjectSchema.optional(), _max: BatchJobMaxAggregateInputObjectSchema.optional(), _avg: BatchJobAvgAggregateInputObjectSchema.optional(), _sum: BatchJobSumAggregateInputObjectSchema.optional() }).strict();

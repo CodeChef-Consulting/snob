@@ -1,0 +1,66 @@
+import * as z from 'zod';
+export const BatchJobAggregateResultSchema = z.object({  _count: z.object({
+    id: z.number(),
+    geminiJobName: z.number(),
+    displayName: z.number(),
+    model: z.number(),
+    contentType: z.number(),
+    itemCount: z.number(),
+    itemIds: z.number(),
+    status: z.number(),
+    submittedAt: z.number(),
+    completedAt: z.number(),
+    extractionsSaved: z.number(),
+    extractionsSavedAt: z.number(),
+    successCount: z.number(),
+    errorCount: z.number(),
+    error: z.number(),
+    createdAt: z.number(),
+    updatedAt: z.number()
+  }).optional(),
+  _sum: z.object({
+    id: z.number().nullable(),
+    itemCount: z.number().nullable(),
+    successCount: z.number().nullable(),
+    errorCount: z.number().nullable()
+  }).nullable().optional(),
+  _avg: z.object({
+    id: z.number().nullable(),
+    itemCount: z.number().nullable(),
+    successCount: z.number().nullable(),
+    errorCount: z.number().nullable()
+  }).nullable().optional(),
+  _min: z.object({
+    id: z.number().int().nullable(),
+    geminiJobName: z.string().nullable(),
+    displayName: z.string().nullable(),
+    model: z.string().nullable(),
+    contentType: z.string().nullable(),
+    itemCount: z.number().int().nullable(),
+    status: z.string().nullable(),
+    submittedAt: z.date().nullable(),
+    completedAt: z.date().nullable(),
+    extractionsSavedAt: z.date().nullable(),
+    successCount: z.number().int().nullable(),
+    errorCount: z.number().int().nullable(),
+    error: z.string().nullable(),
+    createdAt: z.date().nullable(),
+    updatedAt: z.date().nullable()
+  }).nullable().optional(),
+  _max: z.object({
+    id: z.number().int().nullable(),
+    geminiJobName: z.string().nullable(),
+    displayName: z.string().nullable(),
+    model: z.string().nullable(),
+    contentType: z.string().nullable(),
+    itemCount: z.number().int().nullable(),
+    status: z.string().nullable(),
+    submittedAt: z.date().nullable(),
+    completedAt: z.date().nullable(),
+    extractionsSavedAt: z.date().nullable(),
+    successCount: z.number().int().nullable(),
+    errorCount: z.number().int().nullable(),
+    error: z.string().nullable(),
+    createdAt: z.date().nullable(),
+    updatedAt: z.date().nullable()
+  }).nullable().optional()});

@@ -1,0 +1,15 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { BatchJobWhereInputObjectSchema as BatchJobWhereInputObjectSchema } from './objects/BatchJobWhereInput.schema';
+import { BatchJobOrderByWithAggregationInputObjectSchema as BatchJobOrderByWithAggregationInputObjectSchema } from './objects/BatchJobOrderByWithAggregationInput.schema';
+import { BatchJobScalarWhereWithAggregatesInputObjectSchema as BatchJobScalarWhereWithAggregatesInputObjectSchema } from './objects/BatchJobScalarWhereWithAggregatesInput.schema';
+import { BatchJobScalarFieldEnumSchema } from './enums/BatchJobScalarFieldEnum.schema';
+import { BatchJobCountAggregateInputObjectSchema as BatchJobCountAggregateInputObjectSchema } from './objects/BatchJobCountAggregateInput.schema';
+import { BatchJobMinAggregateInputObjectSchema as BatchJobMinAggregateInputObjectSchema } from './objects/BatchJobMinAggregateInput.schema';
+import { BatchJobMaxAggregateInputObjectSchema as BatchJobMaxAggregateInputObjectSchema } from './objects/BatchJobMaxAggregateInput.schema';
+import { BatchJobAvgAggregateInputObjectSchema as BatchJobAvgAggregateInputObjectSchema } from './objects/BatchJobAvgAggregateInput.schema';
+import { BatchJobSumAggregateInputObjectSchema as BatchJobSumAggregateInputObjectSchema } from './objects/BatchJobSumAggregateInput.schema';
+
+export const BatchJobGroupBySchema: z.ZodType<Prisma.BatchJobGroupByArgs> = z.object({ where: BatchJobWhereInputObjectSchema.optional(), orderBy: z.union([BatchJobOrderByWithAggregationInputObjectSchema, BatchJobOrderByWithAggregationInputObjectSchema.array()]).optional(), having: BatchJobScalarWhereWithAggregatesInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), by: z.array(BatchJobScalarFieldEnumSchema), _count: z.union([ z.literal(true), BatchJobCountAggregateInputObjectSchema ]).optional(), _min: BatchJobMinAggregateInputObjectSchema.optional(), _max: BatchJobMaxAggregateInputObjectSchema.optional(), _avg: BatchJobAvgAggregateInputObjectSchema.optional(), _sum: BatchJobSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.BatchJobGroupByArgs>;
+
+export const BatchJobGroupByZodSchema = z.object({ where: BatchJobWhereInputObjectSchema.optional(), orderBy: z.union([BatchJobOrderByWithAggregationInputObjectSchema, BatchJobOrderByWithAggregationInputObjectSchema.array()]).optional(), having: BatchJobScalarWhereWithAggregatesInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), by: z.array(BatchJobScalarFieldEnumSchema), _count: z.union([ z.literal(true), BatchJobCountAggregateInputObjectSchema ]).optional(), _min: BatchJobMinAggregateInputObjectSchema.optional(), _max: BatchJobMaxAggregateInputObjectSchema.optional(), _avg: BatchJobAvgAggregateInputObjectSchema.optional(), _sum: BatchJobSumAggregateInputObjectSchema.optional() }).strict();

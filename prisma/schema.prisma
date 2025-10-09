@@ -120,6 +120,42 @@ model Restaurant {
   comments Comment[]
 }
 
+model BatchJob {
+  id                   Int      @id @default(autoincrement())
+
+  // Gemini Batch API details
+  geminiJobName        String?  @unique // e.g., "batches/123456789"
+  displayName          String   // Human-readable name
+  model                String   // e.g., "gemini-2.5-flash"
+
+  // Job configuration
+  contentType          String   // "post" or "comment"
+  itemCount            Int      // Number of items in batch
+  itemIds              Json     // Array of post/comment IDs in this batch
+
+  // Status tracking
+  status               String   @default("pending") // pending, submitted, running, succeeded, failed, cancelled, expired
+  submittedAt          DateTime?
+  completedAt          DateTime?
+
+  // Result processing
+  extractionsSaved     Boolean  @default(false) // Whether results were saved to RestaurantExtraction
+  extractionsSavedAt   DateTime?
+  successCount         Int      @default(0)
+  errorCount           Int      @default(0)
+
+  // Error tracking
+  error                String?  // Error message if failed
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([status])
+  @@index([contentType])
+  @@index([extractionsSaved])
+  @@index([createdAt])
+}
+
 model RestaurantExtraction {
   id                   Int      @id @default(autoincrement())
 
