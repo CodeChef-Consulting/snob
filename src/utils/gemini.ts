@@ -4,6 +4,8 @@ import { Post, Comment, PrismaClient } from '@prisma/client';
 // Lazy initialization to allow dotenvx to decrypt env vars first
 let genAI: GoogleGenAI | null = null;
 
+const model = 'gemini-2.5-flash';
+
 function getGenAI(): GoogleGenAI {
   if (!genAI) {
     if (!process.env.GEMINI_API_KEY) {
@@ -14,7 +16,8 @@ function getGenAI(): GoogleGenAI {
   return genAI;
 }
 
-export interface CommentEvaluationInput {
+export interface CommentSentimentInput {
+  post_title: string;
   post_text: string;
   post_upvotes: number;
   comment_text: string;
@@ -22,14 +25,13 @@ export interface CommentEvaluationInput {
   parent_text?: string;
 }
 
-export interface PostEvaluationInput {
+export interface PostSentimentInput {
   post_text: string;
   post_upvotes: number;
 }
 
-export interface EvaluationResult {
+export interface SentimentResult {
   rawAiScore: number;
-  restaurantsMentioned: string;
 }
 
 export interface CommentExtractionInput {
@@ -54,34 +56,21 @@ export interface RestaurantExtractionResult {
 /**
  * Helper function to parse evaluation response
  */
-function parseEvaluationResponse(responseText: string): EvaluationResult {
-  const parts = responseText.split(',').map((p) => p.trim());
-
-  if (parts.length < 2) {
-    throw new Error(`Invalid response format: ${responseText}`);
-  }
-
-  const rawAiScore = parseFloat(parts[0]);
-  const restaurantsMentioned = parts
-    .slice(1)
-    .join(',')
-    .replace(/^["']|["']$/g, ''); // Remove quotes if present
-
+function parseSentimentResponse(responseText: string): SentimentResult {
+  const rawAiScore = parseFloat(responseText);
   if (isNaN(rawAiScore)) {
-    throw new Error(`Invalid rawAiScore: ${parts[0]}`);
+    throw new Error(`Invalid rawAiScore: ${responseText}`);
   }
 
   return {
     rawAiScore,
-    restaurantsMentioned:
-      restaurantsMentioned === 'NONE' ? '' : restaurantsMentioned,
   };
 }
 
 /**
- * Convert a Post from the database to PostEvaluationInput
+ * Convert a Post from the database to PostSentimentInput
  */
-export function postToEvaluationInput(post: Post): PostEvaluationInput {
+export function postToSentimentInput(post: Post): PostSentimentInput {
   const post_text = [post.title, post.body].filter(Boolean).join('\n\n');
 
   return {
@@ -91,17 +80,18 @@ export function postToEvaluationInput(post: Post): PostEvaluationInput {
 }
 
 /**
- * Convert a Comment from the database to CommentEvaluationInput
+ * Convert a Comment from the database to CommentSentimentInput
  * Requires the associated post and optional parent comment
  */
-export async function commentToEvaluationInput(
+export async function commentToSentimentInput(
   comment: Comment,
   post: Post,
   parentComment?: Comment | null
-): Promise<CommentEvaluationInput> {
+): Promise<CommentSentimentInput> {
   const post_text = [post.title, post.body].filter(Boolean).join('\n\n');
 
   return {
+    post_title: post.title || '',
     post_text,
     post_upvotes: post.ups || 0,
     comment_text: comment.body || '',
@@ -114,10 +104,10 @@ export async function commentToEvaluationInput(
  * Fetch and convert a Comment with its context from the database
  * This is a convenience method that handles all the lookups
  */
-export async function fetchCommentForEvaluation(
+export async function fetchCommentForSentiment(
   prisma: PrismaClient,
   commentId: number
-): Promise<CommentEvaluationInput> {
+): Promise<CommentSentimentInput> {
   const comment = await prisma.comment.findUnique({
     where: { id: commentId },
     include: {
@@ -130,16 +120,16 @@ export async function fetchCommentForEvaluation(
     throw new Error(`Comment ${commentId} not found`);
   }
 
-  return commentToEvaluationInput(comment, comment.post, comment.parentComment);
+  return commentToSentimentInput(comment, comment.post, comment.parentComment);
 }
 
 /**
  * Fetch and convert a Post from the database
  */
-export async function fetchPostForEvaluation(
+export async function fetchPostForSentiment(
   prisma: PrismaClient,
   postId: number
-): Promise<PostEvaluationInput> {
+): Promise<PostSentimentInput> {
   const post = await prisma.post.findUnique({
     where: { id: postId },
   });
@@ -148,7 +138,7 @@ export async function fetchPostForEvaluation(
     throw new Error(`Post ${postId} not found`);
   }
 
-  return postToEvaluationInput(post);
+  return postToSentimentInput(post);
 }
 
 /**
@@ -156,16 +146,16 @@ export async function fetchPostForEvaluation(
  * Returns rawAiScore (-1 to 1) and restaurantsMentioned
  */
 export async function evaluateComment(
-  input: CommentEvaluationInput
-): Promise<EvaluationResult> {
+  input: CommentSentimentInput
+): Promise<SentimentResult> {
   try {
     const response = await getGenAI().models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model,
       contents: createUserContent([createCommentPrompt(input)]),
     });
 
     const responseText = response.text?.trim() || '';
-    return parseEvaluationResponse(responseText);
+    return parseSentimentResponse(responseText);
   } catch (error) {
     console.error('Error evaluating comment:', error);
     throw error;
@@ -175,53 +165,47 @@ export async function evaluateComment(
 /**
  * Helper to create comment prompt
  */
-function createCommentPrompt(input: CommentEvaluationInput): string {
-  return `Read the following Reddit discussion and output your evaluation.
+function createCommentPrompt(input: CommentSentimentInput): string {
+  return `Read the following Reddit comment (and relevant context) and output your evaluation.
 
-Post text:
-${input.post_text}
-Post upvotes: ${input.post_upvotes}
-
-Comment text:
-${input.comment_text}
+Primary Comment Info to Evaluate:
+Comment text: ${input.comment_text}
 Comment upvotes: ${input.comment_upvotes}
 
-Parent comment text (if any):
-${input.parent_text || 'None'}
+Secondary Comment Info for Context:
+Parent comment text (if any): ${input.parent_text || 'None'}
+Post title: ${input.post_title}
+Post text: ${input.post_text}
+Post upvotes: ${input.post_upvotes}
 
-Output exactly two fields, separated by commas:
+Output exactly one field:
 
-1) rawAiScore (-1 to 1): How positively this discussion makes you want to visit the restaurant(s) mentioned.
+1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned.
    -1 = definitely avoid, 0 = neutral, 1 = definitely want to visit.
    A post saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
    If sentiment is unclear or purely factual, score 0.
 
-2) restaurantsMentioned: List all restaurant names mentioned anywhere in the post or comment.
-   Include all clearly named places, even if brief.
-   Output NONE if no restaurants are mentioned.
-
 **Important:**
 - Base your evaluation only on the text given.
-- Upvotes indicate engagement and reliability; 5+ upvotes is notable, 10+ is substantial.
-- If the text seems irrelevant to restaurant opinions, set rawAiScore to 0 and restaurantsMentioned to NONE.
+- Upvotes indicate engagement and reliability, so the sentiment (whether positive or negative) should be stronger; 5+ upvotes is notable, 10+ is substantial.
+- If the text seems irrelevant to restaurant opinions, set rawAiScore to 0.
 - Round numeric values to two decimal places.
 - Output exactly in this format:
-  rawAiScore, restaurantsMentioned
+  rawAiScore
   Example:
-  0.45, "Bestia"`;
+  0.45`;
 }
 
 /**
  * Helper to create post prompt
  */
-function createPostPrompt(input: PostEvaluationInput): string {
+function createPostPrompt(input: PostSentimentInput): string {
   return `Read the following Reddit post and output your evaluation.
 
-Post text:
-${input.post_text}
+Post text: ${input.post_text}
 Post upvotes: ${input.post_upvotes}
 
-Output exactly two fields, separated by commas:
+Output exactly one field:
 
 1) rawAiScore (-1 to 1): How positively this post makes you want to visit the restaurant(s) mentioned.
    -1 = definitely avoid
@@ -230,18 +214,16 @@ Output exactly two fields, separated by commas:
    Posts that describe a restaurant as overhyped or just okay should lean negative (around -0.1 to -0.4).
    If sentiment is unclear or factual, score 0.
 
-2) restaurantsMentioned: List all restaurant names mentioned anywhere in the post.
-   Output NONE if no restaurants are mentioned.
-
 **Important:**
 - Base your evaluation only on the text given.
 - If multiple restaurants are mentioned, assume mixed or less decisive sentiment (bias toward 0).
-- If the text is irrelevant to restaurant opinions, set rawAiScore to 0 and restaurantsMentioned to NONE.
+- Upvotes indicate engagement and reliability, so the sentiment (whether positive or negative) should be stronger; 5+ upvotes is notable, 10+ is substantial.
+- If the text is irrelevant to restaurant opinions, set rawAiScore to 0.
 - Round numeric values to two decimal places.
-- Output **only** the two values, in this order:
-  rawAiScore, restaurantsMentioned
-- Example:
-  0.45, "Bestia"`;
+- Output exactly in this format:
+  rawAiScore
+  Example:
+  0.45`;
 }
 
 /**
@@ -249,16 +231,16 @@ Output exactly two fields, separated by commas:
  * Returns rawAiScore (-1 to 1) and restaurantsMentioned
  */
 export async function evaluatePost(
-  input: PostEvaluationInput
-): Promise<EvaluationResult> {
+  input: PostSentimentInput
+): Promise<SentimentResult> {
   try {
     const response = await getGenAI().models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model,
       contents: createUserContent([createPostPrompt(input)]),
     });
 
     const responseText = response.text?.trim() || '';
-    return parseEvaluationResponse(responseText);
+    return parseSentimentResponse(responseText);
   } catch (error) {
     console.error('Error evaluating post:', error);
     throw error;
@@ -327,7 +309,7 @@ function createCommentExtractionPrompt(input: CommentExtractionInput): string {
 1) restaurantsMentioned: List all restaurants clearly referenced in the comment, post title, or post text. If none, output NONE.
 2) primaryRestaurant: If the comment primarily discusses one restaurant (even if others are mentioned), output its name. Otherwise, output NONE.
 3) dishesMentioned: List any specific dishes mentioned. If none, output NONE.
-4) isSubjective: true if the comment expresses a personal opinion, judgment, or sentiment about any restaurant; false if purely factual, neutral, or irrelevant.
+4) isSubjective: true if the comment expresses a personal opinion, judgment, answer to Post Title, or sentiment about any restaurant; false if purely factual, neutral, or irrelevant.
 
 Output **exactly in this format**:
 
@@ -385,7 +367,7 @@ export async function extractCommentRestaurantInfo(
 ): Promise<RestaurantExtractionResult> {
   try {
     const response = await getGenAI().models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model,
       contents: createUserContent([createCommentExtractionPrompt(input)]),
     });
 
@@ -405,7 +387,7 @@ export async function extractPostRestaurantInfo(
 ): Promise<RestaurantExtractionResult> {
   try {
     const response = await getGenAI().models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model,
       contents: createUserContent([createPostExtractionPrompt(input)]),
     });
 

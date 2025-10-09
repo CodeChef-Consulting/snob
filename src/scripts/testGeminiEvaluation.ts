@@ -12,11 +12,11 @@ import {
 const prisma = new PrismaClient();
 
 // Toggle which tests to run
-const TEST_COMMENTS = [237890];
+const TEST_COMMENTS = [164];
 const TEST_POSTS = [];
 
-async function testEvaluations() {
-  console.log('🧪 Testing Gemini AI Extraction and Evaluation\n');
+async function testSentiments() {
+  console.log('🧪 Testing Gemini AI Extraction and Sentiment\n');
   console.log('='.repeat(80));
 
   try {
@@ -37,7 +37,7 @@ async function testEvaluations() {
       }
 
       console.log(`   URL: https://reddit.com${comment.permalink || ''}`);
-      console.log(`   Comment: "${comment.body?.substring(0, 100)}..."`);
+      console.log(`   Comment: "${comment.body}"`);
 
       const extraction = await extractCommentRestaurantInfo({
         post_title: comment.post.title || '',
@@ -51,10 +51,7 @@ async function testEvaluations() {
       console.log(`   Dishes: ${extraction.dishesMentioned}`);
       console.log(`   Subjective: ${extraction.isSubjective}`);
 
-      if (
-        extraction.restaurantsMentioned !== 'NONE' &&
-        extraction.isSubjective
-      ) {
+      if (true) {
         const evaluation = await evaluateComment({
           post_text: comment.post.body || comment.post.title || '',
           post_upvotes: comment.post.ups || 0,
@@ -64,7 +61,6 @@ async function testEvaluations() {
         });
         console.log(`   ✅ EVALUATED - Score: ${evaluation.rawAiScore}`);
       } else {
-        console.log(`   ⏭️  SKIPPED - Not relevant or not subjective`);
       }
     }
 
@@ -122,7 +118,7 @@ async function testEvaluations() {
   }
 }
 
-testEvaluations()
+testSentiments()
   .then(() => {
     console.log('Done!');
     process.exit(0);

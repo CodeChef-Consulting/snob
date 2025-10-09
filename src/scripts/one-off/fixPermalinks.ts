@@ -6,7 +6,7 @@ import {
   createRedditClient,
   extractMediaUrls,
   extractMediaFromCommentBody,
-} from '../utils/reddit';
+} from '../../utils/reddit';
 
 const prisma = new PrismaClient();
 const r = createRedditClient();
