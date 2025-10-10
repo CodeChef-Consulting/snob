@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from 'csv-parse/sync';
+import { startCase, toLower } from 'lodash';
 
 const prisma = new PrismaClient();
 
@@ -72,12 +73,12 @@ async function ingestRestaurants() {
 
         await prisma.restaurant.create({
           data: {
-            name,
-            address: record['STREET ADDRESS'] || null,
-            city: record['CITY'] || null,
+            name: name ? startCase(toLower(name)) : null,
+            address: record['STREET ADDRESS'] ? startCase(toLower(record['STREET ADDRESS'])) : null,
+            city: record['CITY'] ? startCase(toLower(record['CITY'])) : null,
             state: 'CA', // All restaurants are in California (Los Angeles)
             zipCode: record['ZIP CODE'] || null,
-            cuisine: record['PRIMARY NAICS DESCRIPTION'] || null,
+            restaurantType: record['PRIMARY NAICS DESCRIPTION'] ? startCase(toLower(record['PRIMARY NAICS DESCRIPTION'])) : null,
             metadata,
           },
         });

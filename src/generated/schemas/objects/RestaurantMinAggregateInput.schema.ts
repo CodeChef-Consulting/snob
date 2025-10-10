@@ -11,7 +11,7 @@ const makeSchema = () => z.object({
   zipCode: z.literal(true).optional(),
   phone: z.literal(true).optional(),
   website: z.literal(true).optional(),
-  cuisine: z.literal(true).optional(),
+  restaurantType: z.literal(true).optional(),
   priceRange: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional()

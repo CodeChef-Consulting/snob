@@ -10,7 +10,7 @@ export const RestaurantInputSchema = z.object({
     zipCode: z.string().optional().nullable(),
     phone: z.string().optional().nullable(),
     website: z.string().optional().nullable(),
-    cuisine: z.string().optional().nullable(),
+    restaurantType: z.string().optional().nullable(),
     priceRange: z.string().optional().nullable(),
     metadata: z.unknown().optional().nullable(),
     createdAt: z.date(),

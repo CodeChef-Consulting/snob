@@ -8,7 +8,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     zipCode: z.number(),
     phone: z.number(),
     website: z.number(),
-    cuisine: z.number(),
+    restaurantType: z.number(),
     priceRange: z.number(),
     metadata: z.number(),
     createdAt: z.number(),
@@ -31,7 +31,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     zipCode: z.string().nullable(),
     phone: z.string().nullable(),
     website: z.string().nullable(),
-    cuisine: z.string().nullable(),
+    restaurantType: z.string().nullable(),
     priceRange: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
@@ -45,7 +45,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     zipCode: z.string().nullable(),
     phone: z.string().nullable(),
     website: z.string().nullable(),
-    cuisine: z.string().nullable(),
+    restaurantType: z.string().nullable(),
     priceRange: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()

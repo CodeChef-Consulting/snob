@@ -24,28 +24,28 @@ datasource db {
 }
 
 model Post {
-  id                   Int               @id @default(autoincrement())
-  externalId           String            @unique
-  subreddit            String
-  author               String?
-  title                String?
-  body                 String?
-  score                Int?
-  ups                  Int?
-  downs                Int?
-  upvoteRatio          Float?
-  numComments          Int?
-  gilded               Int?
-  permalink            String?
-  createdUtc           DateTime?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
-  scrapingSession      ScrapingSession?  @relation(fields: [scrapingSessionId], references: [id])
-  scrapingSessionId    Int?
+  id                Int              @id @default(autoincrement())
+  externalId        String           @unique
+  subreddit         String
+  author            String?
+  title             String?
+  body              String?
+  score             Int?
+  ups               Int?
+  downs             Int?
+  upvoteRatio       Float?
+  numComments       Int?
+  gilded            Int?
+  permalink         String?
+  createdUtc        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  scrapingSession   ScrapingSession? @relation(fields: [scrapingSessionId], references: [id])
+  scrapingSessionId Int?
 
   // Comment scraping tracking
-  commentsLastScrapedAt DateTime?        // When comments were last fetched
-  commentsFullyScraped  Boolean          @default(false) // All nested comments fetched
+  commentsLastScrapedAt DateTime? // When comments were last fetched
+  commentsFullyScraped  Boolean   @default(false) // All nested comments fetched
 
   comments             Comment[]
   files                File[]
@@ -57,27 +57,27 @@ model Post {
 }
 
 model Comment {
-  id                   Int               @id @default(autoincrement())
-  externalId           String            @unique
-  post                 Post              @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId               Int
-  parentComment        Comment?          @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  parentCommentId      Int?
-  replies              Comment[]         @relation("CommentReplies")
-  author               String?
-  body                 String?
-  score                Int?
-  ups                  Int?
-  depth                Int?
-  controversiality     Int?
-  isSubmitter          Boolean?
-  scoreHidden          Boolean?
-  permalink            String?
-  createdUtc           DateTime?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
-  scrapingSession      ScrapingSession?  @relation(fields: [scrapingSessionId], references: [id])
-  scrapingSessionId    Int?
+  id                Int              @id @default(autoincrement())
+  externalId        String           @unique
+  post              Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId            Int
+  parentComment     Comment?         @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId   Int?
+  replies           Comment[]        @relation("CommentReplies")
+  author            String?
+  body              String?
+  score             Int?
+  ups               Int?
+  depth             Int?
+  controversiality  Int?
+  isSubmitter       Boolean?
+  scoreHidden       Boolean?
+  permalink         String?
+  createdUtc        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  scrapingSession   ScrapingSession? @relation(fields: [scrapingSessionId], references: [id])
+  scrapingSessionId Int?
 
   files                File[]
   restaurantsMentioned Restaurant[]
@@ -102,53 +102,53 @@ model File {
 }
 
 model Restaurant {
-  id         Int      @id @default(autoincrement())
-  name       String
-  address    String?
-  city       String?
-  state      String?
-  zipCode    String?
-  phone      String?
-  website    String?
-  cuisine    String?
-  priceRange String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  phone          String?
+  website        String?
+  restaurantType String?
+  priceRange     String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   posts    Post[]
   comments Comment[]
 }
 
 model BatchJob {
-  id                   Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   // Gemini Batch API details
-  geminiJobName        String?  @unique // e.g., "batches/123456789"
-  displayName          String   // Human-readable name
-  model                String   // e.g., "gemini-2.5-flash"
+  geminiJobName String? @unique // e.g., "batches/123456789"
+  displayName   String // Human-readable name
+  model         String // e.g., "gemini-2.5-flash"
 
   // Job configuration
-  contentType          String   // "post" or "comment"
-  itemCount            Int      // Number of items in batch
-  itemIds              Json     // Array of post/comment IDs in this batch
+  contentType String // "post" or "comment"
+  itemCount   Int // Number of items in batch
+  itemIds     Json // Array of post/comment IDs in this batch
 
   // Status tracking
-  status               String   @default("pending") // pending, submitted, running, succeeded, failed, cancelled, expired
-  submittedAt          DateTime?
-  completedAt          DateTime?
+  status      String    @default("pending") // pending, submitted, running, succeeded, failed, cancelled, expired
+  submittedAt DateTime?
+  completedAt DateTime?
 
   // Result processing
-  extractionsSaved     Boolean  @default(false) // Whether results were saved to RestaurantExtraction
-  extractionsSavedAt   DateTime?
-  successCount         Int      @default(0)
-  errorCount           Int      @default(0)
+  extractionsSaved   Boolean   @default(false) // Whether results were saved to RestaurantExtraction
+  extractionsSavedAt DateTime?
+  successCount       Int       @default(0)
+  errorCount         Int       @default(0)
 
   // Error tracking
-  error                String?  // Error message if failed
+  error String? // Error message if failed
 
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([contentType])
@@ -157,51 +157,51 @@ model BatchJob {
 }
 
 model RestaurantExtraction {
-  id                   Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   // Link to either post or comment (one must be set)
-  post                 Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId               Int?
-  comment              Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  commentId            Int?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId Int?
 
   // Extraction results (matching RestaurantExtractionResult interface)
-  restaurantsMentioned String   // Comma-separated or "NONE"
-  primaryRestaurant    String   // Single restaurant name or "NONE"
-  dishesMentioned      String   // Comma-separated or "NONE"
+  restaurantsMentioned String // Comma-separated or "NONE"
+  primaryRestaurant    String // Single restaurant name or "NONE"
+  dishesMentioned      String // Comma-separated or "NONE"
   isSubjective         Boolean
 
   // Metadata
-  extractedAt          DateTime @default(now())
-  model                String?  // e.g., "gemini-2.5-flash"
+  extractedAt DateTime @default(now())
+  model       String? // e.g., "gemini-2.5-flash"
 
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([postId])      // One extraction per post
-  @@unique([commentId])   // One extraction per comment
+  @@unique([postId]) // One extraction per post
+  @@unique([commentId]) // One extraction per comment
   @@index([isSubjective]) // For filtering subjective content
-  @@index([extractedAt])  // For tracking extraction progress
+  @@index([extractedAt]) // For tracking extraction progress
 }
 
 model ScrapingSession {
-  id                Int       @id @default(autoincrement())
-  subreddit         String
-  mode              String    @default("new") // new, top, controversial, search
-  timeframe         String?   // all, year (for top/controversial/search)
-  searchQuery       String?   // for search mode
+  id          Int     @id @default(autoincrement())
+  subreddit   String
+  mode        String  @default("new") // new, top, controversial, search
+  timeframe   String? // all, year (for top/controversial/search)
+  searchQuery String? // for search mode
 
   // Post scraping tracking only
-  lastPostId        String?   // Last post processed (for resumability)
+  lastPostId        String? // Last post processed (for resumability)
   lastPostTimestamp DateTime? // Timestamp of last post processed
   postsScraped      Int       @default(0)
   completed         Boolean   @default(false) // All posts scraped
 
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  posts             Post[]
-  comments          Comment[]
+  posts    Post[]
+  comments Comment[]
 
   @@index([subreddit, mode, timeframe, searchQuery])
   @@index([createdAt])

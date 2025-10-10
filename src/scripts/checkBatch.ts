@@ -99,7 +99,9 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   }
 
   if (!batchJob.geminiJobName) {
-    console.log('\n⚠️  No Gemini job name found. Job may not have been submitted properly.');
+    console.log(
+      '\n⚠️  No Gemini job name found. Job may not have been submitted properly.'
+    );
     return batchJob;
   }
 
@@ -129,7 +131,9 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
         data: { status: dbStatus },
       });
 
-      console.log(`      [${new Date().toISOString()}] State: ${currentJob.state}`);
+      console.log(
+        `      [${new Date().toISOString()}] State: ${currentJob.state}`
+      );
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
       currentJob = await ai.batches.get({ name: batchJob.geminiJobName! });
     }
@@ -179,7 +183,9 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   let errors = 0;
 
   if (currentJob.dest?.inlinedResponses) {
-    console.log(`   Processing ${currentJob.dest.inlinedResponses.length} responses...`);
+    console.log(
+      `   Processing ${currentJob.dest.inlinedResponses.length} responses...`
+    );
 
     for (let i = 0; i < currentJob.dest.inlinedResponses.length; i++) {
       const response = currentJob.dest.inlinedResponses[i];
@@ -192,9 +198,15 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
           );
 
           if (batchJob.contentType === 'post') {
-            await saveExtraction({ ...extraction, postId: itemId }, batchJob.model);
+            await saveExtraction(
+              { ...extraction, postId: itemId },
+              batchJob.model
+            );
           } else {
-            await saveExtraction({ ...extraction, commentId: itemId }, batchJob.model);
+            await saveExtraction(
+              { ...extraction, commentId: itemId },
+              batchJob.model
+            );
           }
 
           processed++;

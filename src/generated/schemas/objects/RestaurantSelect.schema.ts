@@ -13,7 +13,7 @@ const makeSchema = () => z.object({
   zipCode: z.boolean().optional(),
   phone: z.boolean().optional(),
   website: z.boolean().optional(),
-  cuisine: z.boolean().optional(),
+  restaurantType: z.boolean().optional(),
   priceRange: z.boolean().optional(),
   metadata: z.boolean().optional(),
   createdAt: z.boolean().optional(),

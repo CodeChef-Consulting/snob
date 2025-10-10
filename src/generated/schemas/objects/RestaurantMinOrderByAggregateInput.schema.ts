@@ -11,7 +11,7 @@ const makeSchema = () => z.object({
   zipCode: SortOrderSchema.optional(),
   phone: SortOrderSchema.optional(),
   website: SortOrderSchema.optional(),
-  cuisine: SortOrderSchema.optional(),
+  restaurantType: SortOrderSchema.optional(),
   priceRange: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional()

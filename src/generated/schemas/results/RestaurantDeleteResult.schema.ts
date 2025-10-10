@@ -8,7 +8,7 @@ export const RestaurantDeleteResultSchema = z.nullable(z.object({
   zipCode: z.string().optional(),
   phone: z.string().optional(),
   website: z.string().optional(),
-  cuisine: z.string().optional(),
+  restaurantType: z.string().optional(),
   priceRange: z.string().optional(),
   metadata: z.unknown().optional(),
   createdAt: z.date(),
