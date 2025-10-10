@@ -2,6 +2,7 @@ import dotenv from '@dotenvx/dotenvx';
 dotenv.config();
 
 import { PrismaClient } from '@prisma/client';
+import { getStatusEmoji } from '../utils/gemini';
 
 const prisma = new PrismaClient();
 
@@ -23,15 +24,7 @@ async function listBatchJobs() {
   }
 
   for (const job of jobs) {
-    const statusEmoji = {
-      pending: '⏸️ ',
-      submitted: '📤',
-      running: '⏳',
-      succeeded: '✅',
-      failed: '❌',
-      cancelled: '🚫',
-      expired: '⏰',
-    }[job.status] || '❓';
+    const statusEmoji = getStatusEmoji(job.status);
 
     console.log(`\n   ${statusEmoji} Job #${job.id} - ${job.displayName}`);
     console.log(`      Type: ${job.contentType}`);

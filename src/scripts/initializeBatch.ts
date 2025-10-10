@@ -2,11 +2,11 @@ import dotenv from '@dotenvx/dotenvx';
 dotenv.config();
 
 import { PrismaClient } from '@prisma/client';
-import { GoogleGenAI } from '@google/genai';
+import { getGenAI, updateBatchJobStatus } from '../utils/gemini';
 import {
   createPostExtractionPrompt,
   createCommentExtractionPrompt,
-} from '../utils/gemini';
+} from '../utils/prompts';
 
 const prisma = new PrismaClient();
 
@@ -26,7 +26,7 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
   console.log('\n📝 Initializing Post Extraction Batch');
   console.log('='.repeat(80));
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+  const ai = getGenAI();
 
   const whereClause = skipExisting ? { restaurantExtraction: null } : {};
   const totalPosts = await prisma.post.count({ where: whereClause });
@@ -111,13 +111,9 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
     return batchJobRecord;
   } catch (error) {
     // Update BatchJob with error
-    await prisma.batchJob.update({
-      where: { id: batchJobRecord.id },
-      data: {
-        status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
-        completedAt: new Date(),
-      },
+    await updateBatchJobStatus(prisma, batchJobRecord.id, 'failed', {
+      error: error instanceof Error ? error.message : String(error),
+      completedAt: new Date(),
     });
     throw error;
   }
@@ -130,7 +126,7 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
   console.log('\n💬 Initializing Comment Extraction Batch');
   console.log('='.repeat(80));
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+  const ai = getGenAI();
 
   const whereClause = skipExisting ? { restaurantExtraction: null } : {};
   const totalComments = await prisma.comment.count({ where: whereClause });
@@ -216,13 +212,9 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
 
     return batchJobRecord;
   } catch (error) {
-    await prisma.batchJob.update({
-      where: { id: batchJobRecord.id },
-      data: {
-        status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
-        completedAt: new Date(),
-      },
+    await updateBatchJobStatus(prisma, batchJobRecord.id, 'failed', {
+      error: error instanceof Error ? error.message : String(error),
+      completedAt: new Date(),
     });
     throw error;
   }

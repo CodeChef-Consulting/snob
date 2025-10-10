@@ -1,12 +1,19 @@
-import { GoogleGenAI, createUserContent } from '@google/genai';
-import { Post, Comment, PrismaClient } from '@prisma/client';
+import type { BatchJob as GeminiBatchJob } from '@google/genai';
+import { createUserContent, GoogleGenAI, JobState } from '@google/genai';
+import { PrismaClient } from '@prisma/client';
+import {
+  createCommentSentimentPrompt,
+  createPostSentimentPrompt,
+  createCommentExtractionPrompt,
+  createPostExtractionPrompt,
+} from './prompts';
 
 // Lazy initialization to allow dotenvx to decrypt env vars first
 let genAI: GoogleGenAI | null = null;
 
 const model = 'gemini-2.5-flash';
 
-function getGenAI(): GoogleGenAI {
+export function getGenAI(): GoogleGenAI {
   if (!genAI) {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY environment variable is required');
@@ -15,6 +22,10 @@ function getGenAI(): GoogleGenAI {
   }
   return genAI;
 }
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
 
 export interface CommentSentimentInput {
   comment_text: string;
@@ -49,6 +60,10 @@ export interface RestaurantExtractionResult {
   isSubjective: boolean;
 }
 
+// ============================================================================
+// Sentiment Analysis
+// ============================================================================
+
 /**
  * Helper function to parse evaluation response
  */
@@ -64,63 +79,6 @@ function parseSentimentResponse(responseText: string): SentimentResult {
 }
 
 /**
- * Convert a Post from the database to PostSentimentInput
- */
-export function postToSentimentInput(post: Post): PostSentimentInput {
-  return {
-    post_title: post.title || '',
-    post_text: post.body || '',
-  };
-}
-
-/**
- * Convert a Comment from the database to CommentSentimentInput
- */
-export function commentToSentimentInput(
-  comment: Comment
-): CommentSentimentInput {
-  return {
-    comment_text: comment.body || '',
-  };
-}
-
-/**
- * Fetch and convert a Comment from the database
- */
-export async function fetchCommentForSentiment(
-  prisma: PrismaClient,
-  commentId: number
-): Promise<CommentSentimentInput> {
-  const comment = await prisma.comment.findUnique({
-    where: { id: commentId },
-  });
-
-  if (!comment) {
-    throw new Error(`Comment ${commentId} not found`);
-  }
-
-  return commentToSentimentInput(comment);
-}
-
-/**
- * Fetch and convert a Post from the database
- */
-export async function fetchPostForSentiment(
-  prisma: PrismaClient,
-  postId: number
-): Promise<PostSentimentInput> {
-  const post = await prisma.post.findUnique({
-    where: { id: postId },
-  });
-
-  if (!post) {
-    throw new Error(`Post ${postId} not found`);
-  }
-
-  return postToSentimentInput(post);
-}
-
-/**
  * Evaluate a Reddit comment for restaurant sentiment
  * Returns rawAiScore (-1 to 1) and restaurantsMentioned
  */
@@ -130,7 +88,7 @@ export async function evaluateComment(
   try {
     const response = await getGenAI().models.generateContent({
       model,
-      contents: createUserContent([createCommentPrompt(input)]),
+      contents: createUserContent([createCommentSentimentPrompt(input)]),
     });
 
     const responseText = response.text?.trim() || '';
@@ -139,57 +97,6 @@ export async function evaluateComment(
     console.error('Error evaluating comment:', error);
     throw error;
   }
-}
-
-/**
- * Helper to create comment prompt
- */
-function createCommentPrompt(input: CommentSentimentInput): string {
-  return `You are a foodie browsing Reddit to find the best places to eat. Read the following Reddit comment on a food related post and output your sentiment evaluation.
-
-Comment text: ${input.comment_text}
-
-Post title (use mainly for context): ${input.post_title}
-
-Output exactly one field:
-
-1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned?
-   -1 = definitely avoid, 0 = neutral, 1 = definitely want to visit.
-   Focus ONLY on an impression of **taste and quality of the food**. Ignore ambiance, service, hype, or other experiences.
-   A comment saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
-   If sentiment is unclear or purely factual, score 0.
-
-**Important:**
-- Base your evaluation only on the text given.
-- Assume that even if there isn't a restaurant mentioned in context, the comment is still about food.
-- If the text seems irrelevant to restaurant opinions, set rawAiScore to 0.
-- Round numeric values to two decimal places.
-- Output exactly in this format (example): 0.45`;
-}
-
-/**
- * Helper to create post prompt
- */
-function createPostPrompt(input: PostSentimentInput): string {
-  return `You are a foodie browsing Reddit to find the best places to eat. Read the following food related post and output your sentiment evaluation.
-
-Post title: ${input.post_title}
-Post text: ${input.post_text}
-
-Output exactly one field:
-
-1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned?
-   -1 = definitely avoid, 0 = neutral, 1 = definitely want to visit.
-   Focus ONLY on an impression of **taste and quality of the food**. Ignore ambiance, service, hype, or other experiences.
-   A comment saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
-   If sentiment is unclear or purely factual, score 0.
-
-**Important:**
-- Base your evaluation only on the text given.
-- Assume that even if there isn't a restaurant mentioned in context, the comment is still about food.
-- If the text seems irrelevant to restaurant opinions, set rawAiScore to 0.
-- Round numeric values to two decimal places.
-- Output exactly in this format (example): 0.45`;
 }
 
 /**
@@ -202,7 +109,7 @@ export async function evaluatePost(
   try {
     const response = await getGenAI().models.generateContent({
       model,
-      contents: createUserContent([createPostPrompt(input)]),
+      contents: createUserContent([createPostSentimentPrompt(input)]),
     });
 
     const responseText = response.text?.trim() || '';
@@ -212,6 +119,10 @@ export async function evaluatePost(
     throw error;
   }
 }
+
+// ============================================================================
+// Restaurant Extraction
+// ============================================================================
 
 /**
  * Helper function to parse restaurant extraction response
@@ -257,75 +168,6 @@ export function parseRestaurantExtractionResponse(
 }
 
 /**
- * Create prompt for comment restaurant extraction
- */
-export function createCommentExtractionPrompt(input: CommentExtractionInput): string {
-  const parts = ['Read the following Reddit post and comment carefully:\n'];
-
-  parts.push(`Post title:\n${input.post_title}\n`);
-  parts.push(`Post text:\n${input.post_text}\n`);
-  parts.push(`Comment text:\n${input.comment_text}\n`);
-
-  if (input.parent_text) {
-    parts.push(`Parent comment text (if any):\n${input.parent_text}\n`);
-  }
-
-  parts.push(`Extract the following:
-
-1) restaurantsMentioned: List all restaurants clearly referenced in the comment, post title, or post text. If none, output NONE.
-2) primaryRestaurant: If the comment primarily discusses one restaurant (even if others are mentioned), output its name. Otherwise, output NONE.
-3) dishesMentioned: List any specific dishes mentioned. If none, output NONE.
-4) isSubjective: true if the comment expresses a personal opinion, judgment, answer to Post Title, or sentiment about any restaurant; false if purely factual, neutral, or irrelevant.
-
-Output **exactly in this format**:
-
-restaurantsMentioned: [...]
-primaryRestaurant: "..."
-dishesMentioned: [...]
-isSubjective: true/false
-
-**Notes:**
-- Include all clearly named restaurants, even if briefly mentioned.
-- Include all dishes explicitly mentioned; skip generic terms like "food" or "meal."
-- Subjectivity should reflect whether the comment expresses an opinion about a restaurant (positive, negative, or neutral), not just factual statements.
-- If nothing is mentioned for a field, use NONE.`);
-
-  return parts.join('\n');
-}
-
-/**
- * Create prompt for post restaurant extraction
- */
-export function createPostExtractionPrompt(input: PostExtractionInput): string {
-  const parts = ['Read the following Reddit post carefully:\n'];
-
-  parts.push(`Post title:\n${input.post_title}\n`);
-  parts.push(`Post text:\n${input.post_text}\n`);
-
-  parts.push(`Extract the following:
-
-1) restaurantsMentioned: List all restaurants clearly referenced in the post title or text. If none, output NONE.
-2) primaryRestaurant: If the post primarily discusses one restaurant (even if others are mentioned), output its name. Otherwise, output NONE.
-3) dishesMentioned: List any specific dishes mentioned. If none, output NONE.
-4) isSubjective: true if the post expresses a personal opinion, judgment, or sentiment about any restaurant; false if purely factual, neutral, or irrelevant.
-
-Output **exactly in this format**:
-
-restaurantsMentioned: [...]
-primaryRestaurant: "..."
-dishesMentioned: [...]
-isSubjective: true/false
-
-**Notes:**
-- Include all clearly named restaurants, even if briefly mentioned.
-- Include all dishes explicitly mentioned; skip generic terms like "food" or "meal."
-- Subjectivity should reflect whether the post expresses an opinion about a restaurant (positive, negative, or neutral), not just factual statements.
-- If nothing is mentioned for a field, use NONE.`);
-
-  return parts.join('\n');
-}
-
-/**
  * Extract restaurant information from a comment
  */
 export async function extractCommentRestaurantInfo(
@@ -363,4 +205,143 @@ export async function extractPostRestaurantInfo(
     console.error('Error extracting restaurant info from post:', error);
     throw error;
   }
+}
+
+// ============================================================================
+// Batch Job Utilities
+// ============================================================================
+
+/**
+ * Terminal states where batch job is no longer processing
+ */
+export const TERMINAL_STATES = new Set([
+  JobState.JOB_STATE_SUCCEEDED,
+  JobState.JOB_STATE_FAILED,
+  JobState.JOB_STATE_CANCELLED,
+  JobState.JOB_STATE_EXPIRED,
+]);
+
+/**
+ * Map Gemini JobState to database status
+ */
+export const JOB_STATE_TO_DB_STATUS: Record<string, string> = {
+  [JobState.JOB_STATE_SUCCEEDED]: 'succeeded',
+  [JobState.JOB_STATE_FAILED]: 'failed',
+  [JobState.JOB_STATE_CANCELLED]: 'cancelled',
+  [JobState.JOB_STATE_EXPIRED]: 'expired',
+  [JobState.JOB_STATE_RUNNING]: 'running',
+  [JobState.JOB_STATE_QUEUED]: 'submitted',
+  [JobState.JOB_STATE_PENDING]: 'submitted',
+};
+
+/**
+ * Get status emoji for batch job
+ */
+export function getStatusEmoji(status: string): string {
+  const emojiMap: Record<string, string> = {
+    pending: '⏸️',
+    submitted: '📤',
+    running: '⏳',
+    succeeded: '✅',
+    failed: '❌',
+    cancelled: '🚫',
+    expired: '⏰',
+  };
+  return emojiMap[status] || '❓';
+}
+
+/**
+ * Check if a batch job state is terminal (no longer processing)
+ */
+export function isTerminalState(state: string): boolean {
+  return TERMINAL_STATES.has(state as JobState);
+}
+
+/**
+ * Convert Gemini job state to database status
+ */
+export function geminiStateToDatabaseStatus(state: string): string {
+  return JOB_STATE_TO_DB_STATUS[state] || 'failed';
+}
+
+/**
+ * Fetch batch job from Gemini API
+ */
+export async function fetchGeminiBatchJob(
+  geminiJobName: string
+): Promise<GeminiBatchJob> {
+  return getGenAI().batches.get({ name: geminiJobName });
+}
+
+/**
+ * Save extraction result to database
+ */
+export async function saveExtraction(
+  prisma: PrismaClient,
+  result: RestaurantExtractionResult & { postId?: number; commentId?: number },
+  modelName: string
+): Promise<void> {
+  const data = {
+    restaurantsMentioned: result.restaurantsMentioned,
+    primaryRestaurant: result.primaryRestaurant,
+    dishesMentioned: result.dishesMentioned,
+    isSubjective: result.isSubjective,
+    model: modelName,
+    extractedAt: new Date(),
+  };
+
+  if (result.postId) {
+    await prisma.restaurantExtraction.upsert({
+      where: { postId: result.postId },
+      create: { ...data, postId: result.postId },
+      update: data,
+    });
+  } else if (result.commentId) {
+    await prisma.restaurantExtraction.upsert({
+      where: { commentId: result.commentId },
+      create: { ...data, commentId: result.commentId },
+      update: data,
+    });
+  }
+}
+
+/**
+ * Update batch job status in database
+ */
+export async function updateBatchJobStatus(
+  prisma: PrismaClient,
+  batchJobId: number,
+  status: string,
+  options?: {
+    completedAt?: Date;
+    error?: string | null;
+  }
+): Promise<void> {
+  await prisma.batchJob.update({
+    where: { id: batchJobId },
+    data: {
+      status,
+      ...options,
+    },
+  });
+}
+
+/**
+ * Mark batch job extractions as saved
+ */
+export async function markExtractionsAsSaved(
+  prisma: PrismaClient,
+  batchJobId: number,
+  successCount: number,
+  errorCount: number
+): Promise<void> {
+  await prisma.batchJob.update({
+    where: { id: batchJobId },
+    data: {
+      extractionsSaved: true,
+      extractionsSavedAt: new Date(),
+      successCount,
+      errorCount,
+    },
+  });
 }

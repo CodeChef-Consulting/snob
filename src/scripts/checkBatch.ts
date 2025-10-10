@@ -1,48 +1,23 @@
 import dotenv from '@dotenvx/dotenvx';
 dotenv.config();
 
+import type { BatchJob as GeminiBatchJob } from '@google/genai';
+import { JobState } from '@google/genai';
 import { PrismaClient } from '@prisma/client';
-import { GoogleGenAI } from '@google/genai';
 import {
-  RestaurantExtractionResult,
   parseRestaurantExtractionResponse,
+  TERMINAL_STATES,
+  geminiStateToDatabaseStatus,
+  fetchGeminiBatchJob,
+  saveExtraction,
+  updateBatchJobStatus,
+  markExtractionsAsSaved,
 } from '../utils/gemini';
 
 const prisma = new PrismaClient();
 
 // Configuration
 const POLL_INTERVAL = 30000; // 30 seconds
-
-/**
- * Save extraction result to database
- */
-async function saveExtraction(
-  result: RestaurantExtractionResult & { postId?: number; commentId?: number },
-  model: string
-) {
-  const data = {
-    restaurantsMentioned: result.restaurantsMentioned,
-    primaryRestaurant: result.primaryRestaurant,
-    dishesMentioned: result.dishesMentioned,
-    isSubjective: result.isSubjective,
-    model,
-    extractedAt: new Date(),
-  };
-
-  if (result.postId) {
-    await prisma.restaurantExtraction.upsert({
-      where: { postId: result.postId },
-      create: { ...data, postId: result.postId },
-      update: data,
-    });
-  } else if (result.commentId) {
-    await prisma.restaurantExtraction.upsert({
-      where: { commentId: result.commentId },
-      create: { ...data, commentId: result.commentId },
-      update: data,
-    });
-  }
-}
 
 /**
  * Check batch job status and retrieve results if completed
@@ -105,72 +80,49 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
     return batchJob;
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-
-  const completedStates = new Set([
-    'JOB_STATE_SUCCEEDED',
-    'JOB_STATE_FAILED',
-    'JOB_STATE_CANCELLED',
-    'JOB_STATE_EXPIRED',
-  ]);
-
   console.log('\n⏳ Checking Gemini API status...');
 
-  let currentJob = await ai.batches.get({ name: batchJob.geminiJobName });
+  let currentJob: GeminiBatchJob = await fetchGeminiBatchJob(
+    batchJob.geminiJobName
+  );
 
   // Poll if requested
-  if (pollUntilComplete && !completedStates.has(currentJob.state as any)) {
+  if (pollUntilComplete && !TERMINAL_STATES.has(currentJob.state as JobState)) {
     console.log('   🔄 Polling until completion (Ctrl+C to stop)...\n');
 
-    while (!completedStates.has(currentJob.state as any)) {
-      const dbStatus =
-        currentJob.state === 'JOB_STATE_RUNNING' ? 'running' : 'submitted';
+    while (!TERMINAL_STATES.has(currentJob.state as JobState)) {
+      const dbStatus = geminiStateToDatabaseStatus(currentJob.state);
 
-      await prisma.batchJob.update({
-        where: { id: batchJobId },
-        data: { status: dbStatus },
-      });
+      await updateBatchJobStatus(prisma, batchJobId, dbStatus);
 
       console.log(
         `      [${new Date().toISOString()}] State: ${currentJob.state}`
       );
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
-      currentJob = await ai.batches.get({ name: batchJob.geminiJobName! });
+      currentJob = await fetchGeminiBatchJob(batchJob.geminiJobName!);
     }
   }
 
   console.log(`\n   Gemini Status: ${currentJob.state}`);
 
-  if (!completedStates.has(currentJob.state as any)) {
+  if (!TERMINAL_STATES.has(currentJob.state as JobState)) {
     console.log(
       '\n⏸️  Job still processing. Run with --poll to wait for completion.'
     );
     return batchJob;
   }
 
-  // Map Gemini states to DB states
-  const statusMap: Record<string, string> = {
-    JOB_STATE_SUCCEEDED: 'succeeded',
-    JOB_STATE_FAILED: 'failed',
-    JOB_STATE_CANCELLED: 'cancelled',
-    JOB_STATE_EXPIRED: 'expired',
-  };
+  const finalStatus = geminiStateToDatabaseStatus(currentJob.state);
 
-  const finalStatus = statusMap[currentJob.state as string] || 'failed';
-
-  await prisma.batchJob.update({
-    where: { id: batchJobId },
-    data: {
-      status: finalStatus,
-      completedAt: new Date(),
-      error:
-        currentJob.state !== 'JOB_STATE_SUCCEEDED'
-          ? `Job ended with state: ${currentJob.state}`
-          : null,
-    },
+  await updateBatchJobStatus(prisma, batchJobId, finalStatus, {
+    completedAt: new Date(),
+    error:
+      currentJob.state !== JobState.JOB_STATE_SUCCEEDED
+        ? `Job ended with state: ${currentJob.state}`
+        : null,
   });
 
-  if (currentJob.state !== 'JOB_STATE_SUCCEEDED') {
+  if (currentJob.state !== JobState.JOB_STATE_SUCCEEDED) {
     console.log(`\n❌ Batch job ${finalStatus}!`);
     return batchJob;
   }
@@ -199,11 +151,13 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
 
           if (batchJob.contentType === 'post') {
             await saveExtraction(
+              prisma,
               { ...extraction, postId: itemId },
               batchJob.model
             );
           } else {
             await saveExtraction(
+              prisma,
               { ...extraction, commentId: itemId },
               batchJob.model
             );
@@ -226,15 +180,7 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   }
 
   // Mark extractions as saved
-  await prisma.batchJob.update({
-    where: { id: batchJobId },
-    data: {
-      extractionsSaved: true,
-      extractionsSavedAt: new Date(),
-      successCount: processed,
-      errorCount: errors,
-    },
-  });
+  await markExtractionsAsSaved(prisma, batchJobId, processed, errors);
 
   console.log('\n' + '='.repeat(80));
   console.log('✅ Batch processing complete!');
@@ -275,21 +221,24 @@ async function main() {
 Usage: tsx src/scripts/checkBatch.ts [BatchJob ID] [options]
 
 Arguments:
-  <BatchJob ID>       ID of the batch job to check
+  <BatchJob ID>       ID of the batch job to check (optional - checks all if omitted)
 
 Options:
   --poll              Keep polling until job completes
-  --all               Check all pending jobs
+  --all               Check all pending jobs only
   -h, --help          Show help
 
 Examples:
+  # Check all batch jobs
+  npm run check-batch
+
   # Check status of specific job
   npm run check-batch -- 123
 
   # Poll until completion
   npm run check-batch -- 123 --poll
 
-  # Check all pending jobs
+  # Check all pending jobs only
   npm run check-batch -- --all
 
 After checking:
@@ -300,9 +249,25 @@ After checking:
   }
 
   try {
+    // Check only pending jobs
     if (args.includes('--all')) {
       await checkAllPendingJobs();
-    } else {
+    }
+    // No args or only --poll: check all jobs
+    else if (args.length === 0 || (args.length === 1 && args[0] === '--poll')) {
+      const allJobs = await prisma.batchJob.findMany({
+        orderBy: { createdAt: 'desc' },
+      });
+
+      console.log(`\n🔍 Found ${allJobs.length} total batch jobs`);
+
+      for (const job of allJobs) {
+        console.log(`\n${'='.repeat(80)}`);
+        await checkBatchJob(job.id, false);
+      }
+    }
+    // Check specific job
+    else {
       const batchJobId = parseInt(args[0], 10);
 
       if (isNaN(batchJobId)) {
