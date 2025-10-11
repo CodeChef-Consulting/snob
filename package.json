@@ -7,6 +7,7 @@
     "build": "tsc",
     "fetch-comments": "tsx src/scripts/fetchComments.ts",
     "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
+    "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
     "init-batch": "tsx src/scripts/initializeBatch.ts",
     "check-batch": "tsx src/scripts/checkBatch.ts",
     "batch-jobs": "tsx src/scripts/manageBatchJobs.ts",
@@ -29,9 +30,11 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "@google/genai": "^1.23.0",
+    "@googlemaps/places": "^2.1.0",
     "@prisma/client": "^6.16.3",
     "@trpc/server": "^11.0.0",
     "csv-parse": "^6.1.0",
+    "fuse.js": "^7.1.0",
     "lodash": "^4.17.21",
     "snoowrap": "^1.23.0",
     "zod": "^4.1.11"
@@ -42,6 +45,7 @@
     "prisma": "^6.16.3",
     "prisma-trpc-generator": "^2.4.0",
     "prisma-zod-generator": "^1.26.0",
+    "@types/lodash": "^4.17.20",
     "tsx": "^4.7.0",
     "typescript": "^5.9.3"
   }

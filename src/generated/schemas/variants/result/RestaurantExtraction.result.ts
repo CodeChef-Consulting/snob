@@ -11,6 +11,7 @@ export const RestaurantExtractionResultSchema = z.object({
     primaryRestaurant: z.string(),
     dishesMentioned: z.string(),
     isSubjective: z.boolean(),
+    attemptedLinkToRestaurantsMentioned: z.boolean(),
     extractedAt: z.date(),
     model: z.string().nullable(),
     createdAt: z.date(),

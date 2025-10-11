@@ -10,6 +10,7 @@ const makeSchema = () => z.object({
   primaryRestaurant: SortOrderSchema.optional(),
   dishesMentioned: SortOrderSchema.optional(),
   isSubjective: SortOrderSchema.optional(),
+  attemptedLinkToRestaurantsMentioned: SortOrderSchema.optional(),
   extractedAt: SortOrderSchema.optional(),
   model: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),

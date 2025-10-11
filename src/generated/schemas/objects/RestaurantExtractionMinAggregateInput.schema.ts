@@ -10,6 +10,7 @@ const makeSchema = () => z.object({
   primaryRestaurant: z.literal(true).optional(),
   dishesMentioned: z.literal(true).optional(),
   isSubjective: z.literal(true).optional(),
+  attemptedLinkToRestaurantsMentioned: z.literal(true).optional(),
   extractedAt: z.literal(true).optional(),
   model: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),

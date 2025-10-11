@@ -78,7 +78,6 @@ async function ingestRestaurants() {
             city: record['CITY'] ? startCase(toLower(record['CITY'])) : null,
             state: 'CA', // All restaurants are in California (Los Angeles)
             zipCode: record['ZIP CODE'] || null,
-            restaurantType: record['PRIMARY NAICS DESCRIPTION'] ? startCase(toLower(record['PRIMARY NAICS DESCRIPTION'])) : null,
             metadata,
           },
         });

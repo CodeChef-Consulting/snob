@@ -9,10 +9,8 @@ const makeSchema = () => z.object({
   city: SortOrderSchema.optional(),
   state: SortOrderSchema.optional(),
   zipCode: SortOrderSchema.optional(),
-  phone: SortOrderSchema.optional(),
-  website: SortOrderSchema.optional(),
-  restaurantType: SortOrderSchema.optional(),
-  priceRange: SortOrderSchema.optional(),
+  source: SortOrderSchema.optional(),
+  googlePlaceId: SortOrderSchema.optional(),
   metadata: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional()

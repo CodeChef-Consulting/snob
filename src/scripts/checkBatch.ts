@@ -87,10 +87,10 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   );
 
   // Poll if requested
-  if (pollUntilComplete && !TERMINAL_STATES.has(currentJob.state as JobState)) {
+  if (pollUntilComplete && currentJob.state && !TERMINAL_STATES.has(currentJob.state as JobState)) {
     console.log('   🔄 Polling until completion (Ctrl+C to stop)...\n');
 
-    while (!TERMINAL_STATES.has(currentJob.state as JobState)) {
+    while (currentJob.state && !TERMINAL_STATES.has(currentJob.state as JobState)) {
       const dbStatus = geminiStateToDatabaseStatus(currentJob.state);
 
       await updateBatchJobStatus(prisma, batchJobId, dbStatus);
@@ -105,7 +105,7 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
 
   console.log(`\n   Gemini Status: ${currentJob.state}`);
 
-  if (!TERMINAL_STATES.has(currentJob.state as JobState)) {
+  if (!currentJob.state || !TERMINAL_STATES.has(currentJob.state as JobState)) {
     console.log(
       '\n⏸️  Job still processing. Run with --poll to wait for completion.'
     );
@@ -134,9 +134,10 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   let processed = 0;
   let errors = 0;
 
+  // Handle inline responses (small batches)
   if (currentJob.dest?.inlinedResponses) {
     console.log(
-      `   Processing ${currentJob.dest.inlinedResponses.length} responses...`
+      `   Processing ${currentJob.dest.inlinedResponses.length} inline responses...`
     );
 
     for (let i = 0; i < currentJob.dest.inlinedResponses.length; i++) {
@@ -176,6 +177,69 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
         console.error(`      Error saving item ${itemId}:`, error);
         errors++;
       }
+    }
+  }
+  // Handle JSONL file responses (large batches)
+  else if (currentJob.dest?.gcsUri) {
+    console.log(`   📥 Downloading JSONL results from ${currentJob.dest.gcsUri}...`);
+
+    try {
+      const ai = require('../utils/gemini').getGenAI();
+      const resultFile = await ai.files.get({ name: currentJob.dest.gcsUri });
+
+      if (resultFile.uri) {
+        // Download and parse JSONL results
+        const response = await fetch(resultFile.uri);
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+
+        console.log(`   Processing ${lines.length} JSONL responses...`);
+
+        for (let i = 0; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+
+          const itemId = itemIds[i];
+
+          try {
+            const jsonResponse = JSON.parse(lines[i]);
+
+            if (jsonResponse.response?.text) {
+              const extraction = parseRestaurantExtractionResponse(
+                jsonResponse.response.text
+              );
+
+              if (batchJob.contentType === 'post') {
+                await saveExtraction(
+                  prisma,
+                  { ...extraction, postId: itemId },
+                  batchJob.model
+                );
+              } else {
+                await saveExtraction(
+                  prisma,
+                  { ...extraction, commentId: itemId },
+                  batchJob.model
+                );
+              }
+
+              processed++;
+
+              if (processed % 1000 === 0) {
+                console.log(`      Saved ${processed}/${itemIds.length}...`);
+              }
+            } else if (jsonResponse.error) {
+              console.error(`      Error for item ${itemId}:`, jsonResponse.error);
+              errors++;
+            }
+          } catch (error) {
+            console.error(`      Error parsing/saving item ${itemId}:`, error);
+            errors++;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('   ❌ Error downloading JSONL results:', error);
+      throw error;
     }
   }
 

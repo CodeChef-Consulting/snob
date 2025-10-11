@@ -13,6 +13,7 @@ const makeSchema = () => z.object({
   primaryRestaurant: z.boolean().optional(),
   dishesMentioned: z.boolean().optional(),
   isSubjective: z.boolean().optional(),
+  attemptedLinkToRestaurantsMentioned: z.boolean().optional(),
   extractedAt: z.boolean().optional(),
   model: z.boolean().optional(),
   createdAt: z.boolean().optional(),

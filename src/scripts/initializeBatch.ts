@@ -7,16 +7,78 @@ import {
   createPostExtractionPrompt,
   createCommentExtractionPrompt,
 } from '../utils/prompts';
+import { writeFile, unlink } from 'fs/promises';
+import { join } from 'path';
 
 const prisma = new PrismaClient();
 
 // Configuration
 const BATCH_SIZE = 1000;
+const JSONL_THRESHOLD = 50000; // Use JSONL for batches larger than this
 
 interface InitializeConfig {
   contentType: 'post' | 'comment';
   limit?: number;
   skipExisting?: boolean;
+}
+
+/**
+ * Create JSONL file for large batch jobs
+ * Returns the file URI after uploading to Gemini
+ */
+async function createJsonlBatchFile(
+  requests: Array<{ contents: Array<{ parts: Array<{ text: string }>; role: string }> }>,
+  displayName: string
+): Promise<string> {
+  const ai = getGenAI();
+  const tmpDir = join(process.cwd(), 'tmp');
+  const jsonlPath = join(tmpDir, `${displayName}.jsonl`);
+
+  console.log(`   📝 Creating JSONL file with ${requests.length} requests...`);
+
+  // Create JSONL content - each line is a separate JSON request
+  const jsonlContent = requests
+    .map((request) => JSON.stringify({ request }))
+    .join('\n');
+
+  // Ensure tmp directory exists
+  const fs = await import('fs/promises');
+  try {
+    await fs.mkdir(tmpDir, { recursive: true });
+  } catch (err) {
+    // Directory already exists
+  }
+
+  // Write JSONL file
+  await writeFile(jsonlPath, jsonlContent, 'utf8');
+  console.log(`   💾 Written ${jsonlPath} (${(jsonlContent.length / 1024 / 1024).toFixed(2)} MB)`);
+
+  try {
+    // Upload file to Gemini File API
+    console.log(`   📤 Uploading JSONL file to Gemini...`);
+    const uploadedFile = await ai.files.upload({
+      file: jsonlPath,
+      config: {
+        displayName: `${displayName}-requests`,
+        mimeType: 'application/jsonl',
+      },
+    });
+
+    console.log(`   ✅ File uploaded: ${uploadedFile.uri}`);
+
+    // Clean up local file
+    await unlink(jsonlPath);
+
+    return uploadedFile.uri || '';
+  } catch (error) {
+    // Clean up local file on error
+    try {
+      await unlink(jsonlPath);
+    } catch {
+      // Ignore cleanup errors
+    }
+    throw error;
+  }
 }
 
 /**
@@ -83,14 +145,36 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
 
     console.log(`   📤 Submitting ${posts.length} requests to Gemini Batch API...`);
 
+    // Determine if we need JSONL format
+    const useJsonl = posts.length > JSONL_THRESHOLD;
+
+    if (useJsonl) {
+      console.log(`   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`);
+    }
+
     // Submit batch job to Gemini
-    const geminiBatchJob = await ai.batches.create({
-      model: 'gemini-2.5-flash',
-      src: inlineRequests,
-      config: {
-        displayName: batchJobRecord.displayName,
-      },
-    });
+    let geminiBatchJob;
+    if (useJsonl) {
+      const fileUri = await createJsonlBatchFile(inlineRequests, batchJobRecord.displayName);
+      geminiBatchJob = await ai.batches.create({
+        model: 'gemini-2.5-flash',
+        src: {
+          format: 'jsonl',
+          gcsUri: [fileUri]
+        },
+        config: {
+          displayName: batchJobRecord.displayName,
+        },
+      });
+    } else {
+      geminiBatchJob = await ai.batches.create({
+        model: 'gemini-2.5-flash',
+        src: inlineRequests,
+        config: {
+          displayName: batchJobRecord.displayName,
+        },
+      });
+    }
 
     // Update BatchJob with geminiJobName and status "submitted"
     await prisma.batchJob.update({
@@ -187,13 +271,36 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
 
     console.log(`   📤 Submitting ${comments.length} requests to Gemini Batch API...`);
 
-    const geminiBatchJob = await ai.batches.create({
-      model: 'gemini-2.5-flash',
-      src: inlineRequests,
-      config: {
-        displayName: batchJobRecord.displayName,
-      },
-    });
+    // Determine if we need JSONL format
+    const useJsonl = comments.length > JSONL_THRESHOLD;
+
+    if (useJsonl) {
+      console.log(`   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`);
+    }
+
+    // Submit batch job to Gemini
+    let geminiBatchJob;
+    if (useJsonl) {
+      const fileUri = await createJsonlBatchFile(inlineRequests, batchJobRecord.displayName);
+      geminiBatchJob = await ai.batches.create({
+        model: 'gemini-2.5-flash',
+        src: {
+          format: 'jsonl',
+          gcsUri: [fileUri]
+        },
+        config: {
+          displayName: batchJobRecord.displayName,
+        },
+      });
+    } else {
+      geminiBatchJob = await ai.batches.create({
+        model: 'gemini-2.5-flash',
+        src: inlineRequests,
+        config: {
+          displayName: batchJobRecord.displayName,
+        },
+      });
+    }
 
     await prisma.batchJob.update({
       where: { id: batchJobRecord.id },
@@ -233,14 +340,18 @@ Usage: tsx src/scripts/initializeBatch.ts [options]
 Options:
   --posts             Initialize batch for posts (default)
   --comments          Initialize batch for comments
-  --limit=<number>    Limit items to process
+  --limit=<number>    Limit items to process (max: 200,000)
   --reprocess-all     Don't skip existing extractions
   -h, --help          Show help
+
+Batch Format:
+  - Inline requests: Used for batches up to ${JSONL_THRESHOLD.toLocaleString()} items
+  - JSONL file: Automatically used for larger batches (up to 200K items, 2GB)
 
 Examples:
   npm run init-batch
   npm run init-batch -- --posts --limit=100
-  npm run init-batch -- --comments --limit=500
+  npm run init-batch -- --comments --limit=75000
 
 After initialization:
   - Check status: npm run batch-jobs list
@@ -260,6 +371,7 @@ After initialization:
   console.log(`   Type: ${contentType}`);
   console.log(`   Skip Existing: ${skipExisting ? 'Yes' : 'No'}`);
   console.log(`   Limit: ${limit || 'None (up to 1000)'}`);
+  console.log(`   Format: ${limit && limit > JSONL_THRESHOLD ? 'JSONL file' : 'Inline requests'}`);
   console.log(`   💰 Cost: 50% savings with Batch API!`);
 
   try {

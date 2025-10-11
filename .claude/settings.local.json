@@ -30,7 +30,10 @@
       "Bash(PGPASSWORD=password psql:*)",
       "Bash(npm install:*)",
       "Bash(pnpm uninstall:*)",
-      "Bash(pnpm exec:*)"
+      "Bash(pnpm exec:*)",
+      "Bash(git remote add:*)",
+      "Bash(export PGPASSWORD=password)",
+      "Bash(pg_dump:*)"
     ],
     "deny": [],
     "ask": []

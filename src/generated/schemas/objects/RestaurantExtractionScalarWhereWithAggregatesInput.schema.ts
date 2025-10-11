@@ -18,6 +18,7 @@ const restaurantextractionscalarwherewithaggregatesinputSchema = z.object({
   primaryRestaurant: z.union([z.lazy(() => StringWithAggregatesFilterObjectSchema), z.string()]).optional(),
   dishesMentioned: z.union([z.lazy(() => StringWithAggregatesFilterObjectSchema), z.string()]).optional(),
   isSubjective: z.union([z.lazy(() => BoolWithAggregatesFilterObjectSchema), z.boolean()]).optional(),
+  attemptedLinkToRestaurantsMentioned: z.union([z.lazy(() => BoolWithAggregatesFilterObjectSchema), z.boolean()]).optional(),
   extractedAt: z.union([z.lazy(() => DateTimeWithAggregatesFilterObjectSchema), z.coerce.date()]).optional(),
   model: z.union([z.lazy(() => StringNullableWithAggregatesFilterObjectSchema), z.string()]).optional().nullable(),
   createdAt: z.union([z.lazy(() => DateTimeWithAggregatesFilterObjectSchema), z.coerce.date()]).optional(),

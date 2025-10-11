@@ -3,10 +3,11 @@ import type { Prisma } from '@prisma/client';
 
 
 const makeSchema = () => z.object({
-  id: z.number().int().optional()
+  id: z.number().int().optional(),
+  googlePlaceId: z.string().optional()
 }).strict().superRefine((obj, ctx) => {
         const presentTop = (k: string) => (obj as any)[k] != null;
-        const singles: string[] = ["id"] as string[];
+        const singles: string[] = ["id","googlePlaceId"] as string[];
         const groups: string[][] = [] as string[][];
 
         const anySingle = Array.isArray(singles) && singles.length > 0 ? singles.some(presentTop) : false;

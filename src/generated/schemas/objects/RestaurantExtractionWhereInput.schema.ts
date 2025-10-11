@@ -22,6 +22,7 @@ const restaurantextractionwhereinputSchema = z.object({
   primaryRestaurant: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
   dishesMentioned: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
   isSubjective: z.union([z.lazy(() => BoolFilterObjectSchema), z.boolean()]).optional(),
+  attemptedLinkToRestaurantsMentioned: z.union([z.lazy(() => BoolFilterObjectSchema), z.boolean()]).optional(),
   extractedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   model: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),

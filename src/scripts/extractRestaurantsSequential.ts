@@ -3,19 +3,22 @@ dotenv.config();
 
 import { PrismaClient } from '@prisma/client';
 import {
+  CommentExtractionInput,
   extractCommentRestaurantInfo,
   extractPostRestaurantInfo,
-  CommentExtractionInput,
   PostExtractionInput,
   RestaurantExtractionResult,
 } from '../utils/gemini';
 
 const prisma = new PrismaClient();
 
-// Configuration
-const BATCH_SIZE = 100; // Process 100 items at a time
-const DELAY_BETWEEN_BATCHES = 2000; // 2 second delay between batches
-const DELAY_BETWEEN_ITEMS = 100; // 100ms between individual API calls
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+
+// Configuration - Optimized for paid tier: 1000 RPM (requests per minute)
+// Each batch should take at least 60 seconds to stay within rate limits
+const BATCH_SIZE = 4000; // Process up to 1000 items per batch (1000 RPM = 1000/min)
+const MIN_BATCH_DURATION_MS = 60000; // 60 seconds minimum per batch
+const STAGGER_DELAY_MS = 60; // 60ms stagger between starting each request
 
 interface Config {
   processPosts?: boolean;
@@ -25,41 +28,127 @@ interface Config {
 }
 
 /**
- * Save extraction result to database
+ * Batch save extraction results to database
+ * Separates creates and updates for optimal performance
  */
-async function saveExtraction(
-  result: RestaurantExtractionResult & { postId?: number; commentId?: number },
+async function batchSaveExtractions(
+  results: Array<
+    RestaurantExtractionResult & { postId?: number; commentId?: number }
+  >,
   model: string
 ) {
-  const data = {
-    restaurantsMentioned: result.restaurantsMentioned,
-    primaryRestaurant: result.primaryRestaurant,
-    dishesMentioned: result.dishesMentioned,
-    isSubjective: result.isSubjective,
-    model,
-    extractedAt: new Date(),
-  };
+  const now = new Date();
 
-  if (result.postId) {
-    await prisma.restaurantExtraction.upsert({
-      where: { postId: result.postId },
-      create: { ...data, postId: result.postId },
-      update: data,
-    });
-  } else if (result.commentId) {
-    await prisma.restaurantExtraction.upsert({
-      where: { commentId: result.commentId },
-      create: { ...data, commentId: result.commentId },
-      update: data,
-    });
-  }
+  // Separate posts and comments
+  const postResults = results.filter((r) => r.postId);
+  const commentResults = results.filter((r) => r.commentId);
+
+  // Get existing extraction IDs
+  const [existingPostIds, existingCommentIds] = await Promise.all([
+    postResults.length > 0
+      ? prisma.restaurantExtraction.findMany({
+          where: { postId: { in: postResults.map((r) => r.postId!) } },
+          select: { postId: true },
+        })
+      : Promise.resolve([]),
+    commentResults.length > 0
+      ? prisma.restaurantExtraction.findMany({
+          where: { commentId: { in: commentResults.map((r) => r.commentId!) } },
+          select: { commentId: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const existingPostIdSet = new Set(existingPostIds.map((e) => e.postId));
+  const existingCommentIdSet = new Set(
+    existingCommentIds.map((e) => e.commentId)
+  );
+
+  // Separate creates and updates
+  const postCreates = postResults.filter(
+    (r) => !existingPostIdSet.has(r.postId!)
+  );
+  const postUpdates = postResults.filter((r) =>
+    existingPostIdSet.has(r.postId!)
+  );
+  const commentCreates = commentResults.filter(
+    (r) => !existingCommentIdSet.has(r.commentId!)
+  );
+  const commentUpdates = commentResults.filter((r) =>
+    existingCommentIdSet.has(r.commentId!)
+  );
+
+  // Execute creates and updates in parallel
+  await Promise.all([
+    // Create new post extractions
+    postCreates.length > 0
+      ? prisma.restaurantExtraction.createMany({
+          data: postCreates.map((r) => ({
+            postId: r.postId!,
+            restaurantsMentioned: r.restaurantsMentioned,
+            primaryRestaurant: r.primaryRestaurant,
+            dishesMentioned: r.dishesMentioned,
+            isSubjective: r.isSubjective,
+            model,
+            extractedAt: now,
+          })),
+          skipDuplicates: true,
+        })
+      : Promise.resolve(),
+
+    // Create new comment extractions
+    commentCreates.length > 0
+      ? prisma.restaurantExtraction.createMany({
+          data: commentCreates.map((r) => ({
+            commentId: r.commentId!,
+            restaurantsMentioned: r.restaurantsMentioned,
+            primaryRestaurant: r.primaryRestaurant,
+            dishesMentioned: r.dishesMentioned,
+            isSubjective: r.isSubjective,
+            model,
+            extractedAt: now,
+          })),
+          skipDuplicates: true,
+        })
+      : Promise.resolve(),
+
+    // Update existing post extractions in parallel
+    ...postUpdates.map((r) =>
+      prisma.restaurantExtraction.update({
+        where: { postId: r.postId! },
+        data: {
+          restaurantsMentioned: r.restaurantsMentioned,
+          primaryRestaurant: r.primaryRestaurant,
+          dishesMentioned: r.dishesMentioned,
+          isSubjective: r.isSubjective,
+          model,
+          extractedAt: now,
+        },
+      })
+    ),
+
+    // Update existing comment extractions in parallel
+    ...commentUpdates.map((r) =>
+      prisma.restaurantExtraction.update({
+        where: { commentId: r.commentId! },
+        data: {
+          restaurantsMentioned: r.restaurantsMentioned,
+          primaryRestaurant: r.primaryRestaurant,
+          dishesMentioned: r.dishesMentioned,
+          isSubjective: r.isSubjective,
+          model,
+          extractedAt: now,
+        },
+      })
+    ),
+  ]);
 }
 
 /**
- * Process posts sequentially (FREE TIER COMPATIBLE)
+ * Process posts with parallel API calls and batch DB operations (OPTIMIZED)
  */
 async function processPostsSequential(limit?: number, skipExisting = true) {
-  console.log('\n📝 Processing Posts (Sequential - Free Tier Compatible)');
+  console.log('\n📝 Processing Posts (Optimized - Parallel API + Batch DB)');
   console.log('='.repeat(80));
 
   const whereClause = skipExisting ? { restaurantExtraction: null } : {};
@@ -74,6 +163,7 @@ async function processPostsSequential(limit?: number, skipExisting = true) {
   let errors = 0;
 
   while (processed < (limit || totalPosts)) {
+    const batchStartTime = Date.now();
     const batchLimit = Math.min(BATCH_SIZE, (limit || totalPosts) - processed);
 
     const posts = await prisma.post.findMany({
@@ -88,37 +178,70 @@ async function processPostsSequential(limit?: number, skipExisting = true) {
       `\n   Batch ${Math.floor(processed / BATCH_SIZE) + 1} (${posts.length} posts)...`
     );
 
-    // Process sequentially with delays (free tier friendly)
-    for (const post of posts) {
-      try {
-        const input: PostExtractionInput = {
-          post_title: post.title || '',
-          post_text: post.body || '',
-        };
+    // Process all posts in parallel with staggered starts
+    const extractionPromises = posts.map(
+      (post, index) =>
+        new Promise<{
+          extraction: RestaurantExtractionResult;
+          postId: number;
+        } | null>((resolve) => {
+          setTimeout(async () => {
+            try {
+              const input: PostExtractionInput = {
+                post_title: post.title || '',
+                post_text: post.body || '',
+              };
 
-        const extraction = await extractPostRestaurantInfo(input);
-        await saveExtraction(
-          { ...extraction, postId: post.id },
-          'gemini-2.5-flash'
-        );
+              const extraction = await extractPostRestaurantInfo(
+                input,
+                GEMINI_MODEL
+              );
+              resolve({ extraction, postId: post.id });
+            } catch (error) {
+              console.error(`      Error processing post ${post.id}:`, error);
+              resolve(null);
+            }
+          }, index * STAGGER_DELAY_MS);
+        })
+    );
 
-        processed++;
+    // Wait for all API calls to complete
+    const results = await Promise.all(extractionPromises);
 
-        if (processed % 10 === 0) {
-          console.log(`      Progress: ${processed}/${limit || totalPosts}`);
-        }
+    // Filter out errors and prepare for batch save
+    const successfulResults = results
+      .filter(
+        (r): r is { extraction: RestaurantExtractionResult; postId: number } =>
+          r !== null
+      )
+      .map((r) => ({ ...r.extraction, postId: r.postId }));
 
-        // Small delay between requests to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_ITEMS));
-      } catch (error) {
-        console.error(`      Error processing post ${post.id}:`, error);
-        errors++;
-      }
+    // Batch save to database
+    if (successfulResults.length > 0) {
+      await batchSaveExtractions(successfulResults, GEMINI_MODEL);
     }
 
-    // Delay between batches
+    processed += posts.length;
+    errors += posts.length - successfulResults.length;
+
+    const batchElapsedTime = Date.now() - batchStartTime;
+    console.log(
+      `      ✅ Success: ${successfulResults.length}, ❌ Errors: ${posts.length - successfulResults.length}`
+    );
+    console.log(`      Progress: ${processed}/${limit || totalPosts}`);
+    console.log(
+      `      ⏱️  Batch completed in ${(batchElapsedTime / 1000).toFixed(1)}s`
+    );
+
+    // Wait for remainder of minimum batch duration to respect rate limits
     if (processed < (limit || totalPosts)) {
-      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+      const waitTime = Math.max(0, MIN_BATCH_DURATION_MS - batchElapsedTime);
+      if (waitTime > 0) {
+        console.log(
+          `      ⏳ Waiting ${(waitTime / 1000).toFixed(1)}s before next batch (rate limit)...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
     }
   }
 
@@ -127,10 +250,10 @@ async function processPostsSequential(limit?: number, skipExisting = true) {
 }
 
 /**
- * Process comments sequentially (FREE TIER COMPATIBLE)
+ * Process comments with parallel API calls and batch DB operations (OPTIMIZED)
  */
 async function processCommentsSequential(limit?: number, skipExisting = true) {
-  console.log('\n💬 Processing Comments (Sequential - Free Tier Compatible)');
+  console.log('\n💬 Processing Comments (Optimized - Parallel API + Batch DB)');
   console.log('='.repeat(80));
 
   const whereClause = skipExisting ? { restaurantExtraction: null } : {};
@@ -145,6 +268,7 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
   let errors = 0;
 
   while (processed < (limit || totalComments)) {
+    const batchStartTime = Date.now();
     const batchLimit = Math.min(
       BATCH_SIZE,
       (limit || totalComments) - processed
@@ -165,36 +289,77 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
       `\n   Batch ${Math.floor(processed / BATCH_SIZE) + 1} (${comments.length} comments)...`
     );
 
-    for (const comment of comments) {
-      try {
-        const input: CommentExtractionInput = {
-          post_title: comment.post.title || '',
-          post_text: comment.post.body || '',
-          comment_text: comment.body || '',
-          parent_text: comment.parentComment?.body || '',
-        };
+    // Process all comments in parallel with staggered starts
+    const extractionPromises = comments.map(
+      (comment, index) =>
+        new Promise<{
+          extraction: RestaurantExtractionResult;
+          commentId: number;
+        } | null>((resolve) => {
+          setTimeout(async () => {
+            try {
+              const input: CommentExtractionInput = {
+                post_title: comment.post.title || '',
+                post_text: comment.post.body || '',
+                comment_text: comment.body || '',
+                parent_text: comment.parentComment?.body || '',
+              };
 
-        const extraction = await extractCommentRestaurantInfo(input);
-        await saveExtraction(
-          { ...extraction, commentId: comment.id },
-          'gemini-2.5-flash'
-        );
+              const extraction = await extractCommentRestaurantInfo(
+                input,
+                GEMINI_MODEL
+              );
+              resolve({ extraction, commentId: comment.id });
+            } catch (error) {
+              console.error(
+                `      Error processing comment ${comment.id}:`,
+                error
+              );
+              resolve(null);
+            }
+          }, index * STAGGER_DELAY_MS);
+        })
+    );
 
-        processed++;
+    // Wait for all API calls to complete
+    const results = await Promise.all(extractionPromises);
 
-        if (processed % 10 === 0) {
-          console.log(`      Progress: ${processed}/${limit || totalComments}`);
-        }
+    // Filter out errors and prepare for batch save
+    const successfulResults = results
+      .filter(
+        (
+          r
+        ): r is { extraction: RestaurantExtractionResult; commentId: number } =>
+          r !== null
+      )
+      .map((r) => ({ ...r.extraction, commentId: r.commentId }));
 
-        await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_ITEMS));
-      } catch (error) {
-        console.error(`      Error processing comment ${comment.id}:`, error);
-        errors++;
-      }
+    // Batch save to database
+    if (successfulResults.length > 0) {
+      await batchSaveExtractions(successfulResults, GEMINI_MODEL);
     }
 
+    processed += comments.length;
+    errors += comments.length - successfulResults.length;
+
+    const batchElapsedTime = Date.now() - batchStartTime;
+    console.log(
+      `      ✅ Success: ${successfulResults.length}, ❌ Errors: ${comments.length - successfulResults.length}`
+    );
+    console.log(`      Progress: ${processed}/${limit || totalComments}`);
+    console.log(
+      `      ⏱️  Batch completed in ${(batchElapsedTime / 1000).toFixed(1)}s`
+    );
+
+    // Wait for remainder of minimum batch duration to respect rate limits
     if (processed < (limit || totalComments)) {
-      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+      const waitTime = Math.max(0, MIN_BATCH_DURATION_MS - batchElapsedTime);
+      if (waitTime > 0) {
+        console.log(
+          `      ⏳ Waiting ${(waitTime / 1000).toFixed(1)}s before next batch (rate limit)...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
     }
   }
 
@@ -286,12 +451,20 @@ Examples:
   npm run extract-restaurants -- --comments-only
 
 Features:
-  ✅ FREE TIER COMPATIBLE - Uses standard API calls
-  ✅ Rate limiting built-in (100ms between calls)
+  ✅ OPTIMIZED FOR PAID TIER - 1000 RPM rate limit
+  ✅ Parallel API calls (1000 concurrent with 60ms stagger)
+  ✅ Batch database operations (createMany + parallel updates)
+  ✅ Time-based rate limiting (each batch takes ≥60s)
   ✅ Progress tracking and error handling
   ✅ Saves to RestaurantExtraction table
 
-Note: For 50% cost savings, upgrade to paid tier and use:
+Performance:
+  • Batch size: Up to 1000 items per batch
+  • Rate limit: 1000 requests/minute (enforced via timing)
+  • DB operations: Bulk creates + parallel updates per batch
+  • Expected speed: ~60,000 items/hour maximum
+
+Note: For 50% cost savings, use Batch API instead:
   npm run init-batch (submit batch job)
   npm run check-batch (retrieve results)
   `);

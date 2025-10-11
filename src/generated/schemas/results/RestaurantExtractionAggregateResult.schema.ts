@@ -9,6 +9,7 @@ export const RestaurantExtractionAggregateResultSchema = z.object({  _count: z.o
     primaryRestaurant: z.number(),
     dishesMentioned: z.number(),
     isSubjective: z.number(),
+    attemptedLinkToRestaurantsMentioned: z.number(),
     extractedAt: z.number(),
     model: z.number(),
     createdAt: z.number(),

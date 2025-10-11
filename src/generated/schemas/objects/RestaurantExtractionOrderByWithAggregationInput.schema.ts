@@ -16,6 +16,7 @@ const makeSchema = () => z.object({
   primaryRestaurant: SortOrderSchema.optional(),
   dishesMentioned: SortOrderSchema.optional(),
   isSubjective: SortOrderSchema.optional(),
+  attemptedLinkToRestaurantsMentioned: SortOrderSchema.optional(),
   extractedAt: SortOrderSchema.optional(),
   model: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),

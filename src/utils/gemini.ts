@@ -11,14 +11,15 @@ import {
 // Lazy initialization to allow dotenvx to decrypt env vars first
 let genAI: GoogleGenAI | null = null;
 
-const model = 'gemini-2.5-flash';
+// Configuration
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
 export function getGenAI(): GoogleGenAI {
   if (!genAI) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY environment variable is required');
+    if (!process.env.GOOGLE_API_KEY) {
+      throw new Error('GOOGLE_API_KEY environment variable is required');
     }
-    genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
   }
   return genAI;
 }
@@ -83,7 +84,8 @@ function parseSentimentResponse(responseText: string): SentimentResult {
  * Returns rawAiScore (-1 to 1) and restaurantsMentioned
  */
 export async function evaluateComment(
-  input: CommentSentimentInput
+  input: CommentSentimentInput,
+  model: string = DEFAULT_GEMINI_MODEL
 ): Promise<SentimentResult> {
   try {
     const response = await getGenAI().models.generateContent({
@@ -104,7 +106,8 @@ export async function evaluateComment(
  * Returns rawAiScore (-1 to 1) and restaurantsMentioned
  */
 export async function evaluatePost(
-  input: PostSentimentInput
+  input: PostSentimentInput,
+  model: string = DEFAULT_GEMINI_MODEL
 ): Promise<SentimentResult> {
   try {
     const response = await getGenAI().models.generateContent({
@@ -142,17 +145,20 @@ export function parseRestaurantExtractionResponse(
       restaurantsMentioned = line
         .replace('restaurantsMentioned:', '')
         .trim()
-        .replace(/^\[|\]$/g, '');
+        .replace(/^\[|\]$/g, '')
+        .replace(/"/g, '');
     } else if (line.startsWith('primaryRestaurant:')) {
       primaryRestaurant = line
         .replace('primaryRestaurant:', '')
         .trim()
-        .replace(/^["']|["']$/g, '');
+        .replace(/^["']|["']$/g, '')
+        .replace(/"/g, '');
     } else if (line.startsWith('dishesMentioned:')) {
       dishesMentioned = line
         .replace('dishesMentioned:', '')
         .trim()
-        .replace(/^\[|\]$/g, '');
+        .replace(/^\[|\]$/g, '')
+        .replace(/"/g, '');
     } else if (line.startsWith('isSubjective:')) {
       const value = line.replace('isSubjective:', '').trim().toLowerCase();
       isSubjective = value === 'true';
@@ -171,7 +177,8 @@ export function parseRestaurantExtractionResponse(
  * Extract restaurant information from a comment
  */
 export async function extractCommentRestaurantInfo(
-  input: CommentExtractionInput
+  input: CommentExtractionInput,
+  model: string = DEFAULT_GEMINI_MODEL
 ): Promise<RestaurantExtractionResult> {
   try {
     const response = await getGenAI().models.generateContent({
@@ -191,7 +198,8 @@ export async function extractCommentRestaurantInfo(
  * Extract restaurant information from a post
  */
 export async function extractPostRestaurantInfo(
-  input: PostExtractionInput
+  input: PostExtractionInput,
+  model: string = DEFAULT_GEMINI_MODEL
 ): Promise<RestaurantExtractionResult> {
   try {
     const response = await getGenAI().models.generateContent({

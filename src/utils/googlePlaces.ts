@@ -1,0 +1,216 @@
+import { PlacesClient, protos } from '@googlemaps/places';
+import { PrismaClient } from '@prisma/client';
+import Fuse from 'fuse.js';
+
+// Lazy initialization for Places API client
+let placesClient: PlacesClient | null = null;
+
+export function getPlacesClient(): PlacesClient | null {
+  if (!placesClient) {
+    const apiKey = process.env.GOOGLE_API_KEY;
+
+    if (!apiKey) {
+      console.warn(
+        '⚠️  GOOGLE_API_KEY not set - skipping Google Places lookups'
+      );
+      return null;
+    }
+
+    placesClient = new PlacesClient({
+      apiKey,
+    });
+  }
+
+  return placesClient;
+}
+
+/**
+ * Query Google Places API to find a restaurant
+ */
+export async function findPlaceByName(
+  restaurantName: string,
+  location: string = 'Los Angeles, CA'
+): Promise<protos.google.maps.places.v1.IPlace | null> {
+  const client = getPlacesClient();
+
+  if (!client) {
+    return null;
+  }
+
+  try {
+    const request: protos.google.maps.places.v1.ISearchTextRequest = {
+      textQuery: `${restaurantName} restaurant ${location}`,
+      locationBias: {
+        circle: {
+          center: {
+            latitude: 34.0522,
+            longitude: -118.2437,
+          },
+          radius: 50000, // 50km radius around LA
+        },
+      },
+    };
+
+    const [response] = await client.searchText(request, {
+      otherArgs: {
+        headers: {
+          'X-Goog-FieldMask':
+            'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.priceLevel,places.types,places.nationalPhoneNumber,places.websiteUri',
+        },
+      },
+    });
+
+    if (response.places && response.places.length > 0) {
+      return response.places[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`   ⚠️  Google Places API error:`, error);
+    return null;
+  }
+}
+
+/**
+ * Extract address components from Google Places addressComponents
+ */
+export function extractAddressComponents(
+  addressComponents?: protos.google.maps.places.v1.Place.IAddressComponent[]
+) {
+  if (!addressComponents || addressComponents.length === 0) {
+    return { address: null, city: null, state: null, zipCode: null };
+  }
+
+  let streetNumber = '';
+  let route = '';
+  let city = null;
+  let state = null;
+  let zipCode = null;
+
+  for (const component of addressComponents) {
+    const types = component.types || [];
+
+    if (types.includes('street_number')) {
+      streetNumber = component.longText || '';
+    } else if (types.includes('route')) {
+      route = component.longText || '';
+    } else if (types.includes('locality')) {
+      city = component.longText || null;
+    } else if (types.includes('administrative_area_level_1')) {
+      state = component.shortText || null;
+    } else if (types.includes('postal_code')) {
+      zipCode = component.longText || null;
+    }
+  }
+
+  const address = [streetNumber, route].filter(Boolean).join(' ') || null;
+
+  return { address, city, state, zipCode };
+}
+
+export interface GooglePlacesStats {
+  googlePlacesLookups: number;
+  googlePlacesAdded: number;
+  googlePlacesFailed: number;
+}
+
+/**
+ * Attempt to add restaurant via Google Places API
+ * Updates Fuse index with newly added restaurants
+ */
+export async function lookupAndAddRestaurant(
+  restaurantName: string,
+  prisma: PrismaClient,
+  stats: GooglePlacesStats,
+  fuse: Fuse<{ id: number; name: string }>,
+  restaurants: { id: number; name: string }[]
+): Promise<number | null> {
+  stats.googlePlacesLookups++;
+
+  try {
+    const place = await findPlaceByName(restaurantName);
+
+    if (!place) {
+      stats.googlePlacesFailed++;
+      return null;
+    }
+
+    // Extract place ID from the resource name (format: "places/{place_id}")
+    const placeId = place.id || place.name?.split('/').pop() || '';
+
+    if (!placeId) {
+      stats.googlePlacesFailed++;
+      console.log(`   ⚠️  No place ID found in response`);
+      return null;
+    }
+
+    // Check if we already have this place_id
+    const existing = await prisma.restaurant.findUnique({
+      where: { googlePlaceId: placeId },
+    });
+
+    if (existing) {
+      console.log(
+        `   ℹ️  Found via Google (already in DB): "${existing.name}"`
+      );
+
+      return existing.id;
+    }
+
+    // Extract data from the new API response format
+    const displayName = place.displayName?.text || restaurantName;
+    const formattedAddress = place.formattedAddress || '';
+    const rating = place.rating;
+    const priceLevel = place.priceLevel;
+    const types = place.types || [];
+    const nationalPhoneNumber = place.nationalPhoneNumber;
+    const websiteUri = place.websiteUri;
+
+    // Create new restaurant from Google Places data
+    const { address, city, state, zipCode } = extractAddressComponents(
+      place.addressComponents || []
+    );
+
+    const restaurant = await prisma.restaurant.create({
+      data: {
+        name: displayName,
+        address,
+        city,
+        state,
+        zipCode,
+        source: 'Google Places API',
+        googlePlaceId: placeId,
+        metadata: {
+          rating,
+          priceLevel,
+          types,
+          formattedAddress,
+          nationalPhoneNumber,
+          websiteUri,
+        },
+      },
+    });
+
+    stats.googlePlacesAdded++;
+    console.log(
+      `   🌐 Added via Google Places: "${displayName}" at ${formattedAddress}`
+    );
+
+    // Add new restaurant to the array and update Fuse index
+    const newRestaurant = { id: restaurant.id, name: displayName };
+    restaurants.push(newRestaurant);
+    fuse.setCollection(restaurants);
+    console.log(
+      `   ✨ Updated Fuse index with new restaurant (total: ${restaurants.length})`
+    );
+
+    // Rate limiting: Wait 500ms between API calls
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    return restaurant.id;
+  } catch (error) {
+    stats.googlePlacesFailed++;
+    console.error(`   ⚠️  Google Places error for "${restaurantName}":`, error);
+    return null;
+  }
+}

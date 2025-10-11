@@ -102,22 +102,23 @@ model File {
 }
 
 model Restaurant {
-  id             Int      @id @default(autoincrement())
-  name           String
-  address        String?
-  city           String?
-  state          String?
-  zipCode        String?
-  phone          String?
-  website        String?
-  restaurantType String?
-  priceRange     String?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  name          String
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  source        String   @default("Open Data Portal") // "Open Data Portal" or "Google Places API"
+  googlePlaceId String?  @unique // Google Places ID for API lookups
+  metadata      Json? // Store additional data (phone, website, rating, priceLevel, types, etc.)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   posts    Post[]
   comments Comment[]
+
+  @@index([source])
+  @@index([googlePlaceId])
 }
 
 model BatchJob {
@@ -171,6 +172,9 @@ model RestaurantExtraction {
   dishesMentioned      String // Comma-separated or "NONE"
   isSubjective         Boolean
 
+  // Linking tracking
+  attemptedLinkToRestaurantsMentioned Boolean @default(false) // Whether we've attempted to link this extraction
+
   // Metadata
   extractedAt DateTime @default(now())
   model       String? // e.g., "gemini-2.5-flash"
@@ -182,6 +186,7 @@ model RestaurantExtraction {
   @@unique([commentId]) // One extraction per comment
   @@index([isSubjective]) // For filtering subjective content
   @@index([extractedAt]) // For tracking extraction progress
+  @@index([attemptedLinkToRestaurantsMentioned]) // For querying items that need linking
 }
 
 model ScrapingSession {
