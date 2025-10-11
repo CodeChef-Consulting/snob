@@ -11,18 +11,18 @@ interface RestaurantCSVRow {
   'BUSINESS NAME': string;
   'DBA NAME': string;
   'STREET ADDRESS': string;
-  'CITY': string;
+  CITY: string;
   'ZIP CODE': string;
   'LOCATION DESCRIPTION': string;
   'MAILING ADDRESS': string;
   'MAILING CITY': string;
   'MAILING ZIP CODE': string;
-  'NAICS': string;
+  NAICS: string;
   'PRIMARY NAICS DESCRIPTION': string;
   'COUNCIL DISTRICT': string;
   'LOCATION START DATE': string;
   'LOCATION END DATE': string;
-  'LOCATION': string;
+  LOCATION: string;
 }
 
 async function ingestRestaurants() {
@@ -52,7 +52,9 @@ async function ingestRestaurants() {
         }
 
         // Parse location coordinates if available
-        const locationMatch = record['LOCATION']?.match(/POINT \(([^ ]+) ([^ ]+)\)/);
+        const locationMatch = record['LOCATION']?.match(
+          /POINT \(([^ ]+) ([^ ]+)\)/
+        );
         const metadata: any = {
           locationAccountNumber: record['LOCATION ACCOUNT #'],
           businessName: record['BUSINESS NAME'],
@@ -70,11 +72,22 @@ async function ingestRestaurants() {
             latitude: parseFloat(locationMatch[2]),
           };
         }
+        const existingRestaurant = await prisma.restaurant.findFirst({
+          where: { name: startCase(toLower(name!)) },
+        });
+
+        if (existingRestaurant) {
+          console.log(`Restaurant already exists: ${name}`);
+          skipped++;
+          continue;
+        }
 
         await prisma.restaurant.create({
           data: {
-            name: name ? startCase(toLower(name)) : null,
-            address: record['STREET ADDRESS'] ? startCase(toLower(record['STREET ADDRESS'])) : null,
+            name: name ? startCase(toLower(name)) : '',
+            address: record['STREET ADDRESS']
+              ? startCase(toLower(record['STREET ADDRESS']))
+              : null,
             city: record['CITY'] ? startCase(toLower(record['CITY'])) : null,
             state: 'CA', // All restaurants are in California (Los Angeles)
             zipCode: record['ZIP CODE'] || null,
@@ -88,7 +101,10 @@ async function ingestRestaurants() {
           console.log(`Progress: ${inserted} restaurants inserted`);
         }
       } catch (error) {
-        console.error(`Error inserting restaurant: ${record['BUSINESS NAME']}`, error);
+        console.error(
+          `Error inserting restaurant: ${record['BUSINESS NAME']}`,
+          error
+        );
         skipped++;
       }
     }

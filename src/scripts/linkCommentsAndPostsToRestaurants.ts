@@ -1,6 +1,8 @@
+import dotenv from '@dotenvx/dotenvx';
 import { PrismaClient } from '@prisma/client';
-import Fuse from 'fuse.js';
+import Fuse, { FuseResult } from 'fuse.js';
 import { lookupAndAddRestaurant } from '../utils/googlePlaces';
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -17,6 +19,94 @@ interface LinkingStats {
   googlePlacesLookups: number;
   googlePlacesAdded: number;
   googlePlacesFailed: number;
+}
+
+// Common restaurant name suffixes and prefixes to strip for normalization
+const COMMON_SUFFIXES = [
+  'Restaurant',
+  'Cafe',
+  'Grill',
+  'Kitchen',
+  'Bar',
+  'Food',
+  'House',
+  'Sushi',
+  'BBQ',
+  'Bbq',
+  'Tacos',
+  'Burgers',
+  'Bakery',
+  'Pizzeria',
+  'Bistro',
+  'Market',
+  'Shop',
+  'Place',
+  'Spot',
+  'Eatery',
+  'Steakhouse',
+];
+
+const COMMON_PREFIXES = ['The', 'Los', 'Las', 'El', 'La'];
+
+/**
+ * Normalizes a restaurant name by removing common prefixes and suffixes
+ * @param name Original restaurant name
+ * @returns Normalized name without common prefixes/suffixes
+ */
+function normalizeRestaurantName(name: string): string {
+  let normalized = name.trim();
+
+  // Remove common prefixes (case-insensitive)
+  for (const prefix of COMMON_PREFIXES) {
+    const pattern = new RegExp(`^${prefix}\\s+`, 'i');
+    normalized = normalized.replace(pattern, '');
+  }
+
+  // Remove common suffixes (case-insensitive)
+  for (const suffix of COMMON_SUFFIXES) {
+    const pattern = new RegExp(`\\s+${suffix}$`, 'i');
+    normalized = normalized.replace(pattern, '');
+  }
+
+  return normalized.trim();
+}
+
+/**
+ * Two-pass fuzzy matching: first with original name, then with normalized name
+ * @param extractedName Original restaurant name from extraction
+ * @param fuse Fuse.js instance for searching
+ * @param threshold Score threshold for matching (default 0.3)
+ * @returns Best match result if found, null otherwise
+ */
+function findRestaurantMatch(
+  extractedName: string,
+  fuse: Fuse<{ id: number; name: string }>,
+  threshold: number = 0.3
+): FuseResult<{ id: number; name: string }> | null {
+  // Pass 1: Search with original name
+  const originalResults = fuse.search(extractedName);
+  if (
+    originalResults.length > 0 &&
+    originalResults[0].score !== undefined &&
+    originalResults[0].score < threshold
+  ) {
+    return originalResults[0];
+  }
+
+  // Pass 2: Search with normalized name (suffixes/prefixes removed)
+  const normalized = normalizeRestaurantName(extractedName);
+  if (normalized !== extractedName && normalized.length > 0) {
+    const normalizedResults = fuse.search(normalized);
+    if (
+      normalizedResults.length > 0 &&
+      normalizedResults[0].score !== undefined &&
+      normalizedResults[0].score < threshold
+    ) {
+      return normalizedResults[0];
+    }
+  }
+
+  return null;
 }
 
 async function linkCommentsAndPostsToRestaurants() {
@@ -81,7 +171,7 @@ async function linkCommentsAndPostsToRestaurants() {
       googlePlacesFailed: 0,
     };
 
-    // Get all restaurants and create Fuse.js index
+    // Get all restaurants and create Fuse.js index for name matching
     const restaurants = await prisma.restaurant.findMany({
       select: {
         id: true,
@@ -91,13 +181,62 @@ async function linkCommentsAndPostsToRestaurants() {
 
     console.log(`Loaded ${restaurants.length} restaurants from database\n`);
 
-    // Create Fuse.js instance for fuzzy matching
+    // Create Fuse.js instance for name-based fuzzy matching
     const fuse = new Fuse(restaurants, {
       keys: ['name'],
       threshold: 0.3, // Lower = more strict (0.0 = exact, 1.0 = match anything)
       ignoreLocation: true,
       includeScore: true,
     });
+
+    // Get non-Google Places restaurants with addresses for address-based matching
+    const restaurantsWithAddress = await prisma.restaurant.findMany({
+      where: {
+        source: { not: 'Google Places API' },
+        OR: [{ address: { not: null } }],
+      },
+      select: {
+        id: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        metadata: true,
+      },
+    });
+
+    console.log(
+      `Loaded ${restaurantsWithAddress.length} non-Google Places restaurants with addresses for deduplication\n`
+    );
+
+    // Create address array for Fuse (prefer metadata.formattedAddress, fallback to constructed address)
+    const restaurantAddresses = restaurantsWithAddress
+      .map((r) => {
+        // Try metadata.formattedAddress first
+        const formattedAddress =
+          (r.metadata as any)?.formattedAddress ||
+          [r.address, r.city, r.state, r.zipCode].filter(Boolean).join(', ');
+
+        return formattedAddress
+          ? { id: r.id, address: formattedAddress }
+          : null;
+      })
+      .filter((r): r is { id: number; address: string } => r !== null);
+
+    // Create Fuse.js instance for address-based fuzzy matching
+    const addressFuse =
+      restaurantAddresses.length > 0
+        ? new Fuse(restaurantAddresses, {
+            keys: ['address'],
+            threshold: 0.3,
+            ignoreLocation: true,
+            includeScore: true,
+          })
+        : null;
+
+    console.log(
+      `Created address-based Fuse index with ${restaurantAddresses.length} addresses\n`
+    );
 
     // Check for --reattempt-all flag (default is to skip already attempted)
     const reattemptAll = process.argv.includes('--reattempt-all');
@@ -135,36 +274,39 @@ async function linkCommentsAndPostsToRestaurants() {
       }
 
       const matchedRestaurantIds = new Set<number>();
+      let hadGooglePlacesError = false;
 
       // Fuzzy match each extracted restaurant name
       for (const extractedName of extractedNames) {
-        const results = fuse.search(extractedName);
+        const matchResult = findRestaurantMatch(extractedName, fuse);
 
-        if (
-          results.length > 0 &&
-          results[0].score !== undefined &&
-          results[0].score < 0.3
-        ) {
-          matchedRestaurantIds.add(results[0].item.id);
+        if (matchResult) {
+          matchedRestaurantIds.add(matchResult.item.id);
           stats.fuzzyMatches++;
           console.log(
-            `✅ Post ${extraction.postId}: "${extractedName}" → "${results[0].item.name}" (score: ${results[0].score.toFixed(3)})`
+            `✅ Post ${extraction.postId}: "${extractedName}" → "${matchResult.item.name}" (score: ${matchResult.score!.toFixed(3)})`
           );
         } else {
           // Try Google Places API as fallback (for posts, always try)
           console.log(
             `🔍 Post ${extraction.postId}: "${extractedName}" → no fuzzy match, trying Google Places...`
           );
-          const restaurantId = await lookupAndAddRestaurant(
+          const result = await lookupAndAddRestaurant(
             extractedName,
             prisma,
             stats,
             fuse,
-            restaurants
+            restaurants,
+            addressFuse
           );
 
-          if (restaurantId) {
-            matchedRestaurantIds.add(restaurantId);
+          if (result.hadError) {
+            hadGooglePlacesError = true;
+            console.log(
+              `⚠️  Post ${extraction.postId}: "${extractedName}" → Google Places error`
+            );
+          } else if (result.restaurantId) {
+            matchedRestaurantIds.add(result.restaurantId);
             stats.fuzzyMatches++;
           } else {
             stats.unmatchedMentions++;
@@ -188,13 +330,19 @@ async function linkCommentsAndPostsToRestaurants() {
         },
       });
 
-      // Mark extraction as attempted
-      await prisma.restaurantExtraction.update({
-        where: { postId: extraction.postId },
-        data: {
-          attemptedLinkToRestaurantsMentioned: true,
-        },
-      });
+      // Mark extraction as attempted only if no Google Places errors
+      if (!hadGooglePlacesError) {
+        await prisma.restaurantExtraction.update({
+          where: { postId: extraction.postId },
+          data: {
+            attemptedLinkToRestaurantsMentioned: true,
+          },
+        });
+      } else {
+        console.log(
+          `   ⏸️  Post ${extraction.postId}: Not marking as attempted due to Google Places error`
+        );
+      }
 
       if (matchedRestaurantIds.size > 0) {
         stats.postsLinked++;
@@ -245,6 +393,7 @@ async function linkCommentsAndPostsToRestaurants() {
       }
 
       const matchedRestaurantIds = new Set<number>();
+      let hadGooglePlacesError = false;
 
       // Check if there's a primary restaurant
       const hasPrimaryRestaurant =
@@ -263,33 +412,35 @@ async function linkCommentsAndPostsToRestaurants() {
 
       // Fuzzy match each extracted restaurant name
       for (const extractedName of namesToProcess) {
-        const results = fuse.search(extractedName);
+        const matchResult = findRestaurantMatch(extractedName, fuse);
 
-        if (
-          results.length > 0 &&
-          results[0].score !== undefined &&
-          results[0].score < 0.3
-        ) {
-          matchedRestaurantIds.add(results[0].item.id);
+        if (matchResult) {
+          matchedRestaurantIds.add(matchResult.item.id);
           stats.fuzzyMatches++;
           console.log(
-            `✅ Comment ${extraction.commentId}: "${extractedName}" → "${results[0].item.name}" (score: ${results[0].score.toFixed(3)})`
+            `✅ Comment ${extraction.commentId}: "${extractedName}" → "${matchResult.item.name}" (score: ${matchResult.score!.toFixed(3)})`
           );
         } else if (extraction.isSubjective) {
           // Try Google Places API as fallback (only for subjective comments)
           console.log(
             `🔍 Comment ${extraction.commentId}: "${extractedName}" → no fuzzy match, trying Google Places (subjective)...`
           );
-          const restaurantId = await lookupAndAddRestaurant(
+          const result = await lookupAndAddRestaurant(
             extractedName,
             prisma,
             stats,
             fuse,
-            restaurants
+            restaurants,
+            addressFuse
           );
 
-          if (restaurantId) {
-            matchedRestaurantIds.add(restaurantId);
+          if (result.hadError) {
+            hadGooglePlacesError = true;
+            console.log(
+              `⚠️  Comment ${extraction.commentId}: "${extractedName}" → Google Places error`
+            );
+          } else if (result.restaurantId) {
+            matchedRestaurantIds.add(result.restaurantId);
             stats.fuzzyMatches++;
           } else {
             stats.unmatchedMentions++;
@@ -303,7 +454,7 @@ async function linkCommentsAndPostsToRestaurants() {
           stats.unmatchedMentions++;
           stats.unmatchedNames.add(extractedName);
           console.log(
-            `⏭️  Comment ${extraction.commentId}: "${extractedName}" → no match (non-subjective, skipping Google Places)`
+            `⏭️  Comment ${extraction.commentId}: "${extractedName}" → no match`
           );
         }
       }
@@ -318,13 +469,19 @@ async function linkCommentsAndPostsToRestaurants() {
         },
       });
 
-      // Mark extraction as attempted
-      await prisma.restaurantExtraction.update({
-        where: { commentId: extraction.commentId },
-        data: {
-          attemptedLinkToRestaurantsMentioned: true,
-        },
-      });
+      // Mark extraction as attempted only if no Google Places errors
+      if (!hadGooglePlacesError) {
+        await prisma.restaurantExtraction.update({
+          where: { commentId: extraction.commentId },
+          data: {
+            attemptedLinkToRestaurantsMentioned: true,
+          },
+        });
+      } else {
+        console.log(
+          `   ⏸️  Comment ${extraction.commentId}: Not marking as attempted due to Google Places error`
+        );
+      }
 
       if (matchedRestaurantIds.size > 0) {
         stats.commentsLinked++;

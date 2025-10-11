@@ -114,17 +114,25 @@ export interface GooglePlacesStats {
   googlePlacesFailed: number;
 }
 
+export interface GooglePlacesResult {
+  restaurantId: number | null;
+  hadError: boolean;
+}
+
 /**
  * Attempt to add restaurant via Google Places API
  * Updates Fuse index with newly added restaurants
+ * Checks address-based fuzzy match first to prevent duplicates
+ * Returns { restaurantId, hadError } to distinguish API errors from not found
  */
 export async function lookupAndAddRestaurant(
   restaurantName: string,
   prisma: PrismaClient,
   stats: GooglePlacesStats,
   fuse: Fuse<{ id: number; name: string }>,
-  restaurants: { id: number; name: string }[]
-): Promise<number | null> {
+  restaurants: { id: number; name: string }[],
+  addressFuse: Fuse<{ id: number; address: string }> | null = null
+): Promise<GooglePlacesResult> {
   stats.googlePlacesLookups++;
 
   try {
@@ -132,7 +140,7 @@ export async function lookupAndAddRestaurant(
 
     if (!place) {
       stats.googlePlacesFailed++;
-      return null;
+      return { restaurantId: null, hadError: false }; // Not found, but no error
     }
 
     // Extract place ID from the resource name (format: "places/{place_id}")
@@ -141,7 +149,7 @@ export async function lookupAndAddRestaurant(
     if (!placeId) {
       stats.googlePlacesFailed++;
       console.log(`   ⚠️  No place ID found in response`);
-      return null;
+      return { restaurantId: null, hadError: false };
     }
 
     // Check if we already have this place_id
@@ -154,7 +162,7 @@ export async function lookupAndAddRestaurant(
         `   ℹ️  Found via Google (already in DB): "${existing.name}"`
       );
 
-      return existing.id;
+      return { restaurantId: existing.id, hadError: false };
     }
 
     // Extract data from the new API response format
@@ -170,6 +178,28 @@ export async function lookupAndAddRestaurant(
     const { address, city, state, zipCode } = extractAddressComponents(
       place.addressComponents || []
     );
+
+    // Check if a non-Google Places restaurant exists with similar address
+    if (addressFuse && formattedAddress) {
+      const addressResults = addressFuse.search(formattedAddress);
+      if (
+        addressResults.length > 0 &&
+        addressResults[0].score !== undefined &&
+        addressResults[0].score < 0.3
+      ) {
+        const existingRestaurant = await prisma.restaurant.findUnique({
+          where: { id: addressResults[0].item.id },
+          select: { id: true, name: true, source: true },
+        });
+
+        if (existingRestaurant) {
+          console.log(
+            `   🔗 Address match found: "${restaurantName}" → existing "${existingRestaurant.name}" (source: ${existingRestaurant.source}, address score: ${addressResults[0].score.toFixed(3)})`
+          );
+          return { restaurantId: existingRestaurant.id, hadError: false };
+        }
+      }
+    }
 
     const restaurant = await prisma.restaurant.create({
       data: {
@@ -207,10 +237,10 @@ export async function lookupAndAddRestaurant(
     // Rate limiting: Wait 500ms between API calls
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    return restaurant.id;
+    return { restaurantId: restaurant.id, hadError: false };
   } catch (error) {
     stats.googlePlacesFailed++;
     console.error(`   ⚠️  Google Places error for "${restaurantName}":`, error);
-    return null;
+    return { restaurantId: null, hadError: true }; // Error occurred
   }
 }
