@@ -8,6 +8,7 @@
     "fetch-comments": "tsx src/scripts/fetchComments.ts",
     "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
     "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
+    "add-restaurant": "tsx src/scripts/addRestaurantManually.ts",
     "init-batch": "tsx src/scripts/initializeBatch.ts",
     "check-batch": "tsx src/scripts/checkBatch.ts",
     "batch-jobs": "tsx src/scripts/manageBatchJobs.ts",

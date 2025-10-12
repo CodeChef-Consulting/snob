@@ -39,7 +39,7 @@ export async function findPlaceByName(
 
   try {
     const request: protos.google.maps.places.v1.ISearchTextRequest = {
-      textQuery: `${restaurantName} restaurant ${location}`,
+      textQuery: `${restaurantName} food drink ${location}`,
       locationBias: {
         circle: {
           center: {
