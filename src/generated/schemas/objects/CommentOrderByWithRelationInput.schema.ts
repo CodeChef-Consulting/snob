@@ -7,7 +7,8 @@ import { CommentOrderByRelationAggregateInputObjectSchema as CommentOrderByRelat
 import { ScrapingSessionOrderByWithRelationInputObjectSchema as ScrapingSessionOrderByWithRelationInputObjectSchema } from './ScrapingSessionOrderByWithRelationInput.schema';
 import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema';
 import { RestaurantOrderByRelationAggregateInputObjectSchema as RestaurantOrderByRelationAggregateInputObjectSchema } from './RestaurantOrderByRelationAggregateInput.schema';
-import { RestaurantExtractionOrderByWithRelationInputObjectSchema as RestaurantExtractionOrderByWithRelationInputObjectSchema } from './RestaurantExtractionOrderByWithRelationInput.schema'
+import { RestaurantExtractionOrderByWithRelationInputObjectSchema as RestaurantExtractionOrderByWithRelationInputObjectSchema } from './RestaurantExtractionOrderByWithRelationInput.schema';
+import { SentimentExtractionOrderByWithRelationInputObjectSchema as SentimentExtractionOrderByWithRelationInputObjectSchema } from './SentimentExtractionOrderByWithRelationInput.schema'
 
 const commentorderbywithrelationinputSchema = z.object({
   id: SortOrderSchema.optional(),
@@ -33,7 +34,8 @@ const commentorderbywithrelationinputSchema = z.object({
   scrapingSession: z.lazy(() => ScrapingSessionOrderByWithRelationInputObjectSchema).optional(),
   files: z.lazy(() => FileOrderByRelationAggregateInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantOrderByRelationAggregateInputObjectSchema).optional(),
-  restaurantExtraction: z.lazy(() => RestaurantExtractionOrderByWithRelationInputObjectSchema).optional()
+  restaurantExtraction: z.lazy(() => RestaurantExtractionOrderByWithRelationInputObjectSchema).optional(),
+  sentimentExtraction: z.lazy(() => SentimentExtractionOrderByWithRelationInputObjectSchema).optional()
 }).strict();
 export const CommentOrderByWithRelationInputObjectSchema: z.ZodType<Prisma.CommentOrderByWithRelationInput> = commentorderbywithrelationinputSchema as unknown as z.ZodType<Prisma.CommentOrderByWithRelationInput>;
 export const CommentOrderByWithRelationInputObjectZodSchema = commentorderbywithrelationinputSchema;

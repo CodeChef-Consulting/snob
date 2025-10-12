@@ -51,6 +51,7 @@ model Post {
   files                File[]
   restaurantsMentioned Restaurant[]
   restaurantExtraction RestaurantExtraction?
+  sentimentExtraction  SentimentExtraction?
 
   @@index([scrapingSessionId])
   @@index([commentsFullyScraped]) // For querying posts that need comment scraping
@@ -82,6 +83,7 @@ model Comment {
   files                File[]
   restaurantsMentioned Restaurant[]
   restaurantExtraction RestaurantExtraction?
+  sentimentExtraction  SentimentExtraction?
 
   @@index([scrapingSessionId])
 }
@@ -188,6 +190,31 @@ model RestaurantExtraction {
   @@index([isSubjective]) // For filtering subjective content
   @@index([extractedAt]) // For tracking extraction progress
   @@index([attemptedLinkToRestaurantsMentioned]) // For querying items that need linking
+}
+
+model SentimentExtraction {
+  id Int @id @default(autoincrement())
+
+  // Link to either post or comment (one must be set)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId Int?
+
+  // Sentiment score (-1 to 1)
+  rawAiScore Float
+
+  // Metadata
+  extractedAt DateTime @default(now())
+  model       String? // e.g., "gemini-2.5-flash"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([postId]) // One sentiment per post
+  @@unique([commentId]) // One sentiment per comment
+  @@index([rawAiScore]) // For filtering by sentiment
+  @@index([extractedAt]) // For tracking extraction progress
 }
 
 model ScrapingSession {

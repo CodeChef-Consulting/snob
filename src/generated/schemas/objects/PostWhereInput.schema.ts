@@ -14,7 +14,9 @@ import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjec
 import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema';
 import { RestaurantListRelationFilterObjectSchema as RestaurantListRelationFilterObjectSchema } from './RestaurantListRelationFilter.schema';
 import { RestaurantExtractionNullableScalarRelationFilterObjectSchema as RestaurantExtractionNullableScalarRelationFilterObjectSchema } from './RestaurantExtractionNullableScalarRelationFilter.schema';
-import { RestaurantExtractionWhereInputObjectSchema as RestaurantExtractionWhereInputObjectSchema } from './RestaurantExtractionWhereInput.schema'
+import { RestaurantExtractionWhereInputObjectSchema as RestaurantExtractionWhereInputObjectSchema } from './RestaurantExtractionWhereInput.schema';
+import { SentimentExtractionNullableScalarRelationFilterObjectSchema as SentimentExtractionNullableScalarRelationFilterObjectSchema } from './SentimentExtractionNullableScalarRelationFilter.schema';
+import { SentimentExtractionWhereInputObjectSchema as SentimentExtractionWhereInputObjectSchema } from './SentimentExtractionWhereInput.schema'
 
 const postwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => PostWhereInputObjectSchema), z.lazy(() => PostWhereInputObjectSchema).array()]).optional(),
@@ -43,7 +45,8 @@ const postwhereinputSchema = z.object({
   comments: z.lazy(() => CommentListRelationFilterObjectSchema).optional(),
   files: z.lazy(() => FileListRelationFilterObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantListRelationFilterObjectSchema).optional(),
-  restaurantExtraction: z.union([z.lazy(() => RestaurantExtractionNullableScalarRelationFilterObjectSchema), z.lazy(() => RestaurantExtractionWhereInputObjectSchema)]).optional()
+  restaurantExtraction: z.union([z.lazy(() => RestaurantExtractionNullableScalarRelationFilterObjectSchema), z.lazy(() => RestaurantExtractionWhereInputObjectSchema)]).optional(),
+  sentimentExtraction: z.union([z.lazy(() => SentimentExtractionNullableScalarRelationFilterObjectSchema), z.lazy(() => SentimentExtractionWhereInputObjectSchema)]).optional()
 }).strict();
 export const PostWhereInputObjectSchema: z.ZodType<Prisma.PostWhereInput> = postwhereinputSchema as unknown as z.ZodType<Prisma.PostWhereInput>;
 export const PostWhereInputObjectZodSchema = postwhereinputSchema;

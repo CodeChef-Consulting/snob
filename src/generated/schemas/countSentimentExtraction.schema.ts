@@ -1,0 +1,10 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { SentimentExtractionOrderByWithRelationInputObjectSchema as SentimentExtractionOrderByWithRelationInputObjectSchema } from './objects/SentimentExtractionOrderByWithRelationInput.schema';
+import { SentimentExtractionWhereInputObjectSchema as SentimentExtractionWhereInputObjectSchema } from './objects/SentimentExtractionWhereInput.schema';
+import { SentimentExtractionWhereUniqueInputObjectSchema as SentimentExtractionWhereUniqueInputObjectSchema } from './objects/SentimentExtractionWhereUniqueInput.schema';
+import { SentimentExtractionCountAggregateInputObjectSchema as SentimentExtractionCountAggregateInputObjectSchema } from './objects/SentimentExtractionCountAggregateInput.schema';
+
+export const SentimentExtractionCountSchema: z.ZodType<Prisma.SentimentExtractionCountArgs> = z.object({ orderBy: z.union([SentimentExtractionOrderByWithRelationInputObjectSchema, SentimentExtractionOrderByWithRelationInputObjectSchema.array()]).optional(), where: SentimentExtractionWhereInputObjectSchema.optional(), cursor: SentimentExtractionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), SentimentExtractionCountAggregateInputObjectSchema ]).optional() }).strict() as unknown as z.ZodType<Prisma.SentimentExtractionCountArgs>;
+
+export const SentimentExtractionCountZodSchema = z.object({ orderBy: z.union([SentimentExtractionOrderByWithRelationInputObjectSchema, SentimentExtractionOrderByWithRelationInputObjectSchema.array()]).optional(), where: SentimentExtractionWhereInputObjectSchema.optional(), cursor: SentimentExtractionWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), SentimentExtractionCountAggregateInputObjectSchema ]).optional() }).strict();

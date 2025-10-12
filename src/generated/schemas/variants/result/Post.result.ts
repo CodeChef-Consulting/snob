@@ -25,7 +25,8 @@ export const PostResultSchema = z.object({
     comments: z.array(z.unknown()),
     files: z.array(z.unknown()),
     restaurantsMentioned: z.array(z.unknown()),
-    restaurantExtraction: z.unknown().nullable()
+    restaurantExtraction: z.unknown().nullable(),
+    sentimentExtraction: z.unknown().nullable()
 }).strict();
 
 export type PostResultType = z.infer<typeof PostResultSchema>;

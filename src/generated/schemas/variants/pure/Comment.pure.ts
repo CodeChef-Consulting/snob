@@ -25,7 +25,8 @@ export const CommentModelSchema = z.object({
     scrapingSessionId: z.number().int().nullable(),
     files: z.array(z.unknown()),
     restaurantsMentioned: z.array(z.unknown()),
-    restaurantExtraction: z.unknown().nullable()
+    restaurantExtraction: z.unknown().nullable(),
+    sentimentExtraction: z.unknown().nullable()
 }).strict();
 
 export type CommentModelType = z.infer<typeof CommentModelSchema>;

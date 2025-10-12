@@ -10,7 +10,8 @@ import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperations
 import { ScrapingSessionUpdateOneWithoutPostsNestedInputObjectSchema as ScrapingSessionUpdateOneWithoutPostsNestedInputObjectSchema } from './ScrapingSessionUpdateOneWithoutPostsNestedInput.schema';
 import { CommentUpdateManyWithoutPostNestedInputObjectSchema as CommentUpdateManyWithoutPostNestedInputObjectSchema } from './CommentUpdateManyWithoutPostNestedInput.schema';
 import { FileUpdateManyWithoutPostNestedInputObjectSchema as FileUpdateManyWithoutPostNestedInputObjectSchema } from './FileUpdateManyWithoutPostNestedInput.schema';
-import { RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutPostNestedInput.schema'
+import { RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutPostNestedInput.schema';
+import { SentimentExtractionUpdateOneWithoutPostNestedInputObjectSchema as SentimentExtractionUpdateOneWithoutPostNestedInputObjectSchema } from './SentimentExtractionUpdateOneWithoutPostNestedInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -33,7 +34,8 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionUpdateOneWithoutPostsNestedInputObjectSchema).optional(),
   comments: z.lazy(() => CommentUpdateManyWithoutPostNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutPostNestedInputObjectSchema).optional(),
-  restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema).optional()
+  restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema).optional(),
+  sentimentExtraction: z.lazy(() => SentimentExtractionUpdateOneWithoutPostNestedInputObjectSchema).optional()
 }).strict();
 export const PostUpdateWithoutRestaurantsMentionedInputObjectSchema: z.ZodType<Prisma.PostUpdateWithoutRestaurantsMentionedInput> = makeSchema() as unknown as z.ZodType<Prisma.PostUpdateWithoutRestaurantsMentionedInput>;
 export const PostUpdateWithoutRestaurantsMentionedInputObjectZodSchema = makeSchema();

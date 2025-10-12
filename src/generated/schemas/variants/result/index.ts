@@ -9,4 +9,5 @@ export { FileResultSchema } from './File.result';
 export { RestaurantResultSchema } from './Restaurant.result';
 export { BatchJobResultSchema } from './BatchJob.result';
 export { RestaurantExtractionResultSchema } from './RestaurantExtraction.result';
+export { SentimentExtractionResultSchema } from './SentimentExtraction.result';
 export { ScrapingSessionResultSchema } from './ScrapingSession.result';

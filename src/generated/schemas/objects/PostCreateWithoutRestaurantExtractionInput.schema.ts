@@ -3,7 +3,8 @@ import type { Prisma } from '@prisma/client';
 import { ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutPostsInput.schema';
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
 import { FileCreateNestedManyWithoutPostInputObjectSchema as FileCreateNestedManyWithoutPostInputObjectSchema } from './FileCreateNestedManyWithoutPostInput.schema';
-import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema'
+import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema';
+import { SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema as SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema } from './SentimentExtractionCreateNestedOneWithoutPostInput.schema'
 
 const makeSchema = () => z.object({
   externalId: z.string(),
@@ -26,7 +27,8 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema).optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema).optional(),
   files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema).optional()
+  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema).optional(),
+  sentimentExtraction: z.lazy(() => SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema).optional()
 }).strict();
 export const PostCreateWithoutRestaurantExtractionInputObjectSchema: z.ZodType<Prisma.PostCreateWithoutRestaurantExtractionInput> = makeSchema() as unknown as z.ZodType<Prisma.PostCreateWithoutRestaurantExtractionInput>;
 export const PostCreateWithoutRestaurantExtractionInputObjectZodSchema = makeSchema();

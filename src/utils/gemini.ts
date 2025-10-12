@@ -7,6 +7,18 @@ import {
   createPostExtractionPrompt,
   createPostSentimentPrompt,
 } from './prompts';
+import {
+  parseSentimentResponse,
+  parseRestaurantExtractionResponse,
+} from './parsing';
+import type {
+  CommentSentimentInput,
+  PostSentimentInput,
+  SentimentResult,
+  CommentExtractionInput,
+  PostExtractionInput,
+  RestaurantExtractionResult,
+} from './types';
 
 // Lazy initialization to allow dotenvx to decrypt env vars first
 let genAI: GoogleGenAI | null = null;
@@ -24,60 +36,19 @@ export function getGenAI(): GoogleGenAI {
   return genAI;
 }
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
-
-export interface CommentSentimentInput {
-  comment_text: string;
-  post_title: string;
-}
-
-export interface PostSentimentInput {
-  post_title: string;
-  post_text: string;
-}
-
-export interface SentimentResult {
-  rawAiScore: number;
-}
-
-export interface CommentExtractionInput {
-  post_title: string;
-  post_text: string;
-  comment_text: string;
-  parent_text?: string;
-}
-
-export interface PostExtractionInput {
-  post_title: string;
-  post_text: string;
-}
-
-export interface RestaurantExtractionResult {
-  restaurantsMentioned: string | null;
-  primaryRestaurant: string | null;
-  dishesMentioned: string | null;
-  isSubjective: boolean;
-}
+// Re-export types for convenience
+export type {
+  CommentSentimentInput,
+  PostSentimentInput,
+  SentimentResult,
+  CommentExtractionInput,
+  PostExtractionInput,
+  RestaurantExtractionResult,
+} from './types';
 
 // ============================================================================
 // Sentiment Analysis
 // ============================================================================
-
-/**
- * Helper function to parse evaluation response
- */
-function parseSentimentResponse(responseText: string): SentimentResult {
-  const rawAiScore = parseFloat(responseText);
-  if (isNaN(rawAiScore)) {
-    throw new Error(`Invalid rawAiScore: ${responseText}`);
-  }
-
-  return {
-    rawAiScore,
-  };
-}
 
 /**
  * Evaluate a Reddit comment for restaurant sentiment
@@ -123,79 +94,12 @@ export async function evaluatePost(
   }
 }
 
+// Re-export parsing functions for convenience
+export { parseRestaurantExtractionResponse } from './parsing';
+
 // ============================================================================
 // Restaurant Extraction
 // ============================================================================
-
-/**
- * Normalize extraction field: convert empty/'NONE' to null, remove spaces after commas, deduplicate
- */
-function normalizeField(value: string, deduplicate = false): string | null {
-  if (!value || value === '' || value === 'NONE') {
-    return null;
-  }
-
-  if (deduplicate) {
-    // Split, trim, deduplicate (case-insensitive), rejoin
-    const items = value
-      .split(',')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-    const uniqueItems = Array.from(
-      new Map(items.map((item) => [item.toLowerCase(), item])).values()
-    );
-    return uniqueItems.join(',');
-  }
-
-  // Just remove spaces after commas
-  return value.replace(/, /g, ',');
-}
-
-/**
- * Helper function to parse restaurant extraction response
- */
-export function parseRestaurantExtractionResponse(
-  responseText: string
-): RestaurantExtractionResult {
-  const lines = responseText.split('\n').map((line) => line.trim());
-
-  let restaurantsMentioned = 'NONE';
-  let primaryRestaurant = 'NONE';
-  let dishesMentioned = 'NONE';
-  let isSubjective = false;
-
-  for (const line of lines) {
-    if (line.startsWith('restaurantsMentioned:')) {
-      restaurantsMentioned = line
-        .replace('restaurantsMentioned:', '')
-        .trim()
-        .replace(/^\[|\]$/g, '')
-        .replace(/"/g, '');
-    } else if (line.startsWith('primaryRestaurant:')) {
-      primaryRestaurant = line
-        .replace('primaryRestaurant:', '')
-        .trim()
-        .replace(/^["']|["']$/g, '')
-        .replace(/"/g, '');
-    } else if (line.startsWith('dishesMentioned:')) {
-      dishesMentioned = line
-        .replace('dishesMentioned:', '')
-        .trim()
-        .replace(/^\[|\]$/g, '')
-        .replace(/"/g, '');
-    } else if (line.startsWith('isSubjective:')) {
-      const value = line.replace('isSubjective:', '').trim().toLowerCase();
-      isSubjective = value === 'true';
-    }
-  }
-
-  return {
-    restaurantsMentioned: normalizeField(restaurantsMentioned, true),
-    primaryRestaurant: normalizeField(primaryRestaurant),
-    dishesMentioned: normalizeField(dishesMentioned, true), // deduplicate dishes
-    isSubjective,
-  };
-}
 
 /**
  * Extract restaurant information from a comment

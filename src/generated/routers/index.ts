@@ -5,6 +5,7 @@ import { filesRouter } from "./File.router";
 import { restaurantsRouter } from "./Restaurant.router";
 import { batchjobsRouter } from "./BatchJob.router";
 import { restaurantextractionsRouter } from "./RestaurantExtraction.router";
+import { sentimentextractionsRouter } from "./SentimentExtraction.router";
 import { scrapingsessionsRouter } from "./ScrapingSession.router";
 
     export const appRouter = t.router({
@@ -14,5 +15,6 @@ import { scrapingsessionsRouter } from "./ScrapingSession.router";
       restaurant: restaurantsRouter,
       batchjob: batchjobsRouter,
       restaurantextraction: restaurantextractionsRouter,
+      sentimentextraction: sentimentextractionsRouter,
       scrapingsession: scrapingsessionsRouter})
     

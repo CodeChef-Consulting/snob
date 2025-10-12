@@ -23,5 +23,6 @@ export const PostUpsertResultSchema = z.object({
   comments: z.array(z.unknown()),
   files: z.array(z.unknown()),
   restaurantsMentioned: z.array(z.unknown()),
-  restaurantExtraction: z.unknown().optional()
+  restaurantExtraction: z.unknown().optional(),
+  sentimentExtraction: z.unknown().optional()
 });
