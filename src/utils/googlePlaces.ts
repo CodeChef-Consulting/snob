@@ -137,26 +137,6 @@ export async function lookupAndAddRestaurant(
 ): Promise<GooglePlacesResult> {
   // Check if any Google Places restaurant has this as a lookupAlias (exact match)
   const normalizedName = restaurantName.trim().toLowerCase();
-  const aliasMatch = await prisma.restaurant.findFirst({
-    where: {
-      source: 'Google Places API',
-      lookupAliases: {
-        contains: normalizedName, // This will do a case-insensitive LIKE search
-      },
-    },
-    select: { id: true, name: true, lookupAliases: true },
-  });
-
-  if (aliasMatch && aliasMatch.lookupAliases) {
-    // Verify it's an exact match (not just a substring)
-    const aliases = aliasMatch.lookupAliases.split(',');
-    if (aliases.includes(normalizedName)) {
-      console.log(
-        `   🔗 Exact alias match: "${restaurantName}" → "${aliasMatch.name}"`
-      );
-      return { restaurantId: aliasMatch.id, hadError: false };
-    }
-  }
 
   stats.googlePlacesLookups++;
 
