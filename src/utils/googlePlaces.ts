@@ -1,6 +1,7 @@
 import { PlacesClient, protos } from '@googlemaps/places';
 import { PrismaClient } from '@prisma/client';
 import Fuse from 'fuse.js';
+import _ from 'lodash';
 
 // Lazy initialization for Places API client
 let placesClient: PlacesClient | null = null;
@@ -67,7 +68,7 @@ export async function findPlaceByName(
     return null;
   } catch (error) {
     console.error(`   ⚠️  Google Places API error:`, error);
-    return null;
+    throw error;
   }
 }
 
@@ -122,6 +123,7 @@ export interface GooglePlacesResult {
 /**
  * Attempt to add restaurant via Google Places API
  * Updates Fuse index with newly added restaurants
+ * Checks lookupAliases for exact matches before making API calls
  * Checks address-based fuzzy match first to prevent duplicates
  * Returns { restaurantId, hadError } to distinguish API errors from not found
  */
@@ -133,6 +135,29 @@ export async function lookupAndAddRestaurant(
   restaurants: { id: number; name: string }[],
   addressFuse: Fuse<{ id: number; address: string }> | null = null
 ): Promise<GooglePlacesResult> {
+  // Check if any Google Places restaurant has this as a lookupAlias (exact match)
+  const normalizedName = restaurantName.trim().toLowerCase();
+  const aliasMatch = await prisma.restaurant.findFirst({
+    where: {
+      source: 'Google Places API',
+      lookupAliases: {
+        contains: normalizedName, // This will do a case-insensitive LIKE search
+      },
+    },
+    select: { id: true, name: true, lookupAliases: true },
+  });
+
+  if (aliasMatch && aliasMatch.lookupAliases) {
+    // Verify it's an exact match (not just a substring)
+    const aliases = aliasMatch.lookupAliases.split(',');
+    if (aliases.includes(normalizedName)) {
+      console.log(
+        `   🔗 Exact alias match: "${restaurantName}" → "${aliasMatch.name}"`
+      );
+      return { restaurantId: aliasMatch.id, hadError: false };
+    }
+  }
+
   stats.googlePlacesLookups++;
 
   try {
@@ -155,12 +180,35 @@ export async function lookupAndAddRestaurant(
     // Check if we already have this place_id
     const existing = await prisma.restaurant.findUnique({
       where: { googlePlaceId: placeId },
+      select: { id: true, name: true, lookupAliases: true },
     });
 
     if (existing) {
       console.log(
         `   ℹ️  Found via Google (already in DB): "${existing.name}"`
       );
+
+      // If this is a new alias for an existing restaurant, add it
+      const existingAliases = existing.lookupAliases
+        ? existing.lookupAliases.split(',')
+        : [];
+
+      // Add new alias if it's different from the canonical name
+      if (
+        normalizedName !== existing.name.trim().toLowerCase() &&
+        !existingAliases.some((a) => a === normalizedName)
+      ) {
+        const updatedAliases = [...existingAliases, normalizedName].join(',');
+
+        await prisma.restaurant.update({
+          where: { id: existing.id },
+          data: { lookupAliases: updatedAliases },
+        });
+
+        console.log(
+          `   ✨ Added new alias "${normalizedName}" to "${existing.name}"`
+        );
+      }
 
       return { restaurantId: existing.id, hadError: false };
     }
@@ -178,6 +226,11 @@ export async function lookupAndAddRestaurant(
     const { address, city, state, zipCode } = extractAddressComponents(
       place.addressComponents || []
     );
+
+    // If the searched name differs from the canonical name, add it as a lookup alias
+    const canonicalNameNormalized = displayName.trim().toLowerCase();
+    const lookupAliases =
+      normalizedName !== canonicalNameNormalized ? normalizedName : null;
 
     // Check if a non-Google Places restaurant exists with similar address
     if (addressFuse && formattedAddress) {
@@ -210,6 +263,7 @@ export async function lookupAndAddRestaurant(
         zipCode,
         source: 'Google Places API',
         googlePlaceId: placeId,
+        lookupAliases,
         metadata: {
           rating,
           priceLevel,

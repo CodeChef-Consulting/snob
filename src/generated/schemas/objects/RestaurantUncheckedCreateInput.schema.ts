@@ -15,6 +15,7 @@ const makeSchema = () => z.object({
   zipCode: z.string().optional().nullable(),
   source: z.string().optional(),
   googlePlaceId: z.string().optional().nullable(),
+  lookupAliases: z.string().optional().nullable(),
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   createdAt: z.coerce.date().optional(),
   posts: z.lazy(() => PostUncheckedCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema),

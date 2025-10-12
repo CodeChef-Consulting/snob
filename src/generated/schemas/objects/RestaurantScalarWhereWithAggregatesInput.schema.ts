@@ -18,6 +18,7 @@ const restaurantscalarwherewithaggregatesinputSchema = z.object({
   zipCode: z.union([z.lazy(() => StringNullableWithAggregatesFilterObjectSchema), z.string()]).optional().nullable(),
   source: z.union([z.lazy(() => StringWithAggregatesFilterObjectSchema), z.string()]).optional(),
   googlePlaceId: z.union([z.lazy(() => StringNullableWithAggregatesFilterObjectSchema), z.string()]).optional().nullable(),
+  lookupAliases: z.union([z.lazy(() => StringNullableWithAggregatesFilterObjectSchema), z.string()]).optional().nullable(),
   metadata: z.lazy(() => JsonNullableWithAggregatesFilterObjectSchema).optional(),
   createdAt: z.union([z.lazy(() => DateTimeWithAggregatesFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeWithAggregatesFilterObjectSchema), z.coerce.date()]).optional()

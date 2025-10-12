@@ -10,6 +10,7 @@ export const RestaurantResultSchema = z.object({
     zipCode: z.string().nullable(),
     source: z.string(),
     googlePlaceId: z.string().nullable(),
+    lookupAliases: z.string().nullable(),
     metadata: z.unknown().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),

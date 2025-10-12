@@ -8,6 +8,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     zipCode: z.number(),
     source: z.number(),
     googlePlaceId: z.number(),
+    lookupAliases: z.number(),
     metadata: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
@@ -29,6 +30,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     zipCode: z.string().nullable(),
     source: z.string().nullable(),
     googlePlaceId: z.string().nullable(),
+    lookupAliases: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
   }).nullable().optional(),
@@ -41,6 +43,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     zipCode: z.string().nullable(),
     source: z.string().nullable(),
     googlePlaceId: z.string().nullable(),
+    lookupAliases: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
   }).nullable().optional()});

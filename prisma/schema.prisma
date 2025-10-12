@@ -110,6 +110,7 @@ model Restaurant {
   zipCode       String?
   source        String   @default("Open Data Portal") // "Open Data Portal" or "Google Places API"
   googlePlaceId String?  @unique // Google Places ID for API lookups
+  lookupAliases String? // Comma-separated list of alternative names for exact matching (Google Places only)
   metadata      Json? // Store additional data (phone, website, rating, priceLevel, types, etc.)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

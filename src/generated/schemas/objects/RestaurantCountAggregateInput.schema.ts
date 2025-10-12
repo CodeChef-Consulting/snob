@@ -11,6 +11,7 @@ const makeSchema = () => z.object({
   zipCode: z.literal(true).optional(),
   source: z.literal(true).optional(),
   googlePlaceId: z.literal(true).optional(),
+  lookupAliases: z.literal(true).optional(),
   metadata: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional(),

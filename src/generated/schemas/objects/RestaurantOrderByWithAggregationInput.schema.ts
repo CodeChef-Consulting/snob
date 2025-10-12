@@ -17,6 +17,7 @@ const makeSchema = () => z.object({
   zipCode: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   source: SortOrderSchema.optional(),
   googlePlaceId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  lookupAliases: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   metadata: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional(),

@@ -11,6 +11,7 @@ const makeSchema = () => z.object({
   zipCode: SortOrderSchema.optional(),
   source: SortOrderSchema.optional(),
   googlePlaceId: SortOrderSchema.optional(),
+  lookupAliases: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional()
 }).strict();
