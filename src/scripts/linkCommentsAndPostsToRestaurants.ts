@@ -186,7 +186,7 @@ async function processRestaurantGroup(
   for (const restaurantName of restaurantNames) {
     //handle alias match first, it's the strongest match. later we'll manually configure some alias matches to make sure they're linked to the correct restaurant
     const normalizedName = restaurantName.trim().toLowerCase();
-    const aliasMatch = await prisma.restaurant.findFirst({
+    const aliasMatch = await prisma.restaurant.findMany({
       where: {
         lookupAliases: {
           contains: normalizedName, // This will do a case-insensitive LIKE search
@@ -195,17 +195,24 @@ async function processRestaurantGroup(
       select: { id: true, name: true, lookupAliases: true },
     });
 
-    if (aliasMatch && aliasMatch.lookupAliases) {
-      // Verify it's an exact match (not just a substring)
-      const aliases = aliasMatch.lookupAliases.split(',');
-      if (aliases.includes(normalizedName)) {
-        console.log(
-          `   🔗 Exact alias match: "${restaurantName}" → "${aliasMatch.name}"`
-        );
-        matchedRestaurantIds.add(aliasMatch.id);
-        stats.fuzzyMatches++;
-        continue;
+    let hasExactAliasMatch = false;
+    for (const alias of aliasMatch) {
+      if (alias && alias.lookupAliases) {
+        // Verify it's an exact match (not just a substring)
+        const aliases = alias.lookupAliases.split(',');
+        if (aliases.includes(normalizedName)) {
+          console.log(
+            `   🔗 Exact alias match: "${restaurantName}" → "${alias.name}"`
+          );
+          matchedRestaurantIds.add(alias.id);
+          stats.fuzzyMatches++;
+          hasExactAliasMatch = true;
+          break;
+        }
       }
+    }
+    if (hasExactAliasMatch) {
+      continue;
     }
 
     const matchResult = findRestaurantMatch(restaurantName, fuse);

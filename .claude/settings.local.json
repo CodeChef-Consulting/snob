@@ -33,7 +33,8 @@
       "Bash(pnpm exec:*)",
       "Bash(git remote add:*)",
       "Bash(export PGPASSWORD=password)",
-      "Bash(pg_dump:*)"
+      "Bash(pg_dump:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "ask": []

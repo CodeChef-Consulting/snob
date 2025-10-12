@@ -154,11 +154,23 @@ export function parseRestaurantExtractionResponse(
         .replace(/^["']|["']$/g, '')
         .replace(/"/g, '');
     } else if (line.startsWith('dishesMentioned:')) {
-      dishesMentioned = line
+      const rawDishes = line
         .replace('dishesMentioned:', '')
         .trim()
         .replace(/^\[|\]$/g, '')
         .replace(/"/g, '');
+
+      // Deduplicate dishes (case-insensitive)
+      const dishes = rawDishes
+        .split(',')
+        .map((dish) => dish.trim())
+        .filter((dish) => dish.length > 0);
+
+      const uniqueDishes = Array.from(
+        new Map(dishes.map((dish) => [dish.toLowerCase(), dish])).values()
+      );
+
+      dishesMentioned = uniqueDishes.join(', ');
     } else if (line.startsWith('isSubjective:')) {
       const value = line.replace('isSubjective:', '').trim().toLowerCase();
       isSubjective = value === 'true';
