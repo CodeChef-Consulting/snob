@@ -3,9 +3,9 @@ import type { Prisma } from '@prisma/client';
 import { PostCreateNestedOneWithoutRestaurantExtractionInputObjectSchema as PostCreateNestedOneWithoutRestaurantExtractionInputObjectSchema } from './PostCreateNestedOneWithoutRestaurantExtractionInput.schema'
 
 const makeSchema = () => z.object({
-  restaurantsMentioned: z.string(),
-  primaryRestaurant: z.string(),
-  dishesMentioned: z.string(),
+  restaurantsMentioned: z.string().optional().nullable(),
+  primaryRestaurant: z.string().optional().nullable(),
+  dishesMentioned: z.string().optional().nullable(),
   isSubjective: z.boolean(),
   attemptedLinkToRestaurantsMentioned: z.boolean().optional(),
   extractedAt: z.coerce.date().optional(),

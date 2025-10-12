@@ -227,14 +227,19 @@ async function processRestaurantGroup(
       console.log(
         `🔍 "${restaurantName}" → no fuzzy match, trying Google Places...`
       );
-      const result = await lookupAndAddRestaurant(
-        restaurantName,
-        prisma,
-        stats,
-        fuse,
-        restaurants,
-        addressFuse
-      );
+      const result = {
+        hadError: true,
+        restaurantId: null,
+      };
+
+      // await lookupAndAddRestaurant(
+      //   restaurantName,
+      //   prisma,
+      //   stats,
+      //   fuse,
+      //   restaurants,
+      //   addressFuse
+      // );
 
       if (result.hadError) {
         hadGooglePlacesError = true;

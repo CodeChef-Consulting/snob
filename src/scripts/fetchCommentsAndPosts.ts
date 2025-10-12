@@ -78,7 +78,7 @@ async function fetchComments(options: FetchOptions = {}) {
   let allPosts: Submission[] = [];
   let after: string | undefined = undefined;
   const batchSize = 100;
-  const maxPosts = mode === 'new' ? 100 : 1000;
+  const maxPosts = mode === 'new' ? 1000 : 1000;
 
   const modeLabel = mode === 'search' ? `search "${searchQuery}"` : mode;
   const createOnlyLabel = createOnly ? ' [CREATE ONLY - skipping updates]' : '';

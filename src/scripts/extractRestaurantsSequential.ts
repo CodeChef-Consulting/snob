@@ -14,9 +14,11 @@ const prisma = new PrismaClient();
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
+const isFreeTier = true;
+
 // Configuration - Optimized for paid tier: 1000 RPM (requests per minute)
 // Each batch should take at least 60 seconds to stay within rate limits
-const BATCH_SIZE = 4000; // Process up to 1000 items per batch (1000 RPM = 1000/min)
+const BATCH_SIZE = isFreeTier ? 15 : 4000; // Process up to 1000 items per batch (1000 RPM = 1000/min)
 const MIN_BATCH_DURATION_MS = 60000; // 60 seconds minimum per batch
 const STAGGER_DELAY_MS = 60; // 60ms stagger between starting each request
 

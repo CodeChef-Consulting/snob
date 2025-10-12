@@ -168,9 +168,9 @@ model RestaurantExtraction {
   commentId Int?
 
   // Extraction results (matching RestaurantExtractionResult interface)
-  restaurantsMentioned String // Comma-separated or "NONE"
-  primaryRestaurant    String // Single restaurant name or "NONE"
-  dishesMentioned      String // Comma-separated or "NONE"
+  restaurantsMentioned String? // Comma-separated or "NONE"
+  primaryRestaurant    String? // Single restaurant name or "NONE"
+  dishesMentioned      String? // Comma-separated or "NONE"
   isSubjective         Boolean
 
   // Linking tracking

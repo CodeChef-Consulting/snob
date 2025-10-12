@@ -2,10 +2,10 @@ import type { BatchJob as GeminiBatchJob } from '@google/genai';
 import { createUserContent, GoogleGenAI, JobState } from '@google/genai';
 import { PrismaClient } from '@prisma/client';
 import {
-  createCommentSentimentPrompt,
-  createPostSentimentPrompt,
   createCommentExtractionPrompt,
+  createCommentSentimentPrompt,
   createPostExtractionPrompt,
+  createPostSentimentPrompt,
 } from './prompts';
 
 // Lazy initialization to allow dotenvx to decrypt env vars first
@@ -55,9 +55,9 @@ export interface PostExtractionInput {
 }
 
 export interface RestaurantExtractionResult {
-  restaurantsMentioned: string;
-  primaryRestaurant: string;
-  dishesMentioned: string;
+  restaurantsMentioned: string | null;
+  primaryRestaurant: string | null;
+  dishesMentioned: string | null;
   isSubjective: boolean;
 }
 
@@ -128,6 +128,30 @@ export async function evaluatePost(
 // ============================================================================
 
 /**
+ * Normalize extraction field: convert empty/'NONE' to null, remove spaces after commas, deduplicate
+ */
+function normalizeField(value: string, deduplicate = false): string | null {
+  if (!value || value === '' || value === 'NONE') {
+    return null;
+  }
+
+  if (deduplicate) {
+    // Split, trim, deduplicate (case-insensitive), rejoin
+    const items = value
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    const uniqueItems = Array.from(
+      new Map(items.map((item) => [item.toLowerCase(), item])).values()
+    );
+    return uniqueItems.join(',');
+  }
+
+  // Just remove spaces after commas
+  return value.replace(/, /g, ',');
+}
+
+/**
  * Helper function to parse restaurant extraction response
  */
 export function parseRestaurantExtractionResponse(
@@ -154,23 +178,11 @@ export function parseRestaurantExtractionResponse(
         .replace(/^["']|["']$/g, '')
         .replace(/"/g, '');
     } else if (line.startsWith('dishesMentioned:')) {
-      const rawDishes = line
+      dishesMentioned = line
         .replace('dishesMentioned:', '')
         .trim()
         .replace(/^\[|\]$/g, '')
         .replace(/"/g, '');
-
-      // Deduplicate dishes (case-insensitive)
-      const dishes = rawDishes
-        .split(',')
-        .map((dish) => dish.trim())
-        .filter((dish) => dish.length > 0);
-
-      const uniqueDishes = Array.from(
-        new Map(dishes.map((dish) => [dish.toLowerCase(), dish])).values()
-      );
-
-      dishesMentioned = uniqueDishes.join(', ');
     } else if (line.startsWith('isSubjective:')) {
       const value = line.replace('isSubjective:', '').trim().toLowerCase();
       isSubjective = value === 'true';
@@ -178,9 +190,9 @@ export function parseRestaurantExtractionResponse(
   }
 
   return {
-    restaurantsMentioned,
-    primaryRestaurant,
-    dishesMentioned,
+    restaurantsMentioned: normalizeField(restaurantsMentioned, true),
+    primaryRestaurant: normalizeField(primaryRestaurant),
+    dishesMentioned: normalizeField(dishesMentioned, true), // deduplicate dishes
     isSubjective,
   };
 }

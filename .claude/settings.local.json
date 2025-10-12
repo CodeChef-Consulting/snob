@@ -34,7 +34,9 @@
       "Bash(git remote add:*)",
       "Bash(export PGPASSWORD=password)",
       "Bash(pg_dump:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(docker cp:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

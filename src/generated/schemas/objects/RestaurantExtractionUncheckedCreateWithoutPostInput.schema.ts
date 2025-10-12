@@ -5,9 +5,9 @@ import type { Prisma } from '@prisma/client';
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
   commentId: z.number().int().optional().nullable(),
-  restaurantsMentioned: z.string(),
-  primaryRestaurant: z.string(),
-  dishesMentioned: z.string(),
+  restaurantsMentioned: z.string().optional().nullable(),
+  primaryRestaurant: z.string().optional().nullable(),
+  dishesMentioned: z.string().optional().nullable(),
   isSubjective: z.boolean(),
   attemptedLinkToRestaurantsMentioned: z.boolean().optional(),
   extractedAt: z.coerce.date().optional(),
