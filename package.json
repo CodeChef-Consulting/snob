@@ -7,6 +7,7 @@
     "build": "tsc",
     "fetch-comments": "tsx src/scripts/fetchComments.ts",
     "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
+    "extract-sentiment": "tsx src/scripts/extractSentimentSequential.ts",
     "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
     "add-restaurant": "tsx src/scripts/addRestaurantManually.ts",
     "init-batch": "tsx src/scripts/initializeBatch.ts",

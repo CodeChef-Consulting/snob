@@ -13,6 +13,7 @@ import {
   updateBatchJobStatus,
   markExtractionsAsSaved,
 } from '../utils/gemini';
+import { parseSentimentResponse } from '../utils/parsing';
 
 const prisma = new PrismaClient();
 
@@ -22,7 +23,11 @@ const POLL_INTERVAL = 30000; // 30 seconds
 /**
  * Check batch job status and retrieve results if completed
  */
-async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
+async function checkBatchJob(
+  batchJobId: number,
+  pollUntilComplete = false,
+  forceReprocess = false
+) {
   const batchJob = await prisma.batchJob.findUnique({
     where: { id: batchJobId },
   });
@@ -67,10 +72,15 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
     console.log(`   ❌ Error: ${batchJob.error}`);
   }
 
-  // If already processed, no need to check Gemini
-  if (batchJob.extractionsSaved) {
+  // If already processed, no need to check Gemini (unless forcing reprocess)
+  if (batchJob.extractionsSaved && !forceReprocess) {
     console.log('\n✅ This batch has already been processed and saved!');
+    console.log('   Use --reprocess flag to force reprocessing.');
     return batchJob;
+  }
+
+  if (forceReprocess && batchJob.extractionsSaved) {
+    console.log('\n🔄 Force reprocessing batch (--reprocess flag detected)...');
   }
 
   if (!batchJob.geminiJobName) {
@@ -87,10 +97,17 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   );
 
   // Poll if requested
-  if (pollUntilComplete && currentJob.state && !TERMINAL_STATES.has(currentJob.state as JobState)) {
+  if (
+    pollUntilComplete &&
+    currentJob.state &&
+    !TERMINAL_STATES.has(currentJob.state as JobState)
+  ) {
     console.log('   🔄 Polling until completion (Ctrl+C to stop)...\n');
 
-    while (currentJob.state && !TERMINAL_STATES.has(currentJob.state as JobState)) {
+    while (
+      currentJob.state &&
+      !TERMINAL_STATES.has(currentJob.state as JobState)
+    ) {
       const dbStatus = geminiStateToDatabaseStatus(currentJob.state);
 
       await updateBatchJobStatus(prisma, batchJobId, dbStatus);
@@ -144,24 +161,52 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
       const response = currentJob.dest.inlinedResponses[i];
       const itemId = itemIds[i];
 
-      try {
-        if (response.response?.text) {
-          const extraction = parseRestaurantExtractionResponse(
-            response.response.text
-          );
+      const responseText =
+        response.response?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-          if (batchJob.contentType === 'post') {
-            await saveExtraction(
-              prisma,
-              { ...extraction, postId: itemId },
-              batchJob.model
-            );
-          } else {
-            await saveExtraction(
-              prisma,
-              { ...extraction, commentId: itemId },
-              batchJob.model
-            );
+      try {
+        if (responseText) {
+          // Handle sentiment jobs
+          if (batchJob.displayName?.includes('sentiment')) {
+            const sentiment = parseSentimentResponse(responseText);
+
+            await prisma.sentimentExtraction.upsert({
+              where:
+                batchJob.contentType === 'post'
+                  ? { postId: itemId }
+                  : { commentId: itemId },
+              create: {
+                ...(batchJob.contentType === 'post'
+                  ? { postId: itemId }
+                  : { commentId: itemId }),
+                rawAiScore: sentiment.rawAiScore,
+                model: batchJob.model,
+                extractedAt: new Date(),
+              },
+              update: {
+                rawAiScore: sentiment.rawAiScore,
+                model: batchJob.model,
+                extractedAt: new Date(),
+              },
+            });
+          }
+          // Handle restaurant extraction jobs
+          else {
+            const extraction = parseRestaurantExtractionResponse(responseText);
+
+            if (batchJob.contentType === 'post') {
+              await saveExtraction(
+                prisma,
+                { ...extraction, postId: itemId },
+                batchJob.model
+              );
+            } else {
+              await saveExtraction(
+                prisma,
+                { ...extraction, commentId: itemId },
+                batchJob.model
+              );
+            }
           }
 
           processed++;
@@ -181,7 +226,9 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
   }
   // Handle JSONL file responses (large batches)
   else if (currentJob.dest?.gcsUri) {
-    console.log(`   📥 Downloading JSONL results from ${currentJob.dest.gcsUri}...`);
+    console.log(
+      `   📥 Downloading JSONL results from ${currentJob.dest.gcsUri}...`
+    );
 
     try {
       const ai = require('../utils/gemini').getGenAI();
@@ -204,22 +251,51 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
             const jsonResponse = JSON.parse(lines[i]);
 
             if (jsonResponse.response?.text) {
-              const extraction = parseRestaurantExtractionResponse(
-                jsonResponse.response.text
-              );
+              // Handle sentiment jobs
+              if (batchJob.displayName?.includes('sentiment')) {
+                const sentiment = parseSentimentResponse(
+                  jsonResponse.response.text
+                );
 
-              if (batchJob.contentType === 'post') {
-                await saveExtraction(
-                  prisma,
-                  { ...extraction, postId: itemId },
-                  batchJob.model
+                await prisma.sentimentExtraction.upsert({
+                  where:
+                    batchJob.contentType === 'post'
+                      ? { postId: itemId }
+                      : { commentId: itemId },
+                  create: {
+                    ...(batchJob.contentType === 'post'
+                      ? { postId: itemId }
+                      : { commentId: itemId }),
+                    rawAiScore: sentiment.rawAiScore,
+                    model: batchJob.model,
+                    extractedAt: new Date(),
+                  },
+                  update: {
+                    rawAiScore: sentiment.rawAiScore,
+                    model: batchJob.model,
+                    extractedAt: new Date(),
+                  },
+                });
+              }
+              // Handle restaurant extraction jobs
+              else {
+                const extraction = parseRestaurantExtractionResponse(
+                  jsonResponse.response.text
                 );
-              } else {
-                await saveExtraction(
-                  prisma,
-                  { ...extraction, commentId: itemId },
-                  batchJob.model
-                );
+
+                if (batchJob.contentType === 'post') {
+                  await saveExtraction(
+                    prisma,
+                    { ...extraction, postId: itemId },
+                    batchJob.model
+                  );
+                } else {
+                  await saveExtraction(
+                    prisma,
+                    { ...extraction, commentId: itemId },
+                    batchJob.model
+                  );
+                }
               }
 
               processed++;
@@ -228,7 +304,10 @@ async function checkBatchJob(batchJobId: number, pollUntilComplete = false) {
                 console.log(`      Saved ${processed}/${itemIds.length}...`);
               }
             } else if (jsonResponse.error) {
-              console.error(`      Error for item ${itemId}:`, jsonResponse.error);
+              console.error(
+                `      Error for item ${itemId}:`,
+                jsonResponse.error
+              );
               errors++;
             }
           } catch (error) {
@@ -289,6 +368,7 @@ Arguments:
 
 Options:
   --poll              Keep polling until job completes
+  --reprocess         Force reprocess batch even if already saved
   --all               Check all pending jobs only
   -h, --help          Show help
 
@@ -302,12 +382,16 @@ Examples:
   # Poll until completion
   npm run check-batch -- 123 --poll
 
+  # Force reprocess a completed batch
+  npm run check-batch -- 123 --reprocess
+
   # Check all pending jobs only
   npm run check-batch -- --all
 
 After checking:
   - If job is complete, results are automatically saved
   - If still processing, run again later or use --poll
+  - Use --reprocess to re-save results from Gemini
     `);
     process.exit(0);
   }
@@ -341,7 +425,8 @@ After checking:
       }
 
       const pollUntilComplete = args.includes('--poll');
-      await checkBatchJob(batchJobId, pollUntilComplete);
+      const forceReprocess = args.includes('--reprocess');
+      await checkBatchJob(batchJobId, pollUntilComplete, forceReprocess);
     }
   } catch (error) {
     console.error('❌ Error:', error);

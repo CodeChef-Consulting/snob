@@ -33,9 +33,28 @@ export function normalizeField(value: string, deduplicate = false): string | nul
 
 /**
  * Parse sentiment response from AI
+ * Handles both plain number format and JSON format
  */
 export function parseSentimentResponse(responseText: string): SentimentResult {
-  const rawAiScore = parseFloat(responseText);
+  const trimmed = responseText.trim();
+
+  // Try to parse as JSON first (in case AI returns JSON format)
+  if (trimmed.startsWith('{') || trimmed.startsWith('```')) {
+    try {
+      // Remove markdown code blocks if present
+      const jsonText = trimmed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsed = JSON.parse(jsonText);
+
+      if (typeof parsed.rawAiScore === 'number') {
+        return { rawAiScore: parsed.rawAiScore };
+      }
+    } catch (e) {
+      // Fall through to plain number parsing
+    }
+  }
+
+  // Parse as plain number
+  const rawAiScore = parseFloat(trimmed);
   if (isNaN(rawAiScore)) {
     throw new Error(`Invalid rawAiScore: ${responseText}`);
   }

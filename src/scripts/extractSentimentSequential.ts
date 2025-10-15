@@ -3,20 +3,20 @@ dotenv.config();
 
 import { PrismaClient } from '@prisma/client';
 import {
-  CommentExtractionInput,
-  extractCommentRestaurantInfo,
-  extractPostRestaurantInfo,
-  PostExtractionInput,
-  RestaurantExtractionResult,
-} from '../utils/gemini';
-import {
   BatchConfig,
-  processBatch,
-  waitForRateLimit,
-  printSummary,
   parseCliArgs,
   printHelp,
+  printSummary,
+  processBatch,
+  waitForRateLimit,
 } from '../utils/batchProcessor';
+import {
+  CommentSentimentInput,
+  PostSentimentInput,
+  SentimentResult,
+  evaluateComment,
+  evaluatePost,
+} from '../utils/gemini';
 
 const prisma = new PrismaClient();
 
@@ -39,26 +39,26 @@ interface Config {
 }
 
 /**
- * Batch save extraction results to database
+ * Batch save sentiment results to database
  */
-async function batchSaveExtractions(
-  results: Array<RestaurantExtractionResult & { postId?: number; commentId?: number }>,
+async function batchSaveSentiments(
+  results: Array<SentimentResult & { postId?: number; commentId?: number }>,
   model: string
 ) {
   const now = new Date();
   const postResults = results.filter((r) => r.postId);
   const commentResults = results.filter((r) => r.commentId);
 
-  // Get existing extraction IDs
+  // Get existing sentiment IDs
   const [existingPostIds, existingCommentIds] = await Promise.all([
     postResults.length > 0
-      ? prisma.restaurantExtraction.findMany({
+      ? prisma.sentimentExtraction.findMany({
           where: { postId: { in: postResults.map((r) => r.postId!) } },
           select: { postId: true },
         })
       : Promise.resolve([]),
     commentResults.length > 0
-      ? prisma.restaurantExtraction.findMany({
+      ? prisma.sentimentExtraction.findMany({
           where: { commentId: { in: commentResults.map((r) => r.commentId!) } },
           select: { commentId: true },
         })
@@ -66,24 +66,31 @@ async function batchSaveExtractions(
   ]);
 
   const existingPostIdSet = new Set(existingPostIds.map((e) => e.postId));
-  const existingCommentIdSet = new Set(existingCommentIds.map((e) => e.commentId));
+  const existingCommentIdSet = new Set(
+    existingCommentIds.map((e) => e.commentId)
+  );
 
   // Separate creates and updates
-  const postCreates = postResults.filter((r) => !existingPostIdSet.has(r.postId!));
-  const postUpdates = postResults.filter((r) => existingPostIdSet.has(r.postId!));
-  const commentCreates = commentResults.filter((r) => !existingCommentIdSet.has(r.commentId!));
-  const commentUpdates = commentResults.filter((r) => existingCommentIdSet.has(r.commentId!));
+  const postCreates = postResults.filter(
+    (r) => !existingPostIdSet.has(r.postId!)
+  );
+  const postUpdates = postResults.filter((r) =>
+    existingPostIdSet.has(r.postId!)
+  );
+  const commentCreates = commentResults.filter(
+    (r) => !existingCommentIdSet.has(r.commentId!)
+  );
+  const commentUpdates = commentResults.filter((r) =>
+    existingCommentIdSet.has(r.commentId!)
+  );
 
   // Execute creates and updates in parallel
   await Promise.all([
     postCreates.length > 0
-      ? prisma.restaurantExtraction.createMany({
+      ? prisma.sentimentExtraction.createMany({
           data: postCreates.map((r) => ({
             postId: r.postId!,
-            restaurantsMentioned: r.restaurantsMentioned,
-            primaryRestaurant: r.primaryRestaurant,
-            dishesMentioned: r.dishesMentioned,
-            isSubjective: r.isSubjective,
+            rawAiScore: r.rawAiScore,
             model,
             extractedAt: now,
           })),
@@ -92,13 +99,10 @@ async function batchSaveExtractions(
       : Promise.resolve(),
 
     commentCreates.length > 0
-      ? prisma.restaurantExtraction.createMany({
+      ? prisma.sentimentExtraction.createMany({
           data: commentCreates.map((r) => ({
             commentId: r.commentId!,
-            restaurantsMentioned: r.restaurantsMentioned,
-            primaryRestaurant: r.primaryRestaurant,
-            dishesMentioned: r.dishesMentioned,
-            isSubjective: r.isSubjective,
+            rawAiScore: r.rawAiScore,
             model,
             extractedAt: now,
           })),
@@ -107,30 +111,16 @@ async function batchSaveExtractions(
       : Promise.resolve(),
 
     ...postUpdates.map((r) =>
-      prisma.restaurantExtraction.update({
+      prisma.sentimentExtraction.update({
         where: { postId: r.postId! },
-        data: {
-          restaurantsMentioned: r.restaurantsMentioned,
-          primaryRestaurant: r.primaryRestaurant,
-          dishesMentioned: r.dishesMentioned,
-          isSubjective: r.isSubjective,
-          model,
-          extractedAt: now,
-        },
+        data: { rawAiScore: r.rawAiScore, model, extractedAt: now },
       })
     ),
 
     ...commentUpdates.map((r) =>
-      prisma.restaurantExtraction.update({
+      prisma.sentimentExtraction.update({
         where: { commentId: r.commentId! },
-        data: {
-          restaurantsMentioned: r.restaurantsMentioned,
-          primaryRestaurant: r.primaryRestaurant,
-          dishesMentioned: r.dishesMentioned,
-          isSubjective: r.isSubjective,
-          model,
-          extractedAt: now,
-        },
+        data: { rawAiScore: r.rawAiScore, model, extractedAt: now },
       })
     ),
   ]);
@@ -143,7 +133,18 @@ async function processPostsSequential(limit?: number, skipExisting = true) {
   console.log('\n📝 Processing Posts (Optimized - Parallel API + Batch DB)');
   console.log('='.repeat(80));
 
-  const whereClause = skipExisting ? { restaurantExtraction: null } : {};
+  const whereClause = skipExisting
+    ? {
+        sentimentExtraction: null,
+        restaurantsMentioned: {
+          some: {}, // Has at least one restaurant linked
+        },
+      }
+    : {
+        restaurantsMentioned: {
+          some: {}, // Has at least one restaurant linked
+        },
+      };
   const totalPosts = await prisma.post.count({ where: whereClause });
 
   console.log(`   Total posts to process: ${totalPosts}`);
@@ -163,15 +164,19 @@ async function processPostsSequential(limit?: number, skipExisting = true) {
 
     if (posts.length === 0) break;
 
-    const { successful, errors: batchErrors, elapsed } = await processBatch(
+    const {
+      successful,
+      errors: batchErrors,
+      elapsed,
+    } = await processBatch(
       posts,
       async (post) => {
-        const input: PostExtractionInput = {
+        const input: PostSentimentInput = {
           post_title: post.title || '',
           post_text: post.body || '',
         };
-        const extraction = await extractPostRestaurantInfo(input, GEMINI_MODEL);
-        return { extraction, postId: post.id };
+        const sentiment = await evaluatePost(input, GEMINI_MODEL);
+        return { sentiment, postId: post.id };
       },
       batchConfig,
       Math.floor(processed / BATCH_SIZE) + 1,
@@ -181,14 +186,21 @@ async function processPostsSequential(limit?: number, skipExisting = true) {
 
     // Batch save to database
     if (successful.length > 0) {
-      const results = successful.map((r) => ({ ...r.extraction, postId: r.postId }));
-      await batchSaveExtractions(results, GEMINI_MODEL);
+      const results = successful.map((r) => ({
+        ...r.sentiment,
+        postId: r.postId,
+      }));
+      await batchSaveSentiments(results, GEMINI_MODEL);
     }
 
     processed += posts.length;
     errors += batchErrors;
 
-    await waitForRateLimit(elapsed, batchConfig.minBatchDurationMs, processed < (limit || totalPosts));
+    await waitForRateLimit(
+      elapsed,
+      batchConfig.minBatchDurationMs,
+      processed < (limit || totalPosts)
+    );
   }
 
   console.log(`\n   ✅ Processed: ${processed}, ❌ Failed: ${errors}`);
@@ -202,7 +214,18 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
   console.log('\n💬 Processing Comments (Optimized - Parallel API + Batch DB)');
   console.log('='.repeat(80));
 
-  const whereClause = skipExisting ? { restaurantExtraction: null } : {};
+  const whereClause = skipExisting
+    ? {
+        sentimentExtraction: null,
+        restaurantsMentioned: {
+          some: {}, // Has at least one restaurant linked
+        },
+      }
+    : {
+        restaurantsMentioned: {
+          some: {}, // Has at least one restaurant linked
+        },
+      };
   const totalComments = await prisma.comment.count({ where: whereClause });
 
   console.log(`   Total comments to process: ${totalComments}`);
@@ -212,7 +235,10 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
   let errors = 0;
 
   while (processed < (limit || totalComments)) {
-    const batchLimit = Math.min(BATCH_SIZE, (limit || totalComments) - processed);
+    const batchLimit = Math.min(
+      BATCH_SIZE,
+      (limit || totalComments) - processed
+    );
 
     const comments = await prisma.comment.findMany({
       where: whereClause,
@@ -225,17 +251,19 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
 
     if (comments.length === 0) break;
 
-    const { successful, errors: batchErrors, elapsed } = await processBatch(
+    const {
+      successful,
+      errors: batchErrors,
+      elapsed,
+    } = await processBatch(
       comments,
       async (comment) => {
-        const input: CommentExtractionInput = {
+        const input: CommentSentimentInput = {
           post_title: comment.post.title || '',
-          post_text: comment.post.body || '',
           comment_text: comment.body || '',
-          parent_text: comment.parentComment?.body || '',
         };
-        const extraction = await extractCommentRestaurantInfo(input, GEMINI_MODEL);
-        return { extraction, commentId: comment.id };
+        const sentiment = await evaluateComment(input, GEMINI_MODEL);
+        return { sentiment, commentId: comment.id };
       },
       batchConfig,
       Math.floor(processed / BATCH_SIZE) + 1,
@@ -245,14 +273,21 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
 
     // Batch save to database
     if (successful.length > 0) {
-      const results = successful.map((r) => ({ ...r.extraction, commentId: r.commentId }));
-      await batchSaveExtractions(results, GEMINI_MODEL);
+      const results = successful.map((r) => ({
+        ...r.sentiment,
+        commentId: r.commentId,
+      }));
+      await batchSaveSentiments(results, GEMINI_MODEL);
     }
 
     processed += comments.length;
     errors += batchErrors;
 
-    await waitForRateLimit(elapsed, batchConfig.minBatchDurationMs, processed < (limit || totalComments));
+    await waitForRateLimit(
+      elapsed,
+      batchConfig.minBatchDurationMs,
+      processed < (limit || totalComments)
+    );
   }
 
   console.log(`\n   ✅ Processed: ${processed}, ❌ Failed: ${errors}`);
@@ -260,9 +295,9 @@ async function processCommentsSequential(limit?: number, skipExisting = true) {
 }
 
 /**
- * Main extraction function
+ * Main sentiment extraction function
  */
-async function extractRestaurants(config: Config = {}) {
+async function extractSentiment(config: Config = {}) {
   const {
     processPosts = true,
     processComments = true,
@@ -270,7 +305,7 @@ async function extractRestaurants(config: Config = {}) {
     skipExisting = true,
   } = config;
 
-  console.log('🚀 Starting Restaurant Extraction');
+  console.log('🚀 Starting Sentiment Extraction');
   console.log('='.repeat(80));
   console.log(`   Posts: ${processPosts ? 'Yes' : 'No'}`);
   console.log(`   Comments: ${processComments ? 'Yes' : 'No'}`);
@@ -292,7 +327,7 @@ async function extractRestaurants(config: Config = {}) {
       stats.comments = await processCommentsSequential(limit, skipExisting);
     }
 
-    printSummary('Restaurant Extraction', stats);
+    printSummary('Sentiment Extraction', stats);
   } catch (error) {
     console.error('❌ Fatal error:', error);
     throw error;
@@ -305,13 +340,17 @@ async function extractRestaurants(config: Config = {}) {
 const args = process.argv.slice(2);
 
 if (args.includes('--help') || args.includes('-h')) {
-  printHelp('extractRestaurantsSequential.ts', 'Restaurant Extraction', 'RestaurantExtraction');
+  printHelp(
+    'extractSentimentSequential.ts',
+    'Sentiment Extraction',
+    'SentimentExtraction'
+  );
   process.exit(0);
 }
 
 const config = parseCliArgs(args);
 
-extractRestaurants(config)
+extractSentiment(config)
   .then(() => {
     console.log('\n✅ Done!');
     process.exit(0);
