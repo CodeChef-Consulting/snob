@@ -16,18 +16,19 @@ import {
 
 const SENTIMENT_INTRO = `You are a foodie browsing Reddit to find the best places to eat.`;
 
-const SENTIMENT_SCORE_INSTRUCTIONS = `1) rawAiScore (-1 to 1): How positively the comment makes you want to visit the restaurant(s) mentioned?
-   -1 = definitely avoid, 0 = neutral, 1 = definitely want to visit.
-   Focus ONLY on an impression of **taste and quality of the food**. Ignore ambiance, service, hype, or other experiences.
-   A comment saying a place is "overhyped" or "just okay" should lean negative (around -0.1 to -0.4).
-   If sentiment is unclear or purely factual, score 0.`;
+const SENTIMENT_SCORE_INSTRUCTIONS = `1) rawAiScore (-1 to 1): How positively this text makes you want to visit the restaurant(s) mentioned, based on FOOD QUALITY only.
 
-const SENTIMENT_GUIDELINES = `**Important:**
-- Base your evaluation only on the text given.
-- Assume that even if there isn't a restaurant mentioned in context, the comment is still about food.
-- If the text seems irrelevant to restaurant opinions, set rawAiScore to 0.
-- Round numeric values to two decimal places.
-- Output exactly in this format (example): 0.45`;
+**Scoring Guide:**
+- **1.0**: Enthusiastic praise with specific details (e.g., "best I've ever had", "can't stop thinking about it")
+- **0.6-0.8**: Clear positive sentiment with details (e.g., "really good", "delicious", "great tacos")
+- **0.3-0.5**: Simple recommendation without details or nostalgia/craving (e.g., just naming a place)
+- **0.0**: Average/okay food quality, nothing special (e.g., "it's fine", "decent", "standard")
+- **-0.3 to -0.6**: Criticism about food quality (e.g., "bland", "disappointing", "not worth it")
+- **-1.0**: Strong negative sentiment (e.g., "terrible", "avoid at all costs")
+- **null**: Use null if text is irrelevant to food quality (questions, seeking recommendations, purely factual)
+
+Focus ONLY on taste and food quality. Ignore price, ambiance, service, hype.
+Output exactly one number rounded to two decimal places (example): 0.45, or output: null`;
 
 /**
  * Create sentiment analysis prompt for comment
@@ -43,9 +44,7 @@ Post title (use mainly for context): ${input.post_title}
 
 Output exactly one field:
 
-${SENTIMENT_SCORE_INSTRUCTIONS}
-
-${SENTIMENT_GUIDELINES}`;
+${SENTIMENT_SCORE_INSTRUCTIONS}`;
 }
 
 /**
@@ -59,9 +58,7 @@ Post text: ${input.post_text}
 
 Output exactly one field:
 
-${SENTIMENT_SCORE_INSTRUCTIONS}
-
-${SENTIMENT_GUIDELINES}`;
+${SENTIMENT_SCORE_INSTRUCTIONS}`;
 }
 
 // ============================================================================
