@@ -17,6 +17,8 @@ const prisma = new PrismaClient();
 // Configuration
 const BATCH_SIZE = 1000;
 const JSONL_THRESHOLD = 50000; // Use JSONL for batches larger than this
+// JSONL support verified working with @google/genai 1.23.0
+// Use --force-jsonl flag to test JSONL functionality with small batches
 
 interface InitializeConfig {
   contentType: 'post' | 'comment';
@@ -27,7 +29,7 @@ interface InitializeConfig {
 
 /**
  * Create JSONL file for large batch jobs
- * Returns the file URI after uploading to Gemini
+ * Returns the uploaded file name after uploading to Gemini
  */
 async function createJsonlBatchFile(
   requests: Array<{
@@ -71,12 +73,12 @@ async function createJsonlBatchFile(
       },
     });
 
-    console.log(`   ✅ File uploaded: ${uploadedFile.uri}`);
+    console.log(`   ✅ File uploaded: ${uploadedFile.name}`);
 
     // Clean up local file
     await unlink(jsonlPath);
 
-    return uploadedFile.uri || '';
+    return uploadedFile.name || '';
   } catch (error) {
     // Clean up local file on error
     try {
@@ -166,16 +168,13 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
     // Submit batch job to Gemini
     let geminiBatchJob;
     if (useJsonl) {
-      const fileUri = await createJsonlBatchFile(
+      const fileName = await createJsonlBatchFile(
         inlineRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash-lite',
-        src: {
-          format: 'jsonl',
-          gcsUri: [fileUri],
-        },
+        src: fileName,
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -305,10 +304,7 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
       );
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash',
-        src: {
-          format: 'jsonl',
-          gcsUri: [fileUri],
-        },
+        fileName: fileUri,
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -353,7 +349,8 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
  */
 async function initializePostSentimentBatch(
   limit?: number,
-  skipExisting = true
+  skipExisting = true,
+  forceJsonl = false
 ) {
   console.log('\n📝 Initializing Post Sentiment Analysis Batch');
   console.log('='.repeat(80));
@@ -418,27 +415,28 @@ async function initializePostSentimentBatch(
     );
 
     // Determine if we need JSONL format
-    const useJsonl = posts.length > JSONL_THRESHOLD;
+    const useJsonl = forceJsonl || posts.length > JSONL_THRESHOLD;
 
     if (useJsonl) {
-      console.log(
-        `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
-      );
+      if (forceJsonl) {
+        console.log(`   🗂️  JSONL format forced for testing...`);
+      } else {
+        console.log(
+          `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
+        );
+      }
     }
 
     // Submit batch job to Gemini
     let geminiBatchJob;
     if (useJsonl) {
-      const fileUri = await createJsonlBatchFile(
+      const fileName = await createJsonlBatchFile(
         inlineRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash',
-        src: {
-          format: 'jsonl',
-          gcsUri: [fileUri],
-        },
+        src: fileName,
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -485,7 +483,8 @@ async function initializePostSentimentBatch(
  */
 async function initializeCommentSentimentBatch(
   limit?: number,
-  skipExisting = true
+  skipExisting = true,
+  forceJsonl = false
 ) {
   console.log('\n💬 Initializing Comment Sentiment Analysis Batch');
   console.log('='.repeat(80));
@@ -551,27 +550,28 @@ async function initializeCommentSentimentBatch(
     );
 
     // Determine if we need JSONL format
-    const useJsonl = comments.length > JSONL_THRESHOLD;
+    const useJsonl = forceJsonl || comments.length > JSONL_THRESHOLD;
 
     if (useJsonl) {
-      console.log(
-        `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
-      );
+      if (forceJsonl) {
+        console.log(`   🗂️  JSONL format forced for testing...`);
+      } else {
+        console.log(
+          `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
+        );
+      }
     }
 
     // Submit batch job to Gemini
     let geminiBatchJob;
     if (useJsonl) {
-      const fileUri = await createJsonlBatchFile(
+      const fileName = await createJsonlBatchFile(
         inlineRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash',
-        src: {
-          format: 'jsonl',
-          gcsUri: [fileUri],
-        },
+        src: fileName,
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -627,11 +627,13 @@ Options:
   --sentiment         Run sentiment analysis (default: extraction)
   --limit=<number>    Limit items to process (max: 200,000)
   --reprocess-all     Don't skip existing extractions/sentiments
+  --force-jsonl       Force JSONL format even for small batches (testing)
   -h, --help          Show help
 
 Batch Format:
   - Inline requests: Used for batches up to ${JSONL_THRESHOLD.toLocaleString()} items
   - JSONL file: Automatically used for larger batches (up to 200K items, 2GB)
+  - Use --force-jsonl to test JSONL functionality with small batches
 
 Examples:
   # Restaurant extraction (default)
@@ -643,6 +645,9 @@ Examples:
   npm run init-batch -- --sentiment --posts --limit=1000
   npm run init-batch -- --sentiment --comments
 
+  # Test JSONL with small batch
+  npm run init-batch -- --sentiment --posts --limit=10 --force-jsonl
+
 After initialization:
   - Check status: npm run batch-jobs list
   - Poll results: npm run check-batch -- <BatchJob ID>
@@ -653,6 +658,7 @@ After initialization:
   const contentType = args.includes('--comments') ? 'comment' : 'post';
   const jobType = args.includes('--sentiment') ? 'sentiment' : 'extraction';
   const skipExisting = !args.includes('--reprocess-all');
+  const forceJsonl = args.includes('--force-jsonl');
 
   const limitArg = args.find((arg) => arg.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : undefined;
@@ -666,7 +672,7 @@ After initialization:
   console.log(`   Skip Existing: ${skipExisting ? 'Yes' : 'No'}`);
   console.log(`   Limit: ${limit || 'None (up to 1000)'}`);
   console.log(
-    `   Format: ${limit && limit > JSONL_THRESHOLD ? 'JSONL file' : 'Inline requests'}`
+    `   Format: ${forceJsonl || (limit && limit > JSONL_THRESHOLD) ? 'JSONL file' : 'Inline requests'}`
   );
   console.log(`   💰 Cost: 50% savings with Batch API!`);
 
@@ -674,9 +680,9 @@ After initialization:
     let result;
     if (jobType === 'sentiment') {
       if (contentType === 'post') {
-        result = await initializePostSentimentBatch(limit, skipExisting);
+        result = await initializePostSentimentBatch(limit, skipExisting, forceJsonl);
       } else {
-        result = await initializeCommentSentimentBatch(limit, skipExisting);
+        result = await initializeCommentSentimentBatch(limit, skipExisting, forceJsonl);
       }
     } else {
       if (contentType === 'post') {

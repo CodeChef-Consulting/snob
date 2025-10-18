@@ -33,7 +33,13 @@ export function normalizeField(value: string, deduplicate = false): string | nul
 
 /**
  * Parse sentiment response from AI
- * Handles both plain number format and JSON format
+ * Handles multiple formats:
+ * - JSON with code blocks: ```json\n{"rawAiScore": 0.8}\n```
+ * - JSON: {"rawAiScore": 0.8}
+ * - Key-value: rawAiScore: 0.8
+ * - Numbered: 1) rawAiScore: 0.8
+ * - Plain number: 0.8
+ * - null values (returns null for rawAiScore)
  */
 export function parseSentimentResponse(responseText: string): SentimentResult {
   const trimmed = responseText.trim();
@@ -48,20 +54,50 @@ export function parseSentimentResponse(responseText: string): SentimentResult {
       if (typeof parsed.rawAiScore === 'number') {
         return { rawAiScore: parsed.rawAiScore };
       }
+      if (parsed.rawAiScore === null) {
+        return { rawAiScore: null };
+      }
     } catch (e) {
-      // Fall through to plain number parsing
+      // Fall through to regex parsing
     }
   }
 
-  // Parse as plain number
-  const rawAiScore = parseFloat(trimmed);
-  if (isNaN(rawAiScore)) {
-    throw new Error(`Invalid rawAiScore: ${responseText}`);
+  // Try to extract using regex patterns
+  // Pattern 1: rawAiScore: <number> or rawAiScore: null
+  let match = trimmed.match(/rawAiScore:\s*([-\d.]+|null)/i);
+  if (match) {
+    const value = match[1];
+    if (value === 'null') {
+      return { rawAiScore: null };
+    }
+    const score = parseFloat(value);
+    if (!isNaN(score)) {
+      return { rawAiScore: score };
+    }
   }
 
-  return {
-    rawAiScore,
-  };
+  // Pattern 2: \d+) rawAiScore: <number>
+  match = trimmed.match(/\d+\)\s*rawAiScore:\s*([-\d.]+)/i);
+  if (match) {
+    const score = parseFloat(match[1]);
+    if (!isNaN(score)) {
+      return { rawAiScore: score };
+    }
+  }
+
+  // Pattern 3: Just "null"
+  if (trimmed === 'null') {
+    return { rawAiScore: null };
+  }
+
+  // Pattern 4: Plain number
+  const rawAiScore = parseFloat(trimmed);
+  if (!isNaN(rawAiScore)) {
+    return { rawAiScore };
+  }
+
+  // If nothing worked, throw error
+  throw new Error(`Invalid rawAiScore format: ${responseText}`);
 }
 
 /**

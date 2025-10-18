@@ -170,25 +170,28 @@ async function checkBatchJob(
           if (batchJob.displayName?.includes('sentiment')) {
             const sentiment = parseSentimentResponse(responseText);
 
-            await prisma.sentimentExtraction.upsert({
-              where:
-                batchJob.contentType === 'post'
-                  ? { postId: itemId }
-                  : { commentId: itemId },
-              create: {
-                ...(batchJob.contentType === 'post'
-                  ? { postId: itemId }
-                  : { commentId: itemId }),
-                rawAiScore: sentiment.rawAiScore,
-                model: batchJob.model,
-                extractedAt: new Date(),
-              },
-              update: {
-                rawAiScore: sentiment.rawAiScore,
-                model: batchJob.model,
-                extractedAt: new Date(),
-              },
-            });
+            // Skip saving if rawAiScore is null (post has no sentiment)
+            if (sentiment.rawAiScore !== null) {
+              await prisma.sentimentExtraction.upsert({
+                where:
+                  batchJob.contentType === 'post'
+                    ? { postId: itemId }
+                    : { commentId: itemId },
+                create: {
+                  ...(batchJob.contentType === 'post'
+                    ? { postId: itemId }
+                    : { commentId: itemId }),
+                  rawAiScore: sentiment.rawAiScore,
+                  model: batchJob.model,
+                  extractedAt: new Date(),
+                },
+                update: {
+                  rawAiScore: sentiment.rawAiScore,
+                  model: batchJob.model,
+                  extractedAt: new Date(),
+                },
+              });
+            }
           }
           // Handle restaurant extraction jobs
           else {
@@ -225,38 +228,73 @@ async function checkBatchJob(
     }
   }
   // Handle JSONL file responses (large batches)
-  else if (currentJob.dest?.gcsUri) {
-    console.log(
-      `   📥 Downloading JSONL results from ${currentJob.dest.gcsUri}...`
-    );
+  else if (currentJob.dest?.fileName || currentJob.dest?.gcsUri) {
+    const fileSource = currentJob.dest.fileName || currentJob.dest.gcsUri;
+    console.log(`   📥 Downloading JSONL results from ${fileSource}...`);
 
     try {
       const ai = require('../utils/gemini').getGenAI();
-      const resultFile = await ai.files.get({ name: currentJob.dest.gcsUri });
 
-      if (resultFile.uri) {
-        // Download and parse JSONL results
-        const response = await fetch(resultFile.uri);
-        const text = await response.text();
-        const lines = text.trim().split('\n');
+      // Download the result file to tmp directory
+      const fs = await import('fs/promises');
+      const path = await import('path');
 
-        console.log(`   Processing ${lines.length} JSONL responses...`);
+      const tmpDir = path.join(process.cwd(), 'tmp');
+      await fs.mkdir(tmpDir, { recursive: true });
 
-        for (let i = 0; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
+      // Create a temp file path
+      const fileName = fileSource!.replace('files/', '').replace(/\//g, '-');
+      const tmpFilePath = path.join(tmpDir, `${fileName}.jsonl`);
 
-          const itemId = itemIds[i];
+      // Download file (SDK may use its own naming)
+      await ai.files.download({
+        file: fileSource,
+        downloadPath: tmpFilePath,
+      });
 
-          try {
-            const jsonResponse = JSON.parse(lines[i]);
+      // Check if file exists at expected path, otherwise find it
+      let actualFilePath = tmpFilePath;
+      try {
+        await fs.access(tmpFilePath);
+      } catch {
+        // File not at expected path, find it in tmp directory
+        const files = await fs.readdir(tmpDir);
+        const downloadedFile = files.find((f) => f.endsWith('.jsonl'));
 
-            if (jsonResponse.response?.text) {
-              // Handle sentiment jobs
-              if (batchJob.displayName?.includes('sentiment')) {
-                const sentiment = parseSentimentResponse(
-                  jsonResponse.response.text
-                );
+        if (!downloadedFile) {
+          throw new Error('Downloaded file not found in tmp directory');
+        }
 
+        actualFilePath = path.join(tmpDir, downloadedFile);
+      }
+
+      console.log(`   ✅ Downloaded to: ${actualFilePath}`);
+
+      const text = await fs.readFile(actualFilePath, 'utf-8');
+      const lines = text.trim().split('\n');
+
+      console.log(`   Processing ${lines.length} JSONL responses...`);
+
+      for (let i = 0; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+
+        const itemId = itemIds[i];
+
+        try {
+          const jsonResponse = JSON.parse(lines[i]);
+
+          // Extract text from response structure
+          const responseText =
+            jsonResponse.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            jsonResponse.response?.text;
+
+          if (responseText) {
+            // Handle sentiment jobs
+            if (batchJob.displayName?.includes('sentiment')) {
+              const sentiment = parseSentimentResponse(responseText);
+
+              // Skip saving if rawAiScore is null (post has no sentiment)
+              if (sentiment.rawAiScore !== null) {
                 await prisma.sentimentExtraction.upsert({
                   where:
                     batchJob.contentType === 'post'
@@ -277,45 +315,47 @@ async function checkBatchJob(
                   },
                 });
               }
-              // Handle restaurant extraction jobs
-              else {
-                const extraction = parseRestaurantExtractionResponse(
-                  jsonResponse.response.text
-                );
-
-                if (batchJob.contentType === 'post') {
-                  await saveExtraction(
-                    prisma,
-                    { ...extraction, postId: itemId },
-                    batchJob.model
-                  );
-                } else {
-                  await saveExtraction(
-                    prisma,
-                    { ...extraction, commentId: itemId },
-                    batchJob.model
-                  );
-                }
-              }
-
-              processed++;
-
-              if (processed % 1000 === 0) {
-                console.log(`      Saved ${processed}/${itemIds.length}...`);
-              }
-            } else if (jsonResponse.error) {
-              console.error(
-                `      Error for item ${itemId}:`,
-                jsonResponse.error
-              );
-              errors++;
             }
-          } catch (error) {
-            console.error(`      Error parsing/saving item ${itemId}:`, error);
+            // Handle restaurant extraction jobs
+            else {
+              const extraction =
+                parseRestaurantExtractionResponse(responseText);
+
+              if (batchJob.contentType === 'post') {
+                await saveExtraction(
+                  prisma,
+                  { ...extraction, postId: itemId },
+                  batchJob.model
+                );
+              } else {
+                await saveExtraction(
+                  prisma,
+                  { ...extraction, commentId: itemId },
+                  batchJob.model
+                );
+              }
+            }
+
+            processed++;
+
+            if (processed % 1000 === 0) {
+              console.log(`      Saved ${processed}/${itemIds.length}...`);
+            }
+          } else if (jsonResponse.error) {
+            console.error(
+              `      Error for item ${itemId}:`,
+              jsonResponse.error
+            );
             errors++;
           }
+        } catch (error) {
+          console.error(`      Error parsing/saving item ${itemId}:`, error);
+          errors++;
         }
       }
+
+      // Clean up downloaded file
+      await fs.unlink(actualFilePath);
     } catch (error) {
       console.error('   ❌ Error downloading JSONL results:', error);
       throw error;
