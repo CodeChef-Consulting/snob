@@ -13,7 +13,7 @@ export interface PostSentimentInput {
 }
 
 export interface SentimentResult {
-  rawAiScore: number;
+  rawAiScore: number | null;
 }
 
 export interface CommentExtractionInput {

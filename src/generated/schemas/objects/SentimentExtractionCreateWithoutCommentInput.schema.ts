@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { PostCreateNestedOneWithoutSentimentExtractionInputObjectSchema as PostCreateNestedOneWithoutSentimentExtractionInputObjectSchema } from './PostCreateNestedOneWithoutSentimentExtractionInput.schema'
 
 const makeSchema = () => z.object({
-  rawAiScore: z.number(),
+  rawAiScore: z.number().optional().nullable(),
   extractedAt: z.coerce.date().optional(),
   model: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),

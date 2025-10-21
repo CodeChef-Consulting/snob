@@ -202,7 +202,7 @@ model SentimentExtraction {
   commentId Int?
 
   // Sentiment score (-1 to 1)
-  rawAiScore Float
+  rawAiScore Float?
 
   // Metadata
   extractedAt DateTime @default(now())

@@ -5,7 +5,7 @@ import type { Prisma } from '@prisma/client';
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
   commentId: z.number().int().optional().nullable(),
-  rawAiScore: z.number(),
+  rawAiScore: z.number().optional().nullable(),
   extractedAt: z.coerce.date().optional(),
   model: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),

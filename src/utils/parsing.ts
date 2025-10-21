@@ -44,12 +44,21 @@ export function normalizeField(value: string, deduplicate = false): string | nul
 export function parseSentimentResponse(responseText: string): SentimentResult {
   const trimmed = responseText.trim();
 
+  // Remove markdown code blocks if present
+  let cleanedText = trimmed;
+  if (trimmed.includes('```')) {
+    cleanedText = trimmed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  }
+
+  // Pattern 0: Just "null" (after removing code blocks)
+  if (cleanedText === 'null') {
+    return { rawAiScore: null };
+  }
+
   // Try to parse as JSON first (in case AI returns JSON format)
-  if (trimmed.startsWith('{') || trimmed.startsWith('```')) {
+  if (cleanedText.startsWith('{')) {
     try {
-      // Remove markdown code blocks if present
-      const jsonText = trimmed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(jsonText);
+      const parsed = JSON.parse(cleanedText);
 
       if (typeof parsed.rawAiScore === 'number') {
         return { rawAiScore: parsed.rawAiScore };
@@ -64,7 +73,7 @@ export function parseSentimentResponse(responseText: string): SentimentResult {
 
   // Try to extract using regex patterns
   // Pattern 1: rawAiScore: <number> or rawAiScore: null
-  let match = trimmed.match(/rawAiScore:\s*([-\d.]+|null)/i);
+  let match = cleanedText.match(/rawAiScore:\s*([-\d.]+|null)/i);
   if (match) {
     const value = match[1];
     if (value === 'null') {
@@ -77,7 +86,7 @@ export function parseSentimentResponse(responseText: string): SentimentResult {
   }
 
   // Pattern 2: \d+) rawAiScore: <number>
-  match = trimmed.match(/\d+\)\s*rawAiScore:\s*([-\d.]+)/i);
+  match = cleanedText.match(/\d+\)\s*rawAiScore:\s*([-\d.]+)/i);
   if (match) {
     const score = parseFloat(match[1]);
     if (!isNaN(score)) {
@@ -85,13 +94,8 @@ export function parseSentimentResponse(responseText: string): SentimentResult {
     }
   }
 
-  // Pattern 3: Just "null"
-  if (trimmed === 'null') {
-    return { rawAiScore: null };
-  }
-
-  // Pattern 4: Plain number
-  const rawAiScore = parseFloat(trimmed);
+  // Pattern 3: Plain number
+  const rawAiScore = parseFloat(cleanedText);
   if (!isNaN(rawAiScore)) {
     return { rawAiScore };
   }

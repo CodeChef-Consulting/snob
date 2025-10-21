@@ -170,28 +170,25 @@ async function checkBatchJob(
           if (batchJob.displayName?.includes('sentiment')) {
             const sentiment = parseSentimentResponse(responseText);
 
-            // Skip saving if rawAiScore is null (post has no sentiment)
-            if (sentiment.rawAiScore !== null) {
-              await prisma.sentimentExtraction.upsert({
-                where:
-                  batchJob.contentType === 'post'
-                    ? { postId: itemId }
-                    : { commentId: itemId },
-                create: {
-                  ...(batchJob.contentType === 'post'
-                    ? { postId: itemId }
-                    : { commentId: itemId }),
-                  rawAiScore: sentiment.rawAiScore,
-                  model: batchJob.model,
-                  extractedAt: new Date(),
-                },
-                update: {
-                  rawAiScore: sentiment.rawAiScore,
-                  model: batchJob.model,
-                  extractedAt: new Date(),
-                },
-              });
-            }
+            await prisma.sentimentExtraction.upsert({
+              where:
+                batchJob.contentType === 'post'
+                  ? { postId: itemId }
+                  : { commentId: itemId },
+              create: {
+                ...(batchJob.contentType === 'post'
+                  ? { postId: itemId }
+                  : { commentId: itemId }),
+                rawAiScore: sentiment.rawAiScore,
+                model: batchJob.model,
+                extractedAt: new Date(),
+              },
+              update: {
+                rawAiScore: sentiment.rawAiScore,
+                model: batchJob.model,
+                extractedAt: new Date(),
+              },
+            });
           }
           // Handle restaurant extraction jobs
           else {
@@ -294,27 +291,26 @@ async function checkBatchJob(
               const sentiment = parseSentimentResponse(responseText);
 
               // Skip saving if rawAiScore is null (post has no sentiment)
-              if (sentiment.rawAiScore !== null) {
-                await prisma.sentimentExtraction.upsert({
-                  where:
-                    batchJob.contentType === 'post'
-                      ? { postId: itemId }
-                      : { commentId: itemId },
-                  create: {
-                    ...(batchJob.contentType === 'post'
-                      ? { postId: itemId }
-                      : { commentId: itemId }),
-                    rawAiScore: sentiment.rawAiScore,
-                    model: batchJob.model,
-                    extractedAt: new Date(),
-                  },
-                  update: {
-                    rawAiScore: sentiment.rawAiScore,
-                    model: batchJob.model,
-                    extractedAt: new Date(),
-                  },
-                });
-              }
+
+              await prisma.sentimentExtraction.upsert({
+                where:
+                  batchJob.contentType === 'post'
+                    ? { postId: itemId }
+                    : { commentId: itemId },
+                create: {
+                  ...(batchJob.contentType === 'post'
+                    ? { postId: itemId }
+                    : { commentId: itemId }),
+                  rawAiScore: sentiment.rawAiScore,
+                  model: batchJob.model,
+                  extractedAt: new Date(),
+                },
+                update: {
+                  rawAiScore: sentiment.rawAiScore,
+                  model: batchJob.model,
+                  extractedAt: new Date(),
+                },
+              });
             }
             // Handle restaurant extraction jobs
             else {

@@ -7,7 +7,7 @@ export const SentimentExtractionInputSchema = z.object({
     postId: z.number().int().optional().nullable(),
     comment: z.unknown().optional().nullable(),
     commentId: z.number().int().optional().nullable(),
-    rawAiScore: z.number(),
+    rawAiScore: z.number().optional().nullable(),
     extractedAt: z.date(),
     model: z.string().optional().nullable(),
     createdAt: z.date(),

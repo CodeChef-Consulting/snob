@@ -6,6 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "fetch-comments": "tsx src/scripts/fetchComments.ts",
+    "fetch-comments-and-posts": "tsx src/scripts/fetchCommentsAndPosts.ts",
     "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
     "extract-sentiment": "tsx src/scripts/extractSentimentSequential.ts",
     "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",

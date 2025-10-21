@@ -12,7 +12,7 @@ const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
   postId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   commentId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
-  rawAiScore: SortOrderSchema.optional(),
+  rawAiScore: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   extractedAt: SortOrderSchema.optional(),
   model: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   createdAt: SortOrderSchema.optional(),
