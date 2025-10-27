@@ -267,14 +267,27 @@ async function checkBatchJob(
 
       console.log(`   ✅ Downloaded to: ${actualFilePath}`);
 
+      // Wait for file to be fully written (SDK download may complete before file is flushed)
+      // Verify by checking file size stabilizes
+      let prevSize = 0;
+      let stable = 0;
+      while (stable < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        const stats = await fs.stat(actualFilePath);
+        if (stats.size === prevSize) {
+          stable++;
+        } else {
+          stable = 0;
+          prevSize = stats.size;
+        }
+      }
+
       const text = await fs.readFile(actualFilePath, 'utf-8');
-      const lines = text.trim().split('\n');
+      const lines = text.split('\n').filter((line) => line.trim());
 
       console.log(`   Processing ${lines.length} JSONL responses...`);
 
       for (let i = 0; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-
         const itemId = itemIds[i];
 
         try {

@@ -124,7 +124,7 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
   const batchJobRecord = await prisma.batchJob.create({
     data: {
       displayName: `post-extraction-${Date.now()}`,
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contentType: 'post',
       itemCount: posts.length,
       itemIds: postIds,
@@ -253,7 +253,7 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
   const batchJobRecord = await prisma.batchJob.create({
     data: {
       displayName: `comment-extraction-${Date.now()}`,
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contentType: 'comment',
       itemCount: comments.length,
       itemIds: commentIds,
@@ -303,15 +303,18 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash',
-        fileName: fileUri,
+        model: 'gemini-2.5-flash-lite',
+        src: {
+          format: 'jsonl',
+          gcsUri: [fileUri],
+        },
         config: {
           displayName: batchJobRecord.displayName,
         },
       });
     } else {
       geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-lite',
         src: inlineRequests,
         config: {
           displayName: batchJobRecord.displayName,
@@ -357,10 +360,21 @@ async function initializePostSentimentBatch(
 
   const ai = getGenAI();
 
-  const whereClause = skipExisting ? { sentimentExtraction: null } : {};
+  // Only analyze posts that have subjective restaurant mentions
+  const whereClause = {
+    AND: [
+      skipExisting ? { sentimentExtraction: null } : {},
+      {
+        restaurantExtraction: {
+          isSubjective: true,
+        },
+      },
+    ],
+  };
+
   const totalPosts = await prisma.post.count({ where: whereClause });
 
-  console.log(`   Total posts available: ${totalPosts}`);
+  console.log(`   Total posts with subjective mentions: ${totalPosts}`);
   if (limit) {
     console.log(`   Limiting to: ${limit} posts`);
   }
@@ -382,7 +396,7 @@ async function initializePostSentimentBatch(
   const batchJobRecord = await prisma.batchJob.create({
     data: {
       displayName: `post-sentiment-${Date.now()}`,
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contentType: 'post',
       itemCount: posts.length,
       itemIds: postIds,
@@ -435,7 +449,7 @@ async function initializePostSentimentBatch(
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-lite',
         src: fileName,
         config: {
           displayName: batchJobRecord.displayName,
@@ -443,7 +457,7 @@ async function initializePostSentimentBatch(
       });
     } else {
       geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-lite',
         src: inlineRequests,
         config: {
           displayName: batchJobRecord.displayName,
@@ -491,10 +505,26 @@ async function initializeCommentSentimentBatch(
 
   const ai = getGenAI();
 
-  const whereClause = skipExisting ? { sentimentExtraction: null } : {};
+  // Only analyze comments that have subjective restaurant mentions
+  // with either restaurantsMentioned or primaryRestaurant
+  const whereClause = {
+    AND: [
+      skipExisting ? { sentimentExtraction: null } : {},
+      {
+        restaurantExtraction: {
+          isSubjective: true,
+          OR: [
+            { restaurantsMentioned: { not: null } },
+            { primaryRestaurant: { not: null } },
+          ],
+        },
+      },
+    ],
+  };
+
   const totalComments = await prisma.comment.count({ where: whereClause });
 
-  console.log(`   Total comments available: ${totalComments}`);
+  console.log(`   Total comments with subjective mentions: ${totalComments}`);
   if (limit) {
     console.log(`   Limiting to: ${limit} comments`);
   }
@@ -518,7 +548,7 @@ async function initializeCommentSentimentBatch(
   const batchJobRecord = await prisma.batchJob.create({
     data: {
       displayName: `comment-sentiment-${Date.now()}`,
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contentType: 'comment',
       itemCount: comments.length,
       itemIds: commentIds,
@@ -570,7 +600,7 @@ async function initializeCommentSentimentBatch(
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-lite',
         src: fileName,
         config: {
           displayName: batchJobRecord.displayName,
@@ -578,7 +608,7 @@ async function initializeCommentSentimentBatch(
       });
     } else {
       geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-lite',
         src: inlineRequests,
         config: {
           displayName: batchJobRecord.displayName,
@@ -680,9 +710,17 @@ After initialization:
     let result;
     if (jobType === 'sentiment') {
       if (contentType === 'post') {
-        result = await initializePostSentimentBatch(limit, skipExisting, forceJsonl);
+        result = await initializePostSentimentBatch(
+          limit,
+          skipExisting,
+          forceJsonl
+        );
       } else {
-        result = await initializeCommentSentimentBatch(limit, skipExisting, forceJsonl);
+        result = await initializeCommentSentimentBatch(
+          limit,
+          skipExisting,
+          forceJsonl
+        );
       }
     } else {
       if (contentType === 'post') {
