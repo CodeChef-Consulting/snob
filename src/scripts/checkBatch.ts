@@ -453,7 +453,7 @@ After checking:
     // No args or only --poll: check all jobs
     else if (args.length === 0 || (args.length === 1 && args[0] === '--poll')) {
       const allJobs = await prisma.batchJob.findMany({
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' },
       });
 
       console.log(`\n🔍 Found ${allJobs.length} total batch jobs`);

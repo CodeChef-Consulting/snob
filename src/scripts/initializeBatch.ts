@@ -11,6 +11,7 @@ import {
   createPostExtractionPrompt,
   createPostSentimentPrompt,
 } from '../utils/prompts';
+import { flatMap } from 'lodash';
 
 const prisma = new PrismaClient();
 
@@ -360,6 +361,16 @@ async function initializePostSentimentBatch(
 
   const ai = getGenAI();
 
+  const allExistingPostSentimentBatchJobIds = await prisma.batchJob.findMany({
+    where: {
+      contentType: 'post',
+      displayName: { contains: 'post-sentiment' },
+      //in pending, running, submitted
+      status: { in: ['pending', 'running', 'submitted'] },
+    },
+    select: { itemIds: true },
+  });
+
   // Only analyze posts that have subjective restaurant mentions
   const whereClause = {
     AND: [
@@ -367,6 +378,16 @@ async function initializePostSentimentBatch(
       {
         restaurantExtraction: {
           isSubjective: true,
+        },
+      },
+      //make sure it's not part of ids for a post sentiment batch job
+      {
+        id: {
+          notIn: flatMap(
+            allExistingPostSentimentBatchJobIds.map(
+              (b) => b.itemIds as number[]
+            )
+          ),
         },
       },
     ],
@@ -505,6 +526,18 @@ async function initializeCommentSentimentBatch(
 
   const ai = getGenAI();
 
+  const allExistingCommentSentimentBatchJobIds = await prisma.batchJob.findMany(
+    {
+      where: {
+        contentType: 'comment',
+        displayName: { contains: 'comment-sentiment' },
+        //in pending, running, submitted
+        status: { in: ['pending', 'running', 'submitted'] },
+      },
+      select: { itemIds: true },
+    }
+  );
+
   // Only analyze comments that have subjective restaurant mentions
   // with either restaurantsMentioned or primaryRestaurant
   const whereClause = {
@@ -517,6 +550,16 @@ async function initializeCommentSentimentBatch(
             { restaurantsMentioned: { not: null } },
             { primaryRestaurant: { not: null } },
           ],
+        },
+      },
+      //make sure it's not part of ids for a comment sentiment batch job
+      {
+        id: {
+          notIn: flatMap(
+            allExistingCommentSentimentBatchJobIds.map(
+              (b) => b.itemIds as number[]
+            )
+          ),
         },
       },
     ],
