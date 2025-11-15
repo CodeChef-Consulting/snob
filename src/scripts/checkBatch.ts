@@ -26,7 +26,8 @@ const POLL_INTERVAL = 30000; // 30 seconds
 async function checkBatchJob(
   batchJobId: number,
   pollUntilComplete = false,
-  forceReprocess = false
+  forceReprocess = false,
+  copyResultsToSrc = false
 ) {
   const batchJob = await prisma.batchJob.findUnique({
     where: { id: batchJobId },
@@ -256,6 +257,12 @@ async function checkBatchJob(
       } catch {
         // File not at expected path, find it in tmp directory
         const files = await fs.readdir(tmpDir);
+        if (files.length > 1) {
+          throw new Error(
+            'Multiple files found in tmp directory. Please clean up the tmp directory and try again.'
+          );
+        }
+
         const downloadedFile = files.find((f) => f.endsWith('.jsonl'));
 
         if (!downloadedFile) {
@@ -282,16 +289,35 @@ async function checkBatchJob(
         }
       }
 
+      // Also save a copy to src directory for manual inspection
+      let srcCopyPath = null;
+      if (copyResultsToSrc) {
+        srcCopyPath = path.join(
+          process.cwd(),
+          `batch-${batchJobId}-results.jsonl`
+        );
+        await fs.copyFile(actualFilePath, srcCopyPath);
+        console.log(`   📋 Copy saved to: ${srcCopyPath}`);
+      }
+
       const text = await fs.readFile(actualFilePath, 'utf-8');
       const lines = text.split('\n').filter((line) => line.trim());
 
       console.log(`   Processing ${lines.length} JSONL responses...`);
 
       for (let i = 0; i < lines.length; i++) {
-        const itemId = itemIds[i];
+        let itemId = itemIds[i];
 
         try {
           const jsonResponse = JSON.parse(lines[i]);
+
+          if (jsonResponse.key) {
+            const key = parseInt(jsonResponse.key, 10);
+            if (key !== itemId) {
+              // console.error(`      Key ${key} does not match itemId ${itemId}`);
+            }
+            itemId = key;
+          }
 
           // Extract text from response structure
           const responseText =
@@ -363,8 +389,10 @@ async function checkBatchJob(
         }
       }
 
-      // Clean up downloaded file
-      await fs.unlink(actualFilePath);
+      // Keep the src copy, only clean up tmp file
+      if (actualFilePath !== srcCopyPath) {
+        await fs.unlink(actualFilePath);
+      }
     } catch (error) {
       console.error('   ❌ Error downloading JSONL results:', error);
       throw error;
@@ -475,7 +503,7 @@ After checking:
 
       const pollUntilComplete = args.includes('--poll');
       const forceReprocess = args.includes('--reprocess');
-      await checkBatchJob(batchJobId, pollUntilComplete, forceReprocess);
+      await checkBatchJob(batchJobId, pollUntilComplete, forceReprocess, true);
     }
   } catch (error) {
     console.error('❌ Error:', error);

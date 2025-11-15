@@ -33,8 +33,11 @@ interface InitializeConfig {
  * Returns the uploaded file name after uploading to Gemini
  */
 async function createJsonlBatchFile(
-  requests: Array<{
-    contents: Array<{ parts: Array<{ text: string }>; role: string }>;
+  keyAndRequests: Array<{
+    key: string;
+    request: {
+      contents: Array<{ parts: Array<{ text: string }>; role: string }>;
+    };
   }>,
   displayName: string
 ): Promise<string> {
@@ -42,11 +45,13 @@ async function createJsonlBatchFile(
   const tmpDir = join(process.cwd(), 'tmp');
   const jsonlPath = join(tmpDir, `${displayName}.jsonl`);
 
-  console.log(`   📝 Creating JSONL file with ${requests.length} requests...`);
+  console.log(
+    `   📝 Creating JSONL file with ${keyAndRequests.length} requests...`
+  );
 
   // Create JSONL content - each line is a separate JSON request
-  const jsonlContent = requests
-    .map((request) => JSON.stringify({ request }))
+  const jsonlContent = keyAndRequests
+    .map((keyAndRequest) => JSON.stringify(keyAndRequest))
     .join('\n');
 
   // Ensure tmp directory exists
@@ -137,20 +142,23 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
 
   try {
     // Create batch requests
-    const inlineRequests = posts.map((post) => ({
-      contents: [
-        {
-          parts: [
-            {
-              text: createPostExtractionPrompt({
-                post_title: post.title || '',
-                post_text: post.body || '',
-              }),
-            },
-          ],
-          role: 'user',
-        },
-      ],
+    const keyAndRequests = posts.map((post) => ({
+      key: post.id.toString(),
+      request: {
+        contents: [
+          {
+            parts: [
+              {
+                text: createPostExtractionPrompt({
+                  post_title: post.title || '',
+                  post_text: post.body || '',
+                }),
+              },
+            ],
+            role: 'user',
+          },
+        ],
+      },
     }));
 
     console.log(
@@ -170,7 +178,7 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
     let geminiBatchJob;
     if (useJsonl) {
       const fileName = await createJsonlBatchFile(
-        inlineRequests,
+        keyAndRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
@@ -183,7 +191,7 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
     } else {
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash-lite',
-        src: inlineRequests,
+        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -265,22 +273,25 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
   console.log(`   📋 Created BatchJob #${batchJobRecord.id}`);
 
   try {
-    const inlineRequests = comments.map((comment) => ({
-      contents: [
-        {
-          parts: [
-            {
-              text: createCommentExtractionPrompt({
-                post_title: comment.post.title || '',
-                post_text: comment.post.body || '',
-                comment_text: comment.body || '',
-                parent_text: comment.parentComment?.body || '',
-              }),
-            },
-          ],
-          role: 'user',
-        },
-      ],
+    const keyAndRequests = comments.map((comment) => ({
+      key: comment.id.toString(),
+      request: {
+        contents: [
+          {
+            parts: [
+              {
+                text: createCommentExtractionPrompt({
+                  post_title: comment.post.title || '',
+                  post_text: comment.post.body || '',
+                  comment_text: comment.body || '',
+                  parent_text: comment.parentComment?.body || '',
+                }),
+              },
+            ],
+            role: 'user',
+          },
+        ],
+      },
     }));
 
     console.log(
@@ -300,7 +311,7 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
     let geminiBatchJob;
     if (useJsonl) {
       const fileUri = await createJsonlBatchFile(
-        inlineRequests,
+        keyAndRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
@@ -316,7 +327,7 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
     } else {
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash-lite',
-        src: inlineRequests,
+        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -429,20 +440,23 @@ async function initializePostSentimentBatch(
 
   try {
     // Create batch requests
-    const inlineRequests = posts.map((post) => ({
-      contents: [
-        {
-          parts: [
-            {
-              text: createPostSentimentPrompt({
-                post_title: post.title || '',
-                post_text: post.body || '',
-              }),
-            },
-          ],
-          role: 'user',
-        },
-      ],
+    const keyAndRequests = posts.map((post) => ({
+      key: post.id.toString(),
+      request: {
+        contents: [
+          {
+            parts: [
+              {
+                text: createPostSentimentPrompt({
+                  post_title: post.title || '',
+                  post_text: post.body || '',
+                }),
+              },
+            ],
+            role: 'user',
+          },
+        ],
+      },
     }));
 
     console.log(
@@ -466,7 +480,7 @@ async function initializePostSentimentBatch(
     let geminiBatchJob;
     if (useJsonl) {
       const fileName = await createJsonlBatchFile(
-        inlineRequests,
+        keyAndRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
@@ -479,7 +493,7 @@ async function initializePostSentimentBatch(
     } else {
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash-lite',
-        src: inlineRequests,
+        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -552,6 +566,12 @@ async function initializeCommentSentimentBatch(
           ],
         },
       },
+      //has at least one restaurant linked
+      {
+        restaurantsMentioned: {
+          some: {},
+        },
+      },
       //make sure it's not part of ids for a comment sentiment batch job
       {
         id: {
@@ -602,20 +622,23 @@ async function initializeCommentSentimentBatch(
   console.log(`   📋 Created BatchJob #${batchJobRecord.id}`);
 
   try {
-    const inlineRequests = comments.map((comment) => ({
-      contents: [
-        {
-          parts: [
-            {
-              text: createCommentSentimentPrompt({
-                comment_text: comment.body || '',
-                post_title: comment.post.title || '',
-              }),
-            },
-          ],
-          role: 'user',
-        },
-      ],
+    const keyAndRequests = comments.map((comment) => ({
+      key: comment.id.toString(),
+      request: {
+        contents: [
+          {
+            parts: [
+              {
+                text: createCommentSentimentPrompt({
+                  comment_text: comment.body || '',
+                  post_title: comment.post.title || '',
+                }),
+              },
+            ],
+            role: 'user',
+          },
+        ],
+      },
     }));
 
     console.log(
@@ -639,7 +662,7 @@ async function initializeCommentSentimentBatch(
     let geminiBatchJob;
     if (useJsonl) {
       const fileName = await createJsonlBatchFile(
-        inlineRequests,
+        keyAndRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
@@ -652,7 +675,7 @@ async function initializeCommentSentimentBatch(
     } else {
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash-lite',
-        src: inlineRequests,
+        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -704,7 +727,7 @@ Options:
   -h, --help          Show help
 
 Batch Format:
-  - Inline requests: Used for batches up to ${JSONL_THRESHOLD.toLocaleString()} items
+  - Key-and-request objects: Used for batches up to ${JSONL_THRESHOLD.toLocaleString()} items
   - JSONL file: Automatically used for larger batches (up to 200K items, 2GB)
   - Use --force-jsonl to test JSONL functionality with small batches
 

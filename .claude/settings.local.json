@@ -37,7 +37,8 @@
       "Bash(docker ps:*)",
       "Bash(docker cp:*)",
       "Bash(ls:*)",
-      "Bash(curl -X POST \"https://generativelanguage.googleapis.com/v1beta/batches/npr9l79y1he6r7tzm4mwwpa0e5qn17n4lqb9:cancel?key=$GEMINI_API_KEY\")"
+      "Bash(curl -X POST \"https://generativelanguage.googleapis.com/v1beta/batches/npr9l79y1he6r7tzm4mwwpa0e5qn17n4lqb9:cancel?key=$GEMINI_API_KEY\")",
+      "Read(//private/tmp/**)"
     ],
     "deny": [],
     "ask": []
