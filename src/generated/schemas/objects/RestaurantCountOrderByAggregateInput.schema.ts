@@ -14,6 +14,7 @@ const makeSchema = () => z.object({
   lookupAliases: SortOrderSchema.optional(),
   metadata: SortOrderSchema.optional(),
   rawScore: SortOrderSchema.optional(),
+  normalizedScore: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),
   updatedAt: SortOrderSchema.optional()
 }).strict();

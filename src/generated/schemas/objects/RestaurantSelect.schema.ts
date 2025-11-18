@@ -16,6 +16,7 @@ const makeSchema = () => z.object({
   lookupAliases: z.boolean().optional(),
   metadata: z.boolean().optional(),
   rawScore: z.boolean().optional(),
+  normalizedScore: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   posts: z.union([z.boolean(), z.lazy(() => PostFindManySchema)]).optional(),

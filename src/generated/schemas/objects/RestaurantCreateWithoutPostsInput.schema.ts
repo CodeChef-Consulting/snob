@@ -16,6 +16,7 @@ const makeSchema = () => z.object({
   lookupAliases: z.string().optional().nullable(),
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   rawScore: z.number().optional().nullable(),
+  normalizedScore: z.number().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema).optional()

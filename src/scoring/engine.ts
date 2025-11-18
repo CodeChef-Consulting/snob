@@ -22,6 +22,13 @@ export interface RestaurantScore {
   threadCount: number; // number of unique threads
 }
 
+export interface NormalizedScore {
+  restaurantId: string;
+  rawScore: number;
+  normalizedScore: number; // 0-10 scale, centered around 7
+  zScore: number; // standard deviations from median
+}
+
 // ------------ Weight Functions ----------------
 
 // Half-life = 90 days
@@ -160,4 +167,78 @@ export const aggregateAllRestaurants = (
   return restaurantIds
     .map((id) => aggregateRestaurant(items, id))
     .sort((a, b) => b.score - a.score); // Sort by score descending
+};
+
+// ------------ Score Normalization ------------------
+
+/**
+ * Normalize scores using percentile-based power-law distribution
+ * Creates a natural distribution where:
+ * - Most restaurants cluster between 4-6 (median = 5)
+ * - High scores (7-10) are exponentially rarer
+ * - Low scores (0-3) represent genuinely bad restaurants
+ *
+ * Uses percentile ranks with power-law transformation for realistic distribution
+ */
+export const normalizeScores = (
+  scores: RestaurantScore[]
+): NormalizedScore[] => {
+  if (scores.length === 0) {
+    return [];
+  }
+
+  const rawScores = scores.map(s => s.score);
+
+  // Calculate median for z-score reference
+  const sortedScores = [...rawScores].sort((a, b) => a - b);
+  const median = sortedScores[Math.floor(sortedScores.length / 2)];
+
+  // Calculate MAD for z-score
+  const absoluteDeviations = rawScores.map(s => Math.abs(s - median));
+  const sortedDeviations = [...absoluteDeviations].sort((a, b) => a - b);
+  const mad = sortedDeviations[Math.floor(sortedDeviations.length / 2)];
+  const robustStdDev = mad * 1.4826;
+
+  return scores.map((score, idx) => {
+    // Calculate z-score for reference
+    const zScore = robustStdDev === 0
+      ? 0
+      : (score.score - median) / robustStdDev;
+
+    // Find percentile rank (0-1)
+    const rank = sortedScores.filter(s => s < score.score).length;
+    const percentile = rank / (sortedScores.length - 1);
+
+    // Apply power-law transformation for realistic distribution
+    // Most restaurants cluster in middle, high scores are exponentially rare
+    let normalizedScore: number;
+
+    if (percentile < 0.5) {
+      // Bottom 50%: Linear mapping from 0 to 5
+      normalizedScore = percentile * 2 * 5;
+    } else {
+      // Top 50%: Exponential curve from 5 to 10
+      // This makes high scores (7-10) exponentially rarer
+      const topPercentile = (percentile - 0.5) * 2; // 0 to 1
+
+      // Power curve: x^2.5 gives strong exponential effect
+      // 50th percentile → 5.0
+      // 75th percentile → 6.2
+      // 90th percentile → 7.9
+      // 95th percentile → 8.8
+      // 99th percentile → 9.7
+      const powerCurve = Math.pow(topPercentile, 2.5);
+      normalizedScore = 5 + powerCurve * 5;
+    }
+
+    // Clamp to [0, 10] range
+    normalizedScore = Math.max(0, Math.min(10, normalizedScore));
+
+    return {
+      restaurantId: score.restaurantId,
+      rawScore: score.score,
+      normalizedScore,
+      zScore
+    };
+  });
 };

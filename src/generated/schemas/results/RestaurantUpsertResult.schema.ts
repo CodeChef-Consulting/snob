@@ -11,6 +11,7 @@ export const RestaurantUpsertResultSchema = z.object({
   lookupAliases: z.string().optional(),
   metadata: z.unknown().optional(),
   rawScore: z.number().optional(),
+  normalizedScore: z.number().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   posts: z.array(z.unknown()),

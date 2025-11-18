@@ -11,5 +11,3 @@ import { PostUncheckedUpdateInputObjectSchema as PostUncheckedUpdateInputObjectS
 export const PostUpsertOneSchema: z.ZodType<Prisma.PostUpsertArgs> = z.object({ select: PostSelectObjectSchema.optional(), include: PostIncludeObjectSchema.optional(), where: PostWhereUniqueInputObjectSchema, create: z.union([ PostCreateInputObjectSchema, PostUncheckedCreateInputObjectSchema ]), update: z.union([ PostUpdateInputObjectSchema, PostUncheckedUpdateInputObjectSchema ]) }).strict() as unknown as z.ZodType<Prisma.PostUpsertArgs>;
 
 export const PostUpsertOneZodSchema = z.object({ select: PostSelectObjectSchema.optional(), include: PostIncludeObjectSchema.optional(), where: PostWhereUniqueInputObjectSchema, create: z.union([ PostCreateInputObjectSchema, PostUncheckedCreateInputObjectSchema ]), update: z.union([ PostUpdateInputObjectSchema, PostUncheckedUpdateInputObjectSchema ]) }).strict();
-// Alias for prisma-trpc-generator compatibility
-export const PostUpsertSchema = PostUpsertOneSchema;

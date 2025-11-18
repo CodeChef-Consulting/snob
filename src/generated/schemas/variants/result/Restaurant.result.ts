@@ -13,6 +13,7 @@ export const RestaurantResultSchema = z.object({
     lookupAliases: z.string().nullable(),
     metadata: z.unknown().nullable(),
     rawScore: z.number().nullable(),
+    normalizedScore: z.number().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
     posts: z.array(z.unknown()),

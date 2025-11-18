@@ -11,6 +11,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     lookupAliases: z.number(),
     metadata: z.number(),
     rawScore: z.number(),
+    normalizedScore: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
     posts: z.number(),
@@ -18,11 +19,13 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),
-    rawScore: z.number().nullable()
+    rawScore: z.number().nullable(),
+    normalizedScore: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
-    rawScore: z.number().nullable()
+    rawScore: z.number().nullable(),
+    normalizedScore: z.number().nullable()
   }).nullable().optional(),
   _min: z.object({
     id: z.number().int().nullable(),
@@ -35,6 +38,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     googlePlaceId: z.string().nullable(),
     lookupAliases: z.string().nullable(),
     rawScore: z.number().nullable(),
+    normalizedScore: z.number().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
   }).nullable().optional(),
@@ -49,6 +53,7 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     googlePlaceId: z.string().nullable(),
     lookupAliases: z.string().nullable(),
     rawScore: z.number().nullable(),
+    normalizedScore: z.number().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
   }).nullable().optional()});

@@ -4,7 +4,8 @@ import type { Prisma } from '@prisma/client';
 
 const makeSchema = () => z.object({
   id: z.literal(true).optional(),
-  rawScore: z.literal(true).optional()
+  rawScore: z.literal(true).optional(),
+  normalizedScore: z.literal(true).optional()
 }).strict();
 export const RestaurantSumAggregateInputObjectSchema: z.ZodType<Prisma.RestaurantSumAggregateInputType> = makeSchema() as unknown as z.ZodType<Prisma.RestaurantSumAggregateInputType>;
 export const RestaurantSumAggregateInputObjectZodSchema = makeSchema();

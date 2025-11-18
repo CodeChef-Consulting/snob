@@ -13,6 +13,7 @@ export const RestaurantInputSchema = z.object({
     lookupAliases: z.string().optional().nullable(),
     metadata: z.unknown().optional().nullable(),
     rawScore: z.number().optional().nullable(),
+    normalizedScore: z.number().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
     posts: z.array(z.unknown()),

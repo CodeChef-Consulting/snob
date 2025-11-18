@@ -11,6 +11,7 @@
     "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
     "add-restaurant": "tsx src/scripts/addRestaurantManually.ts",
     "init-batch": "tsx src/scripts/initializeBatch.ts",
+    "compute-scores": "tsx src/scripts/computeScores.ts",
     "check-batch": "tsx src/scripts/checkBatch.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
