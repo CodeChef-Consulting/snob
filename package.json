@@ -1,53 +1,25 @@
 {
-  "name": "snob",
+  "name": "snob-monorepo",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "fetch-comments-and-posts": "tsx src/scripts/fetchCommentsAndPosts.ts",
-    "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
-    "extract-sentiment": "tsx src/scripts/extractSentimentSequential.ts",
-    "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
-    "add-restaurant": "tsx src/scripts/addRestaurantManually.ts",
-    "init-batch": "tsx src/scripts/initializeBatch.ts",
-    "compute-scores": "tsx src/scripts/computeScores.ts",
-    "check-batch": "tsx src/scripts/checkBatch.ts",
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f postgres",
     "docker:restart": "docker compose restart postgres",
-    "db:generate": "dotenvx run -- prisma generate && node scripts/fix-generated-code.js",
-    "db:push": "dotenvx run -- prisma db push",
-    "db:migrate": "dotenvx run -- prisma migrate dev",
-    "db:studio": "dotenvx run -- prisma studio",
-    "db:setup": "npm run docker:up && sleep 3 && npm run db:push"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "Reddit restaurant data scraper with Prisma and tRPC",
-  "dependencies": {
-    "@dotenvx/dotenvx": "^1.51.0",
-    "@google/genai": "^1.23.0",
-    "@googlemaps/places": "^2.1.0",
-    "@prisma/client": "^6.16.3",
-    "@trpc/server": "^11.0.0",
-    "csv-parse": "^6.1.0",
-    "fuse.js": "^7.1.0",
-    "lodash": "^4.17.21",
-    "openai": "^6.3.0",
-    "snoowrap": "^1.23.0",
-    "zod": "^4.1.11"
+    "db:generate": "turbo db:generate",
+    "db:push": "turbo db:push",
+    "db:studio": "cd packages/db && pnpm db:studio"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.20",
-    "@types/node": "^24.6.1",
-    "glob": "^11.0.3",
-    "prisma": "^6.16.3",
-    "prisma-trpc-generator": "^2.4.0",
-    "prisma-zod-generator": "^1.26.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5.9.3"
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "node": ">=18"
   }
 }

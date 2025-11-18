@@ -1,0 +1,38 @@
+{
+  "name": "@repo/scraper",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "fetch-comments-and-posts": "tsx src/scripts/fetchCommentsAndPosts.ts",
+    "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
+    "extract-sentiment": "tsx src/scripts/extractSentimentSequential.ts",
+    "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
+    "add-restaurant": "tsx src/scripts/addRestaurantManually.ts",
+    "init-batch": "tsx src/scripts/initializeBatch.ts",
+    "compute-scores": "tsx src/scripts/computeScores.ts",
+    "check-batch": "tsx src/scripts/checkBatch.ts"
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/api": "workspace:*",
+    "@dotenvx/dotenvx": "^1.51.0",
+    "@google/genai": "^1.23.0",
+    "@googlemaps/places": "^2.1.0",
+    "@trpc/server": "^11.0.0",
+    "csv-parse": "^6.1.0",
+    "fuse.js": "^7.1.0",
+    "lodash": "^4.17.21",
+    "openai": "^6.3.0",
+    "snoowrap": "^1.23.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.6.1",
+    "glob": "^11.0.3",
+    "tsx": "^4.7.0",
+    "typescript": "^5.9.3"
+  }
+}

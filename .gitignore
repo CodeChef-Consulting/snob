@@ -1,8 +1,22 @@
+# Environment files
 .env.keys
-node_modules
-dist
 .env.local
+.env*.local
+
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+.next
+.turbo
+
+# System files
 .DS_Store
+
+# Database
 *.sql
-tmp/
 *.dump
+
+# Temporary files
+tmp/

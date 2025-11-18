@@ -39,7 +39,11 @@
       "Bash(ls:*)",
       "Bash(curl -X POST \"https://generativelanguage.googleapis.com/v1beta/batches/npr9l79y1he6r7tzm4mwwpa0e5qn17n4lqb9:cancel?key=$GEMINI_API_KEY\")",
       "Read(//private/tmp/**)",
-      "Bash(pnpm compute-scores:*)"
+      "Bash(pnpm compute-scores:*)",
+      "Bash(pnpm:*)",
+      "Bash(find:*)",
+      "Bash(pkill:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
