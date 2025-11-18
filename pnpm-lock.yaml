@@ -130,6 +130,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@prisma/client':
+        specifier: ^6.16.3
+        version: 6.16.3(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)
       '@repo/db':
         specifier: workspace:*
         version: link:../db

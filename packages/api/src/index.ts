@@ -1,5 +1,5 @@
-import { appRouter } from '@repo/db/generated/routers';
-import { t } from '@repo/db/generated/routers/helpers/createRouter';
+import { appRouter } from './generated/routers';
+import { t } from './generated/routers/helpers/createRouter';
 import { commentRouter } from './comment';
 import { fileRouter } from './file';
 import { postRouter } from './post';

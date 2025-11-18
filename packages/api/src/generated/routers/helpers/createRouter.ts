@@ -1,10 +1,10 @@
 import * as trpc from "@trpc/server";
 
-  import type { Context } from '../../../src/context';
+  import type { Context } from '../../../context';
 
-  export type { Context } from '../../../src/context';
+  export type { Context } from '../../../context';
 
-      import trpcOptions from '../../../src/trpcOptions';
+      import trpcOptions from '../../../trpcOptions';
 
   export const t = trpc.initTRPC.context<Context>().create(trpcOptions);
 

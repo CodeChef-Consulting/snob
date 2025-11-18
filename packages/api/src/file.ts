@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure, t } from '@repo/db/generated/routers/helpers/createRouter';
+import { publicProcedure, t } from './generated/routers/helpers/createRouter';
 
 export const fileRouter = t.router({
   byPostId: publicProcedure

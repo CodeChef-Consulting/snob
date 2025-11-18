@@ -1,5 +1,5 @@
-import combinedRouter from './myRouters/index';
-import { createContext } from './context';
+import combinedRouter from '@repo/api';
+import { createContext } from '@repo/api/src/context';
 
 // Example usage
 async function main() {
@@ -15,6 +15,6 @@ async function main() {
 
 // Export the router and types for client use
 export default combinedRouter;
-export type { Context } from './context';
+export type { Context } from '@repo/api/src/context';
 
 main().catch(console.error);
