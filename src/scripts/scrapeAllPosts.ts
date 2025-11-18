@@ -132,7 +132,8 @@ async function runAllScrapes() {
       console.log(`✅ Completed ${task.description}`);
 
       // Only delay if we actually scraped (not skipped)
-      const wasSkipped = stdout?.includes('Already scraped') || stdout?.includes('Skipping');
+      const wasSkipped =
+        stdout?.includes('Already scraped') || stdout?.includes('Skipping');
       if (taskNum < tasks.length && !wasSkipped) {
         console.log('\nWaiting 5 seconds before next task...');
         await new Promise((resolve) => setTimeout(resolve, 5000));

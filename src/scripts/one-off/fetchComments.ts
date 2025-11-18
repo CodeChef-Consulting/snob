@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import {
   createRedditClient,
   extractMediaFromCommentBody,
-} from '../utils/reddit';
+} from '../../utils/reddit';
 
 const prisma = new PrismaClient();
 const r = createRedditClient();
@@ -78,7 +78,9 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
         await collectComments(comment);
       }
 
-      console.log(`   Collected ${allComments.length} comments, processing in batches...`);
+      console.log(
+        `   Collected ${allComments.length} comments, processing in batches...`
+      );
 
       // Check which comments already exist (1 query)
       const commentExternalIds = allComments.map((c) => c.id as string);
@@ -87,7 +89,9 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
         select: { externalId: true, id: true },
       });
 
-      const existingExternalIds = new Set(existingComments.map((c) => c.externalId));
+      const existingExternalIds = new Set(
+        existingComments.map((c) => c.externalId)
+      );
 
       // Separate new vs existing comments
       const newComments = [];
@@ -161,7 +165,9 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
             })
           )
         );
-        console.log(`   Updated ${existingCommentUpdates.length} existing comments`);
+        console.log(
+          `   Updated ${existingCommentUpdates.length} existing comments`
+        );
       }
 
       postCommentsScraped = allComments.length;
@@ -284,7 +290,7 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
           `\n🚨 RATE LIMIT ERROR at post ${dbPost.externalId} (ID: ${dbPost.id})`
         );
         console.error('Waiting 60 seconds before continuing...');
-        await new Promise(resolve => setTimeout(resolve, 60000));
+        await new Promise((resolve) => setTimeout(resolve, 60000));
         console.log('Resuming...\n');
         continue; // Skip to next post after waiting
       }

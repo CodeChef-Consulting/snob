@@ -3,7 +3,7 @@ dotenv.config();
 
 import { Submission } from 'snoowrap';
 import { PrismaClient } from '@prisma/client';
-import { createRedditClient, extractMediaUrls } from '../utils/reddit';
+import { createRedditClient, extractMediaUrls } from '../../utils/reddit';
 
 const prisma = new PrismaClient();
 const r = createRedditClient();
@@ -134,9 +134,7 @@ async function fetchPosts(options: FetchOptions = {}) {
       select: { externalId: true, id: true },
     });
 
-    const existingExternalIds = new Set(
-      existingPosts.map((p) => p.externalId)
-    );
+    const existingExternalIds = new Set(existingPosts.map((p) => p.externalId));
 
     // Separate posts into new and existing
     const newPosts = [];
@@ -217,9 +215,7 @@ async function fetchPosts(options: FetchOptions = {}) {
       select: { id: true, externalId: true },
     });
 
-    const postIdMap = new Map(
-      batchDbPosts.map((p) => [p.externalId, p.id])
-    );
+    const postIdMap = new Map(batchDbPosts.map((p) => [p.externalId, p.id]));
 
     // Process media files for this batch
     // First, collect all media file data
