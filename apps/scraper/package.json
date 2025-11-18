@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "@repo/api": "workspace:*",
+    "@repo/server": "workspace:*",
     "@dotenvx/dotenvx": "^1.51.0",
     "@google/genai": "^1.23.0",
     "@googlemaps/places": "^2.1.0",

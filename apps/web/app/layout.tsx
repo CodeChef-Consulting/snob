@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
+import { TRPCProvider } from '../lib/providers';
 
 export const metadata: Metadata = {
-  title: "Restaurant Ratings",
-  description: "Restaurant ratings from Reddit data",
+  title: 'Restaurant Ratings',
+  description: 'Restaurant ratings from Reddit data',
 };
 
 export default function RootLayout({
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <TRPCProvider>{children}</TRPCProvider>
       </body>
     </html>
   );

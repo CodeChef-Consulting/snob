@@ -8,12 +8,12 @@ generator client {
 generator trpc {
   provider = "prisma-trpc-generator"
   config   = "./trpc.config.json"
-  output   = "../../api/src/generated"
+  output   = "../../../apps/server/src/generated"
 }
 
 generator zod {
   provider                         = "prisma-zod-generator"
-  output                           = "../../api/src/generated"
+  output                           = "../../../apps/server/src/generated"
   createOptionalDefaultValuesTypes = true
   createRelationValuesTypes        = true
 }

@@ -11,7 +11,7 @@ const glob = require('glob');
 
 // Fix 1: Add upsert schema aliases
 function fixUpsertSchemas() {
-  const schemasDir = path.join(__dirname, '../api/src/generated/schemas');
+  const schemasDir = path.join(__dirname, '../../apps/server/src/generated/schemas');
   const pattern = path.join(schemasDir, 'upsertOne*.schema.ts');
   const files = glob.sync(pattern);
 
