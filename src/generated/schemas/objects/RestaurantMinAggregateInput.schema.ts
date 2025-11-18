@@ -12,6 +12,7 @@ const makeSchema = () => z.object({
   source: z.literal(true).optional(),
   googlePlaceId: z.literal(true).optional(),
   lookupAliases: z.literal(true).optional(),
+  rawScore: z.literal(true).optional(),
   createdAt: z.literal(true).optional(),
   updatedAt: z.literal(true).optional()
 }).strict();

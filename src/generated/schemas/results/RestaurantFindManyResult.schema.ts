@@ -11,6 +11,7 @@ export const RestaurantFindManyResultSchema = z.object({
   googlePlaceId: z.string().optional(),
   lookupAliases: z.string().optional(),
   metadata: z.unknown().optional(),
+  rawScore: z.number().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   posts: z.array(z.unknown()),

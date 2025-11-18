@@ -114,6 +114,7 @@ model Restaurant {
   googlePlaceId String?  @unique // Google Places ID for API lookups
   lookupAliases String? // Comma-separated list of alternative names for exact matching (Google Places only)
   metadata      Json? // Store additional data (phone, website, rating, priceLevel, types, etc.)
+  rawScore      Float? // Raw mathematical score from sentiment analysis (unbounded, typically -20 to +20)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -122,6 +123,7 @@ model Restaurant {
 
   @@index([source])
   @@index([googlePlaceId])
+  @@index([rawScore])
 }
 
 model BatchJob {

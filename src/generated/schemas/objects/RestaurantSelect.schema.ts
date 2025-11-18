@@ -15,6 +15,7 @@ const makeSchema = () => z.object({
   googlePlaceId: z.boolean().optional(),
   lookupAliases: z.boolean().optional(),
   metadata: z.boolean().optional(),
+  rawScore: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   posts: z.union([z.boolean(), z.lazy(() => PostFindManySchema)]).optional(),

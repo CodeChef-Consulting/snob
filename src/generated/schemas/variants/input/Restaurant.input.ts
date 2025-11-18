@@ -12,6 +12,7 @@ export const RestaurantInputSchema = z.object({
     googlePlaceId: z.string().optional().nullable(),
     lookupAliases: z.string().optional().nullable(),
     metadata: z.unknown().optional().nullable(),
+    rawScore: z.number().optional().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
     posts: z.array(z.unknown()),
