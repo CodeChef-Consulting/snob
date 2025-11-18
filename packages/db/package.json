@@ -17,6 +17,7 @@
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "prisma": "^6.16.3",
+    "glob": "^11.0.3",
     "prisma-trpc-generator": "^2.4.0",
     "prisma-zod-generator": "^1.26.0"
   }
