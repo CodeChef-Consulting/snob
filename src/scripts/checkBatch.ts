@@ -257,12 +257,6 @@ async function checkBatchJob(
       } catch {
         // File not at expected path, find it in tmp directory
         const files = await fs.readdir(tmpDir);
-        if (files.length > 1) {
-          throw new Error(
-            'Multiple files found in tmp directory. Please clean up the tmp directory and try again.'
-          );
-        }
-
         const downloadedFile = files.find((f) => f.endsWith('.jsonl'));
 
         if (!downloadedFile) {
@@ -270,6 +264,10 @@ async function checkBatchJob(
         }
 
         actualFilePath = path.join(tmpDir, downloadedFile);
+
+        if (actualFilePath !== tmpFilePath) {
+          throw new Error('Downloaded file path does not match expected path');
+        }
       }
 
       console.log(`   ✅ Downloaded to: ${actualFilePath}`);
