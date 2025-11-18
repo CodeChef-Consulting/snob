@@ -6,20 +6,20 @@
 
 export interface RedditItem {
   restaurantId: string;
-  rawAiScore: number;      // -1 to 1
+  rawAiScore: number; // -1 to 1
   upvotes: number;
   ageDays: number;
-  depth: number;           // 0 for post, 1+ for comments
-  mentions: number;        // number of restaurants mentioned
-  postId: string;          // thread ID
+  depth: number; // 0 for post, 1+ for comments
+  mentions: number; // number of restaurants mentioned
+  postId: string; // thread ID
 }
 
 export interface RestaurantScore {
   restaurantId: string;
-  score: number;           // final raw score (unbounded, typically -20 to +20)
-  itemCount: number;       // number of items contributing
-  totalWeight: number;     // sum of all weights
-  threadCount: number;     // number of unique threads
+  score: number; // final raw score (unbounded, typically -20 to +20)
+  itemCount: number; // number of items contributing
+  totalWeight: number; // sum of all weights
+  threadCount: number; // number of unique threads
 }
 
 // ------------ Weight Functions ----------------
@@ -64,7 +64,7 @@ export const threadNormalization = (
   items: RedditItem[],
   postId: string
 ): number => {
-  const threadItems = items.filter(item => item.postId === postId);
+  const threadItems = items.filter((item) => item.postId === postId);
 
   const rawThreadWeight = threadItems.reduce((sum, item) => {
     const w = itemWeight(item);
@@ -87,7 +87,9 @@ export const aggregateRestaurant = (
   items: RedditItem[],
   restaurantId: string
 ): RestaurantScore => {
-  const restaurantItems = items.filter(item => item.restaurantId === restaurantId);
+  const restaurantItems = items.filter(
+    (item) => item.restaurantId === restaurantId
+  );
 
   if (restaurantItems.length === 0) {
     return {
@@ -152,10 +154,10 @@ export const aggregateAllRestaurants = (
   items: RedditItem[]
 ): RestaurantScore[] => {
   const restaurantIds = Array.from(
-    new Set(items.map(item => item.restaurantId))
+    new Set(items.map((item) => item.restaurantId))
   );
 
   return restaurantIds
-    .map(id => aggregateRestaurant(items, id))
+    .map((id) => aggregateRestaurant(items, id))
     .sort((a, b) => b.score - a.score); // Sort by score descending
 };

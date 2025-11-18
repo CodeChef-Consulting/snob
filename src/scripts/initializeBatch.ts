@@ -105,7 +105,29 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
 
   const ai = getGenAI();
 
-  const whereClause = skipExisting ? { restaurantExtraction: null } : {};
+  const allExistingPostExtractionBatchJobIds = await prisma.batchJob.findMany({
+    where: {
+      contentType: 'post',
+      displayName: { contains: 'post-extraction' },
+      status: { in: ['pending', 'running', 'submitted'] },
+    },
+    select: { itemIds: true },
+  });
+
+  const whereClause = {
+    AND: [
+      skipExisting ? { restaurantExtraction: null } : {},
+      {
+        id: {
+          notIn: flatMap(
+            allExistingPostExtractionBatchJobIds.map(
+              (b) => b.itemIds as number[]
+            )
+          ),
+        },
+      },
+    ],
+  };
   const totalPosts = await prisma.post.count({ where: whereClause });
 
   console.log(`   Total posts available: ${totalPosts}`);
@@ -234,7 +256,29 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
 
   const ai = getGenAI();
 
-  const whereClause = skipExisting ? { restaurantExtraction: null } : {};
+  const allExistingCommentExtractionBatchJobIds = await prisma.batchJob.findMany({
+    where: {
+      contentType: 'comment',
+      displayName: { contains: 'comment-extraction' },
+      status: { in: ['pending', 'running', 'submitted'] },
+    },
+    select: { itemIds: true },
+  });
+
+  const whereClause = {
+    AND: [
+      skipExisting ? { restaurantExtraction: null } : {},
+      {
+        id: {
+          notIn: flatMap(
+            allExistingCommentExtractionBatchJobIds.map(
+              (b) => b.itemIds as number[]
+            )
+          ),
+        },
+      },
+    ],
+  };
   const totalComments = await prisma.comment.count({ where: whereClause });
 
   console.log(`   Total comments available: ${totalComments}`);
