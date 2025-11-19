@@ -321,8 +321,9 @@ async function fetchComments(options: FetchOptions = {}) {
       // Find parent comment ID if exists
       let parentDbCommentId: number | null = null;
       const parentId = comment.parent_id as string;
+      let parentExternalId: string | null = null;
       if (parentId.startsWith('t1_')) {
-        const parentExternalId = parentId.replace('t1_', '');
+        parentExternalId = parentId.replace('t1_', '');
         const parentComment = existingComments.find(
           (c) => c.externalId === parentExternalId
         );
@@ -344,6 +345,7 @@ async function fetchComments(options: FetchOptions = {}) {
         author: comment.author.name as string,
         createdUtc: new Date((comment.created_utc as number) * 1000),
         scrapingSessionId: session.id,
+        parentExternalId: parentExternalId,
       };
 
       if (existingExternalIds.has(comment.id as string)) {
@@ -360,6 +362,20 @@ async function fetchComments(options: FetchOptions = {}) {
         skipDuplicates: true,
       });
     }
+    //for new comments, if parentExternalId is not null, find the dbCommentId to reassociate with the parent comment
+    for (const comment of newComments) {
+      if (comment.parentExternalId) {
+        const parentComment = await prisma.comment.findFirst({
+          where: { externalId: comment.parentExternalId },
+        });
+        if (parentComment) {
+          await prisma.comment.update({
+            where: { externalId: comment.externalId },
+            data: { parentCommentId: parentComment.id },
+          });
+        }
+      }
+    }
 
     // Batch update existing comments (parallel execution)
     if (existingCommentUpdates.length > 0) {
@@ -371,6 +387,7 @@ async function fetchComments(options: FetchOptions = {}) {
               body: commentData.body,
               score: commentData.score,
               ups: commentData.ups,
+              parentExternalId: commentData.parentExternalId,
               depth: commentData.depth,
               controversiality: commentData.controversiality,
               isSubmitter: commentData.isSubmitter,

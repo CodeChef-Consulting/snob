@@ -11,6 +11,7 @@ import { SentimentExtractionCreateNestedOneWithoutCommentInputObjectSchema as Se
 
 const makeSchema = () => z.object({
   externalId: z.string(),
+  parentExternalId: z.string().optional().nullable(),
   author: z.string().optional().nullable(),
   body: z.string().optional().nullable(),
   score: z.number().int().optional().nullable(),

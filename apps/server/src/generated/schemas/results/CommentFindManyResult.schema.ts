@@ -7,6 +7,7 @@ export const CommentFindManyResultSchema = z.object({
   postId: z.number().int(),
   parentComment: z.unknown().optional(),
   parentCommentId: z.number().int().optional(),
+  parentExternalId: z.string().optional(),
   replies: z.array(z.unknown()),
   author: z.string().optional(),
   body: z.string().optional(),

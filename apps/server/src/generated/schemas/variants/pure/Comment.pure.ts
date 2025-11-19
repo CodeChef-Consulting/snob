@@ -8,6 +8,7 @@ export const CommentModelSchema = z.object({
     postId: z.number().int(),
     parentComment: z.unknown().nullable(),
     parentCommentId: z.number().int().nullable(),
+    parentExternalId: z.string().nullable(),
     replies: z.array(z.unknown()),
     author: z.string().nullable(),
     body: z.string().nullable(),

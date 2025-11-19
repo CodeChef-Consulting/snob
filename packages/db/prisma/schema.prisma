@@ -64,6 +64,7 @@ model Comment {
   postId            Int
   parentComment     Comment?         @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   parentCommentId   Int?
+  parentExternalId  String?          // Reddit external ID of parent comment (t1_xxx)
   replies           Comment[]        @relation("CommentReplies")
   author            String?
   body              String?
@@ -86,6 +87,7 @@ model Comment {
   sentimentExtraction  SentimentExtraction?
 
   @@index([scrapingSessionId])
+  @@index([parentExternalId])
 }
 
 model File {

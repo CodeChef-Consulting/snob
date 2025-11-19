@@ -7,6 +7,7 @@ const makeSchema = () => z.object({
   externalId: SortOrderSchema.optional(),
   postId: SortOrderSchema.optional(),
   parentCommentId: SortOrderSchema.optional(),
+  parentExternalId: SortOrderSchema.optional(),
   author: SortOrderSchema.optional(),
   body: SortOrderSchema.optional(),
   score: SortOrderSchema.optional(),

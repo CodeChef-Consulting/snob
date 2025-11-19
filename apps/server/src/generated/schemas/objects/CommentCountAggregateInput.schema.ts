@@ -7,6 +7,7 @@ const makeSchema = () => z.object({
   externalId: z.literal(true).optional(),
   postId: z.literal(true).optional(),
   parentCommentId: z.literal(true).optional(),
+  parentExternalId: z.literal(true).optional(),
   author: z.literal(true).optional(),
   body: z.literal(true).optional(),
   score: z.literal(true).optional(),

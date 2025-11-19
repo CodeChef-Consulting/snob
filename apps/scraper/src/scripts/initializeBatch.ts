@@ -99,7 +99,11 @@ async function createJsonlBatchFile(
 /**
  * Initialize batch job for posts - submit to Gemini API
  */
-async function initializePostBatch(limit?: number, skipExisting = true) {
+async function initializePostBatch(
+  limit?: number,
+  skipExisting = true,
+  forceJsonl = false
+) {
   console.log('\n📝 Initializing Post Extraction Batch');
   console.log('='.repeat(80));
 
@@ -188,12 +192,16 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
     );
 
     // Determine if we need JSONL format
-    const useJsonl = posts.length > JSONL_THRESHOLD;
+    const useJsonl = forceJsonl || posts.length > JSONL_THRESHOLD;
 
     if (useJsonl) {
-      console.log(
-        `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
-      );
+      if (forceJsonl) {
+        console.log(`   🗂️  JSONL format forced for testing...`);
+      } else {
+        console.log(
+          `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
+        );
+      }
     }
 
     // Submit batch job to Gemini
@@ -251,7 +259,11 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
 /**
  * Initialize batch job for comments - submit to Gemini API
  */
-async function initializeCommentBatch(limit?: number, skipExisting = true) {
+async function initializeCommentBatch(
+  limit?: number,
+  skipExisting = true,
+  forceJsonl = false
+) {
   console.log('\n💬 Initializing Comment Extraction Batch');
   console.log('='.repeat(80));
 
@@ -345,27 +357,28 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
     );
 
     // Determine if we need JSONL format
-    const useJsonl = comments.length > JSONL_THRESHOLD;
+    const useJsonl = forceJsonl || comments.length > JSONL_THRESHOLD;
 
     if (useJsonl) {
-      console.log(
-        `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
-      );
+      if (forceJsonl) {
+        console.log(`   🗂️  JSONL format forced for testing...`);
+      } else {
+        console.log(
+          `   🗂️  Large batch detected (>${JSONL_THRESHOLD}), using JSONL format...`
+        );
+      }
     }
 
     // Submit batch job to Gemini
     let geminiBatchJob;
     if (useJsonl) {
-      const fileUri = await createJsonlBatchFile(
+      const fileName = await createJsonlBatchFile(
         keyAndRequests,
         batchJobRecord.displayName
       );
       geminiBatchJob = await ai.batches.create({
         model: 'gemini-2.5-flash-lite',
-        src: {
-          format: 'jsonl',
-          gcsUri: [fileUri],
-        },
+        src: fileName,
         config: {
           displayName: batchJobRecord.displayName,
         },
@@ -748,10 +761,16 @@ async function initializeCommentSentimentBatch(
 
     return batchJobRecord;
   } catch (error) {
-    await updateBatchJobStatus(prisma, batchJobRecord.id, 'failed', {
-      error: error instanceof Error ? error.message : String(error),
-      completedAt: new Date(),
-    });
+    if (error instanceof Error && error.message.includes('rate-limits')) {
+      await prisma.batchJob.delete({
+        where: { id: batchJobRecord.id },
+      });
+    } else {
+      await updateBatchJobStatus(prisma, batchJobRecord.id, 'failed', {
+        error: error instanceof Error ? error.message : String(error),
+        completedAt: new Date(),
+      });
+    }
     throw error;
   }
 }
@@ -839,9 +858,9 @@ After initialization:
       }
     } else {
       if (contentType === 'post') {
-        result = await initializePostBatch(limit, skipExisting);
+        result = await initializePostBatch(limit, skipExisting, forceJsonl);
       } else {
-        result = await initializeCommentBatch(limit, skipExisting);
+        result = await initializeCommentBatch(limit, skipExisting, forceJsonl);
       }
     }
 

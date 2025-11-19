@@ -6,7 +6,7 @@ import { PrismaClient } from '@repo/db';
 const prisma = new PrismaClient();
 
 async function deleteBatches(batchIds: number[]) {
-  console.log(`\n🗑️  Deleting Restaurant Extractions and Batches`);
+  console.log(`\n🗑️  Deleting Batch Jobs and Associated Data`);
   console.log('='.repeat(80));
 
   for (const batchId of batchIds) {
@@ -36,63 +36,104 @@ async function deleteBatches(batchIds: number[]) {
     const isCommentBatch = batch.contentType === 'comment';
     const itemIds = batch.itemIds as number[];
 
-    // Step 1: Count and disconnect restaurant relationships (clears junction tables)
-    if (isCommentBatch) {
-      const commentsWithRestaurants = await prisma.comment.findMany({
-        where: {
-          id: { in: itemIds },
-          restaurantsMentioned: { some: {} },
-        },
-        select: { id: true },
-      });
-      console.log(`   Comments with restaurant links: ${commentsWithRestaurants.length}`);
+    // Determine batch job type from displayName
+    const isExtractionBatch = batch.displayName.includes('extraction');
+    const isSentimentBatch = batch.displayName.includes('sentiment');
 
-      for (const comment of commentsWithRestaurants) {
-        await prisma.comment.update({
-          where: { id: comment.id },
-          data: { restaurantsMentioned: { set: [] } },
+    if (isExtractionBatch) {
+      console.log(`   Job Type: Restaurant Extraction`);
+
+      // Step 1: Count and disconnect restaurant relationships (clears junction tables)
+      if (isCommentBatch) {
+        const commentsWithRestaurants = await prisma.comment.findMany({
+          where: {
+            id: { in: itemIds },
+            restaurantsMentioned: { some: {} },
+          },
+          select: { id: true },
         });
+        console.log(
+          `   Comments with restaurant links: ${commentsWithRestaurants.length}`
+        );
+
+        for (const comment of commentsWithRestaurants) {
+          await prisma.comment.update({
+            where: { id: comment.id },
+            data: { restaurantsMentioned: { set: [] } },
+          });
+        }
+        console.log(
+          `   ✅ Cleared ${commentsWithRestaurants.length} _CommentToRestaurant relationships`
+        );
+      } else {
+        const postsWithRestaurants = await prisma.post.findMany({
+          where: {
+            id: { in: itemIds },
+            restaurantsMentioned: { some: {} },
+          },
+          select: { id: true },
+        });
+        console.log(
+          `   Posts with restaurant links: ${postsWithRestaurants.length}`
+        );
+
+        for (const post of postsWithRestaurants) {
+          await prisma.post.update({
+            where: { id: post.id },
+            data: { restaurantsMentioned: { set: [] } },
+          });
+        }
+        console.log(
+          `   ✅ Cleared ${postsWithRestaurants.length} _PostToRestaurant relationships`
+        );
       }
-      console.log(`   ✅ Cleared ${commentsWithRestaurants.length} _CommentToRestaurant relationships`);
+
+      // Step 2: Delete restaurant extractions
+      const extractionCount = await prisma.restaurantExtraction.count({
+        where: {
+          [isCommentBatch ? 'commentId' : 'postId']: {
+            in: itemIds,
+          },
+        },
+      });
+      console.log(`   Restaurant extractions to delete: ${extractionCount}`);
+
+      const deleteResult = await prisma.restaurantExtraction.deleteMany({
+        where: {
+          [isCommentBatch ? 'commentId' : 'postId']: {
+            in: itemIds,
+          },
+        },
+      });
+      console.log(`   ✅ Deleted ${deleteResult.count} restaurant extractions`);
+
+    } else if (isSentimentBatch) {
+      console.log(`   Job Type: Sentiment Analysis`);
+
+      // Delete sentiment extractions
+      const sentimentCount = await prisma.sentimentExtraction.count({
+        where: {
+          [isCommentBatch ? 'commentId' : 'postId']: {
+            in: itemIds,
+          },
+        },
+      });
+      console.log(`   Sentiment extractions to delete: ${sentimentCount}`);
+
+      const deleteResult = await prisma.sentimentExtraction.deleteMany({
+        where: {
+          [isCommentBatch ? 'commentId' : 'postId']: {
+            in: itemIds,
+          },
+        },
+      });
+      console.log(`   ✅ Deleted ${deleteResult.count} sentiment extractions`);
+
     } else {
-      const postsWithRestaurants = await prisma.post.findMany({
-        where: {
-          id: { in: itemIds },
-          restaurantsMentioned: { some: {} },
-        },
-        select: { id: true },
-      });
-      console.log(`   Posts with restaurant links: ${postsWithRestaurants.length}`);
-
-      for (const post of postsWithRestaurants) {
-        await prisma.post.update({
-          where: { id: post.id },
-          data: { restaurantsMentioned: { set: [] } },
-        });
-      }
-      console.log(`   ✅ Cleared ${postsWithRestaurants.length} _PostToRestaurant relationships`);
+      console.log(`   ⚠️  Unknown job type - skipping data cleanup`);
     }
 
-    // Step 2: Count and delete restaurant extractions
-    const extractionCount = await prisma.restaurantExtraction.count({
-      where: {
-        [isCommentBatch ? 'commentId' : 'postId']: {
-          in: itemIds,
-        },
-      },
-    });
-    console.log(`   Extractions to delete: ${extractionCount}`);
-
-    const deleteResult = await prisma.restaurantExtraction.deleteMany({
-      where: {
-        [isCommentBatch ? 'commentId' : 'postId']: {
-          in: itemIds,
-        },
-      },
-    });
-    console.log(`   ✅ Deleted ${deleteResult.count} extractions`);
-
-    // Delete the batch job itself
+    // Step 3: Delete the batch job itself
     await prisma.batchJob.delete({
       where: { id: batchId },
     });

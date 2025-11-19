@@ -13,6 +13,7 @@ const makeSchema = () => z.object({
   externalId: SortOrderSchema.optional(),
   postId: SortOrderSchema.optional(),
   parentCommentId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  parentExternalId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   author: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   body: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   score: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),

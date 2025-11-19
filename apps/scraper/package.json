@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "fetch-comments-and-posts": "dotenvx run -f ../../.env -- tsx src/scripts/fetchCommentsAndPosts.ts",
+    "fetch-comments": "dotenvx run -f ../../.env -- tsx src/scripts/one-off/fetchComments.ts",
     "extract-restaurants": "dotenvx run -f ../../.env -- tsx src/scripts/extractRestaurantsSequential.ts",
     "extract-sentiment": "dotenvx run -f ../../.env -- tsx src/scripts/extractSentimentSequential.ts",
     "link-restaurants": "dotenvx run -f ../../.env -- tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",

@@ -8,6 +8,7 @@ export const CommentInputSchema = z.object({
     postId: z.number().int(),
     parentComment: z.unknown().optional().nullable(),
     parentCommentId: z.number().int().optional().nullable(),
+    parentExternalId: z.string().optional().nullable(),
     replies: z.array(z.unknown()),
     author: z.string().optional().nullable(),
     body: z.string().optional().nullable(),

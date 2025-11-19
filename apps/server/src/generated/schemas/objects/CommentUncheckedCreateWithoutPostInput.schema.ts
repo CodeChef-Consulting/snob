@@ -10,6 +10,7 @@ const makeSchema = () => z.object({
   id: z.number().int().optional(),
   externalId: z.string(),
   parentCommentId: z.number().int().optional().nullable(),
+  parentExternalId: z.string().optional().nullable(),
   author: z.string().optional().nullable(),
   body: z.string().optional().nullable(),
   score: z.number().int().optional().nullable(),

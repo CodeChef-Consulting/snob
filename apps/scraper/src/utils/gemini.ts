@@ -215,7 +215,8 @@ export async function fetchGeminiBatchJob(
 export async function saveExtraction(
   prisma: PrismaClient,
   result: RestaurantExtractionResult & { postId?: number; commentId?: number },
-  modelName: string
+  modelName: string,
+  resetAttemptedLinkToRestaurantsMentioned: boolean = false
 ): Promise<void> {
   const data = {
     restaurantsMentioned: result.restaurantsMentioned,
@@ -236,7 +237,12 @@ export async function saveExtraction(
     await prisma.restaurantExtraction.upsert({
       where: { commentId: result.commentId },
       create: { ...data, commentId: result.commentId },
-      update: data,
+      update: {
+        ...data,
+        ...(resetAttemptedLinkToRestaurantsMentioned
+          ? { attemptedLinkToRestaurantsMentioned: false }
+          : {}),
+      },
     });
   }
 }

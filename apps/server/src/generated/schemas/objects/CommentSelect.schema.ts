@@ -17,6 +17,7 @@ const makeSchema = () => z.object({
   postId: z.boolean().optional(),
   parentComment: z.union([z.boolean(), z.lazy(() => CommentArgsObjectSchema)]).optional(),
   parentCommentId: z.boolean().optional(),
+  parentExternalId: z.boolean().optional(),
   replies: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   author: z.boolean().optional(),
   body: z.boolean().optional(),
