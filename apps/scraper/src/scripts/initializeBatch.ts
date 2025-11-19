@@ -211,13 +211,14 @@ async function initializePostBatch(limit?: number, skipExisting = true) {
         },
       });
     } else {
-      geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash-lite',
-        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
-        config: {
-          displayName: batchJobRecord.displayName,
-        },
-      });
+      throw new Error('INLINE NOT WORKING');
+      // geminiBatchJob = await ai.batches.create({
+      //   model: 'gemini-2.5-flash-lite',
+      //   src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
+      //   config: {
+      //     displayName: batchJobRecord.displayName,
+      //   },
+      // });
     }
 
     // Update BatchJob with geminiJobName and status "submitted"
@@ -370,13 +371,14 @@ async function initializeCommentBatch(limit?: number, skipExisting = true) {
         },
       });
     } else {
-      geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash-lite',
-        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
-        config: {
-          displayName: batchJobRecord.displayName,
-        },
-      });
+      throw new Error('INLINE NOT WORKING');
+      // geminiBatchJob = await ai.batches.create({
+      //   model: 'gemini-2.5-flash-lite',
+      //   src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
+      //   config: {
+      //     displayName: batchJobRecord.displayName,
+      //   },
+      // });
     }
 
     await prisma.batchJob.update({
@@ -536,13 +538,14 @@ async function initializePostSentimentBatch(
         },
       });
     } else {
-      geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash-lite',
-        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
-        config: {
-          displayName: batchJobRecord.displayName,
-        },
-      });
+      throw new Error('INLINE NOT WORKING');
+      // geminiBatchJob = await ai.batches.create({
+      //   model: 'gemini-2.5-flash-lite',
+      //   src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
+      //   config: {
+      //     displayName: batchJobRecord.displayName,
+      //   },
+      // });
     }
 
     // Update BatchJob with geminiJobName and status "submitted"
@@ -718,13 +721,14 @@ async function initializeCommentSentimentBatch(
         },
       });
     } else {
-      geminiBatchJob = await ai.batches.create({
-        model: 'gemini-2.5-flash-lite',
-        src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
-        config: {
-          displayName: batchJobRecord.displayName,
-        },
-      });
+      throw new Error('INLINE NOT WORKING');
+      // geminiBatchJob = await ai.batches.create({
+      //   model: 'gemini-2.5-flash-lite',
+      //   src: keyAndRequests.map((keyAndRequest) => keyAndRequest.request),
+      //   config: {
+      //     displayName: batchJobRecord.displayName,
+      //   },
+      // });
     }
 
     await prisma.batchJob.update({

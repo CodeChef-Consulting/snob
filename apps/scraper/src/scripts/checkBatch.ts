@@ -289,6 +289,7 @@ async function checkBatchJob(
 
       // Also save a copy to src directory for manual inspection
       let srcCopyPath = null;
+      console.log('copyResultsToSrc', copyResultsToSrc);
       if (copyResultsToSrc) {
         srcCopyPath = path.join(
           process.cwd(),

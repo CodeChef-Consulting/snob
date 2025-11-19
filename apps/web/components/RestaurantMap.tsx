@@ -3,6 +3,7 @@
 import { trpc } from '../lib/providers';
 import GoogleMapReact from 'google-map-react';
 import { useState } from 'react';
+import RestaurantSidebar from './RestaurantSidebar';
 
 type Restaurant = {
   id: string;
@@ -28,22 +29,21 @@ type MarkerProps = {
 
 // Smooth color gradient from red (0) → yellow (5) → green (10)
 const getScoreColor = (score: number): string => {
-  // Clamp score to 0-10 range
   const clampedScore = Math.max(0, Math.min(10, score));
 
   if (clampedScore < 5) {
     // Red to Yellow (0-5)
     const ratio = clampedScore / 5;
-    const r = 220; // Keep red high
-    const g = Math.round(38 + (202 - 38) * ratio); // 38 → 202
-    const b = Math.round(38 - 38 * ratio); // 38 → 0
+    const r = 220;
+    const g = Math.round(38 + (202 - 38) * ratio);
+    const b = Math.round(38 - 38 * ratio);
     return `rgb(${r}, ${g}, ${b})`;
   } else {
     // Yellow to Green (5-10)
     const ratio = (clampedScore - 5) / 5;
-    const r = Math.round(202 - (202 - 22) * ratio); // 202 → 22
-    const g = Math.round(138 + (163 - 138) * ratio); // 138 → 163
-    const b = Math.round(4 + (74 - 4) * ratio); // 4 → 74
+    const r = Math.round(202 - (202 - 22) * ratio);
+    const g = Math.round(138 + (163 - 138) * ratio);
+    const b = Math.round(4 + (74 - 4) * ratio);
     return `rgb(${r}, ${g}, ${b})`;
   }
 };
@@ -73,8 +73,7 @@ const Marker = ({ restaurant, onClick }: MarkerProps) => {
 };
 
 export default function RestaurantMap() {
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<Restaurant | null>(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
 
   const {
     data: restaurants,
@@ -102,6 +101,7 @@ export default function RestaurantMap() {
     error: any;
   };
 
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -120,16 +120,11 @@ export default function RestaurantMap() {
     );
   }
 
-  // Filter restaurants with valid coordinates
   const validRestaurants =
-    restaurants?.filter((r) => r.latitude !== null && r.longitude !== null) ??
-    [];
+    restaurants?.filter((r) => r.latitude !== null && r.longitude !== null) ?? [];
 
-  // Default to Los Angeles
   const defaultCenter = { lat: 34.0522, lng: -118.2437 };
   const defaultZoom = 11;
-
-  console.log(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
 
   return (
     <div className="h-screen flex flex-col">
@@ -140,7 +135,7 @@ export default function RestaurantMap() {
         </p>
       </div>
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Map */}
         <div className="flex-1">
           <GoogleMapReact
@@ -149,7 +144,7 @@ export default function RestaurantMap() {
             }}
             defaultCenter={defaultCenter}
             defaultZoom={defaultZoom}
-            onClick={() => setSelectedRestaurant(null)}
+            onClick={() => setSelectedRestaurantId(null)}
           >
             {validRestaurants.map((restaurant) => (
               <Marker
@@ -157,64 +152,33 @@ export default function RestaurantMap() {
                 lat={restaurant.latitude!}
                 lng={restaurant.longitude!}
                 restaurant={restaurant}
-                onClick={() => setSelectedRestaurant(restaurant)}
+                onClick={() => setSelectedRestaurantId(Number(restaurant.id))}
               />
             ))}
           </GoogleMapReact>
         </div>
 
         {/* Sidebar */}
-        {selectedRestaurant && (
-          <div className="w-96 bg-white border-l overflow-y-auto p-6">
-            <button
-              onClick={() => setSelectedRestaurant(null)}
-              className="text-gray-500 hover:text-gray-700 mb-4"
-            >
-              ✕ Close
-            </button>
+        {selectedRestaurantId && (() => {
+          const selectedRestaurant = validRestaurants.find(r => Number(r.id) === selectedRestaurantId);
+          if (!selectedRestaurant) return null;
 
-            <h2 className="text-2xl font-bold mb-4">
-              {selectedRestaurant.name}
-            </h2>
-
-            {selectedRestaurant.address && (
-              <p className="text-gray-600 mb-2">{selectedRestaurant.address}</p>
-            )}
-            {selectedRestaurant.city && selectedRestaurant.state && (
-              <p className="text-gray-600 mb-4">
-                {selectedRestaurant.city}, {selectedRestaurant.state}
-                {selectedRestaurant.zipCode && ` ${selectedRestaurant.zipCode}`}
-              </p>
-            )}
-
-            {selectedRestaurant.normalizedScore !== null && (
-              <div className="mb-4">
-                <span className="font-semibold text-sm">Score:</span>
-                <span
-                  className="ml-2 px-3 py-1 rounded text-sm font-medium text-white"
-                  style={{
-                    backgroundColor: getScoreColor(
-                      selectedRestaurant.normalizedScore
-                    ),
-                  }}
-                >
-                  {selectedRestaurant.normalizedScore.toFixed(1)}/10
-                </span>
-              </div>
-            )}
-
-            {selectedRestaurant.rawScore !== null && (
-              <p className="text-sm text-gray-600 mb-4">
-                Raw Score: {selectedRestaurant.rawScore.toFixed(2)}
-              </p>
-            )}
-
-            <p className="text-sm text-gray-500">
-              Source: {selectedRestaurant.source}
-              {selectedRestaurant.googlePlaceId && ' • Google Places'}
-            </p>
-          </div>
-        )}
+          return (
+            <RestaurantSidebar
+              restaurantId={selectedRestaurantId}
+              restaurantName={selectedRestaurant.name}
+              address={selectedRestaurant.address}
+              city={selectedRestaurant.city}
+              state={selectedRestaurant.state}
+              zipCode={selectedRestaurant.zipCode}
+              normalizedScore={selectedRestaurant.normalizedScore}
+              rawScore={selectedRestaurant.rawScore}
+              source={selectedRestaurant.source}
+              googlePlaceId={selectedRestaurant.googlePlaceId}
+              onClose={() => setSelectedRestaurantId(null)}
+            />
+          );
+        })()}
       </div>
     </div>
   );
