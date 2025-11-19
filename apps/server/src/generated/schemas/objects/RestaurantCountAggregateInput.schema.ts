@@ -9,6 +9,8 @@ const makeSchema = () => z.object({
   city: z.literal(true).optional(),
   state: z.literal(true).optional(),
   zipCode: z.literal(true).optional(),
+  latitude: z.literal(true).optional(),
+  longitude: z.literal(true).optional(),
   source: z.literal(true).optional(),
   googlePlaceId: z.literal(true).optional(),
   lookupAliases: z.literal(true).optional(),

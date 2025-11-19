@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "generatorVersion": "0.0.0",
-  "generatedAt": "2025-11-18T22:28:53.328Z",
-  "outputPath": "/Users/jeremytong/reddit-scraper/packages/api/src/generated",
+  "generatedAt": "2025-11-18T23:32:14.049Z",
+  "outputPath": "/Users/jeremytong/reddit-scraper/apps/server/src/generated",
   "files": [
     "schemas/enums/TransactionIsolationLevel.schema.ts",
     "schemas/enums/PostScalarFieldEnum.schema.ts",

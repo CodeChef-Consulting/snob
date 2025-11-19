@@ -3,8 +3,8 @@ import type { Prisma } from '@prisma/client';
 import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
 import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
 import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
-import { JsonNullableFilterObjectSchema as JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
 import { FloatNullableFilterObjectSchema as FloatNullableFilterObjectSchema } from './FloatNullableFilter.schema';
+import { JsonNullableFilterObjectSchema as JsonNullableFilterObjectSchema } from './JsonNullableFilter.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
 import { PostListRelationFilterObjectSchema as PostListRelationFilterObjectSchema } from './PostListRelationFilter.schema';
 import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjectSchema } from './CommentListRelationFilter.schema'
@@ -19,6 +19,8 @@ const restaurantwhereinputSchema = z.object({
   city: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   state: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   zipCode: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
+  latitude: z.union([z.lazy(() => FloatNullableFilterObjectSchema), z.number()]).optional().nullable(),
+  longitude: z.union([z.lazy(() => FloatNullableFilterObjectSchema), z.number()]).optional().nullable(),
   source: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
   googlePlaceId: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   lookupAliases: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),

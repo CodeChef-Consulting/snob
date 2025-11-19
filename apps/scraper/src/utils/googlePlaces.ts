@@ -1,7 +1,6 @@
 import { PlacesClient, protos } from '@googlemaps/places';
 import { PrismaClient } from '@repo/db';
 import Fuse from 'fuse.js';
-import _ from 'lodash';
 
 // Lazy initialization for Places API client
 let placesClient: PlacesClient | null = null;
@@ -62,7 +61,7 @@ export async function findPlaceByName(
     });
 
     if (response.places && response.places.length > 0) {
-      return response.places[0];
+      return response.places[0] || null;
     }
 
     return null;
@@ -201,6 +200,8 @@ export async function lookupAndAddRestaurant(
     const types = place.types || [];
     const nationalPhoneNumber = place.nationalPhoneNumber;
     const websiteUri = place.websiteUri;
+    const latitude = place.location?.latitude;
+    const longitude = place.location?.longitude;
 
     // Create new restaurant from Google Places data
     const { address, city, state, zipCode } = extractAddressComponents(
@@ -217,11 +218,11 @@ export async function lookupAndAddRestaurant(
       const addressResults = addressFuse.search(formattedAddress);
       if (
         addressResults.length > 0 &&
-        addressResults[0].score !== undefined &&
-        addressResults[0].score < 0.3
+        addressResults?.[0]?.score !== undefined &&
+        addressResults?.[0]?.score < 0.3
       ) {
         const existingRestaurant = await prisma.restaurant.findUnique({
-          where: { id: addressResults[0].item.id },
+          where: { id: addressResults?.[0]?.item?.id },
           select: { id: true, name: true, source: true },
         });
 
@@ -251,6 +252,8 @@ export async function lookupAndAddRestaurant(
           formattedAddress,
           nationalPhoneNumber,
           websiteUri,
+          latitude,
+          longitude,
         },
       },
     });

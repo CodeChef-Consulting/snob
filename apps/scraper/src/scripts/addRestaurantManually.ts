@@ -68,6 +68,8 @@ async function addRestaurantManually() {
     const types = place.types || [];
     const nationalPhoneNumber = place.nationalPhoneNumber;
     const websiteUri = place.websiteUri;
+    const latitude = place.location?.latitude;
+    const longitude = place.location?.longitude;
 
     const { address, city, state, zipCode } = extractAddressComponents(
       place.addressComponents || []
@@ -105,6 +107,8 @@ async function addRestaurantManually() {
           formattedAddress,
           nationalPhoneNumber,
           websiteUri,
+          latitude,
+          longitude,
         },
       },
     });

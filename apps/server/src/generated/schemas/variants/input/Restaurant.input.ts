@@ -8,6 +8,8 @@ export const RestaurantInputSchema = z.object({
     city: z.string().optional().nullable(),
     state: z.string().optional().nullable(),
     zipCode: z.string().optional().nullable(),
+    latitude: z.number().optional().nullable(),
+    longitude: z.number().optional().nullable(),
     source: z.string(),
     googlePlaceId: z.string().optional().nullable(),
     lookupAliases: z.string().optional().nullable(),

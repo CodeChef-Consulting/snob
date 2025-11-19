@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "dev": "dotenvx run -f ../../.env -- next dev --turbopack",
+    "build": "dotenvx run -f ../../.env -- next build",
+    "start": "dotenvx run -f ../../.env -- next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
     "@repo/server": "workspace:*",
     "@repo/db": "workspace:*",
     "@tanstack/react-query": "^5.62.18",

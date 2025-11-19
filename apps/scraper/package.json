@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "fetch-comments-and-posts": "tsx src/scripts/fetchCommentsAndPosts.ts",
-    "extract-restaurants": "tsx src/scripts/extractRestaurantsSequential.ts",
-    "extract-sentiment": "tsx src/scripts/extractSentimentSequential.ts",
-    "link-restaurants": "tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
-    "add-restaurant": "tsx src/scripts/addRestaurantManually.ts",
-    "init-batch": "tsx src/scripts/initializeBatch.ts",
-    "compute-scores": "tsx src/scripts/computeScores.ts",
-    "check-batch": "tsx src/scripts/checkBatch.ts"
+    "fetch-comments-and-posts": "dotenvx run -f ../../.env -- tsx src/scripts/fetchCommentsAndPosts.ts",
+    "extract-restaurants": "dotenvx run -f ../../.env -- tsx src/scripts/extractRestaurantsSequential.ts",
+    "extract-sentiment": "dotenvx run -f ../../.env -- tsx src/scripts/extractSentimentSequential.ts",
+    "link-restaurants": "dotenvx run -f ../../.env -- tsx src/scripts/linkCommentsAndPostsToRestaurants.ts",
+    "add-restaurant": "dotenvx run -f ../../.env -- tsx src/scripts/addRestaurantManually.ts",
+    "init-batch": "dotenvx run -f ../../.env -- tsx src/scripts/initializeBatch.ts",
+    "compute-scores": "dotenvx run -f ../../.env -- tsx src/scripts/computeScores.ts",
+    "check-batch": "dotenvx run -f ../../.env -- tsx src/scripts/checkBatch.ts",
+    "backfill-latlng": "dotenvx run -f ../../.env -- tsx src/scripts/backfillLatLng.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
@@ -20,6 +20,7 @@
     "@dotenvx/dotenvx": "^1.51.0",
     "@google/genai": "^1.23.0",
     "@googlemaps/places": "^2.1.0",
+    "@prisma/client": "^6.16.3",
     "@trpc/server": "^11.0.0",
     "csv-parse": "^6.1.0",
     "fuse.js": "^7.1.0",

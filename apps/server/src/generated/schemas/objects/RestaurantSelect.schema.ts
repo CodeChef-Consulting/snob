@@ -11,6 +11,8 @@ const makeSchema = () => z.object({
   city: z.boolean().optional(),
   state: z.boolean().optional(),
   zipCode: z.boolean().optional(),
+  latitude: z.boolean().optional(),
+  longitude: z.boolean().optional(),
   source: z.boolean().optional(),
   googlePlaceId: z.boolean().optional(),
   lookupAliases: z.boolean().optional(),

@@ -3,8 +3,8 @@ import type { Prisma } from '@prisma/client';
 import { IntFieldUpdateOperationsInputObjectSchema as IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
 import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperationsInputObjectSchema } from './StringFieldUpdateOperationsInput.schema';
 import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
-import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
 import { NullableFloatFieldUpdateOperationsInputObjectSchema as NullableFloatFieldUpdateOperationsInputObjectSchema } from './NullableFloatFieldUpdateOperationsInput.schema';
+import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
 import { PostUncheckedUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema as PostUncheckedUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema } from './PostUncheckedUpdateManyWithoutRestaurantsMentionedNestedInput.schema';
 import { CommentUncheckedUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema as CommentUncheckedUpdateManyWithoutRestaurantsMentionedNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutRestaurantsMentionedNestedInput.schema'
@@ -18,6 +18,8 @@ const makeSchema = () => z.object({
   city: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   state: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   zipCode: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
+  latitude: z.union([z.number(), z.lazy(() => NullableFloatFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
+  longitude: z.union([z.number(), z.lazy(() => NullableFloatFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   source: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
   googlePlaceId: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   lookupAliases: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),

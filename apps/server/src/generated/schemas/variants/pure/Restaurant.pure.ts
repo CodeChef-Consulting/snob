@@ -8,6 +8,8 @@ export const RestaurantModelSchema = z.object({
     city: z.string().nullable(),
     state: z.string().nullable(),
     zipCode: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     source: z.string(),
     googlePlaceId: z.string().nullable(),
     lookupAliases: z.string().nullable(),

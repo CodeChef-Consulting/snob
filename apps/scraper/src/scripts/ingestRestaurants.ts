@@ -66,7 +66,7 @@ async function ingestRestaurants() {
           locationEndDate: record['LOCATION END DATE'],
         };
 
-        if (locationMatch) {
+        if (locationMatch && locationMatch[1] && locationMatch[2]) {
           metadata.coordinates = {
             longitude: parseFloat(locationMatch[1]),
             latitude: parseFloat(locationMatch[2]),

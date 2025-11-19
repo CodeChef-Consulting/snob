@@ -6,6 +6,8 @@ export const RestaurantFindUniqueResultSchema = z.nullable(z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   zipCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   source: z.string(),
   googlePlaceId: z.string().optional(),
   lookupAliases: z.string().optional(),

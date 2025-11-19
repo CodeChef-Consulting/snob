@@ -6,6 +6,8 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     city: z.number(),
     state: z.number(),
     zipCode: z.number(),
+    latitude: z.number(),
+    longitude: z.number(),
     source: z.number(),
     googlePlaceId: z.number(),
     lookupAliases: z.number(),
@@ -19,11 +21,15 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
   }).optional(),
   _sum: z.object({
     id: z.number().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     rawScore: z.number().nullable(),
     normalizedScore: z.number().nullable()
   }).nullable().optional(),
   _avg: z.object({
     id: z.number().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     rawScore: z.number().nullable(),
     normalizedScore: z.number().nullable()
   }).nullable().optional(),
@@ -34,6 +40,8 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     city: z.string().nullable(),
     state: z.string().nullable(),
     zipCode: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     source: z.string().nullable(),
     googlePlaceId: z.string().nullable(),
     lookupAliases: z.string().nullable(),
@@ -49,6 +57,8 @@ export const RestaurantAggregateResultSchema = z.object({  _count: z.object({
     city: z.string().nullable(),
     state: z.string().nullable(),
     zipCode: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     source: z.string().nullable(),
     googlePlaceId: z.string().nullable(),
     lookupAliases: z.string().nullable(),

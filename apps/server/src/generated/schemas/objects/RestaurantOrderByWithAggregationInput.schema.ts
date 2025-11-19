@@ -15,6 +15,8 @@ const makeSchema = () => z.object({
   city: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   state: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   zipCode: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  latitude: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  longitude: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   source: SortOrderSchema.optional(),
   googlePlaceId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   lookupAliases: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),

@@ -4,6 +4,8 @@ import { SortOrderSchema } from '../enums/SortOrder.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
+  latitude: SortOrderSchema.optional(),
+  longitude: SortOrderSchema.optional(),
   rawScore: SortOrderSchema.optional(),
   normalizedScore: SortOrderSchema.optional()
 }).strict();
