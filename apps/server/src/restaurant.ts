@@ -83,7 +83,7 @@ export const restaurantRouter = t.router({
           const dishes = extraction.dishesMentioned
             .split(',')
             .map((d) => d.trim())
-            .filter((d) => d && d !== 'NONE');
+            .filter((d) => !!d);
 
           dishes.forEach((dish) => {
             if (!dishSentiments.has(dish)) {
@@ -108,7 +108,7 @@ export const restaurantRouter = t.router({
           const dishes = extraction.dishesMentioned
             .split(',')
             .map((d) => d.trim())
-            .filter((d) => d && d !== 'NONE');
+            .filter((d) => !!d);
 
           dishes.forEach((dish) => {
             if (!dishSentiments.has(dish)) {

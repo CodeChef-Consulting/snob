@@ -47,7 +47,14 @@ export const depthWeight = (depth: number): number => {
 };
 
 export const mentionsWeight = (mentions: number): number => {
-  return 1 / Math.max(1, mentions);
+  // Single mention gets weight of 1.0
+  // 2 mentions: 0.2 (5x penalty)
+  // 3 mentions: 0.125 (8x penalty)
+  // Formula: 1 / mentions^2 for mentions >= 2
+  if (mentions === 1) {
+    return 1.0;
+  }
+  return 1 / Math.pow(mentions, 1.5);
 };
 
 export const itemWeight = (item: RedditItem): number => {

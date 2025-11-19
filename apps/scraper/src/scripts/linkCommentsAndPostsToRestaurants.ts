@@ -125,14 +125,13 @@ function createRestaurantGroups<
 
   // Separate into primary and secondary extractions
   const withPrimary = extractions.filter(
-    (e) => e[idField] && e.primaryRestaurant && e.primaryRestaurant !== 'NONE'
+    (e) => e[idField] && e.primaryRestaurant
   );
   const withoutPrimary = extractions.filter(
     (e) =>
       e[idField] &&
-      (!e.primaryRestaurant || e.primaryRestaurant === 'NONE') &&
+      !e.primaryRestaurant &&
       e.restaurantsMentioned &&
-      e.restaurantsMentioned !== 'NONE' &&
       e.restaurantsMentioned.split(',').filter((n) => n.trim()).length >= 1
   );
 
@@ -177,7 +176,7 @@ async function processRestaurantGroup(
       : groupKey
           .split(',')
           .map((n) => n.trim())
-          .filter((n) => n && n !== 'NONE');
+          .filter((n) => !!n);
 
   const matchedRestaurantIds = new Set<number>();
   let hadGooglePlacesError = false;

@@ -228,7 +228,7 @@ async function checkReplyCommentsBatch(
         let itemId = itemIds[i];
 
         try {
-          const jsonResponse = JSON.parse(lines[i]);
+          const jsonResponse = JSON.parse(lines[i]!);
 
           if (jsonResponse.key) {
             const key = parseInt(jsonResponse.key, 10);
@@ -361,10 +361,11 @@ async function main() {
 
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`
-Usage: tsx src/scripts/one-off/checkReplyCommentsRestaurantExtractionBatch.ts <BatchJob ID> [options]
+Usage: tsx src/scripts/one-off/checkReplyCommentsRestaurantExtractionBatch.ts [BatchJob ID] [options]
 
 Arguments:
-  <BatchJob ID>       ID of the reply-comment-extraction batch job to check (required)
+  <BatchJob ID>       ID of the reply-comment-extraction batch job to check (optional)
+                      If omitted, checks all reply-comment-extraction batches
 
 Options:
   --poll              Keep polling until job completes
@@ -376,6 +377,10 @@ Purpose:
   After saving extractions, this script links comments to their parents via parentCommentId.
 
 Examples:
+  # Check all reply-comment-extraction batches
+  npm run one-off -- one-off/checkReplyCommentsRestaurantExtractionBatch.ts
+
+  # Check specific batch
   npm run one-off -- one-off/checkReplyCommentsRestaurantExtractionBatch.ts 123
   npm run one-off -- one-off/checkReplyCommentsRestaurantExtractionBatch.ts 123 --poll
   npm run one-off -- one-off/checkReplyCommentsRestaurantExtractionBatch.ts 123 --reprocess
@@ -388,29 +393,70 @@ After checking:
     process.exit(0);
   }
 
-  if (args.length === 0) {
-    console.error('❌ BatchJob ID is required.');
-    console.log('Run with --help for usage information.');
-    process.exit(1);
-  }
-
   try {
-    const batchJobId = parseInt(args[0], 10);
-
-    if (isNaN(batchJobId)) {
-      console.error('❌ Invalid BatchJob ID. Must be a number.');
-      console.log('Run with --help for usage information.');
-      process.exit(1);
-    }
-
     const pollUntilComplete = args.includes('--poll');
     const forceReprocess = args.includes('--reprocess');
 
-    await checkReplyCommentsBatch(
-      batchJobId,
-      pollUntilComplete,
-      forceReprocess
-    );
+    // Check if first arg is a batch job ID
+    const firstArg = args.find((arg) => !arg.startsWith('--'));
+
+    if (firstArg) {
+      // Specific batch job ID provided
+      const batchJobId = parseInt(firstArg, 10);
+
+      if (isNaN(batchJobId)) {
+        console.error('❌ Invalid BatchJob ID. Must be a number.');
+        console.log('Run with --help for usage information.');
+        process.exit(1);
+      }
+
+      await checkReplyCommentsBatch(
+        batchJobId,
+        pollUntilComplete,
+        forceReprocess
+      );
+    } else {
+      // No batch job ID - check all reply-comment-extraction batches
+      console.log('\n🔍 Finding all reply-comment-extraction batch jobs...');
+
+      const replyBatches = await prisma.batchJob.findMany({
+        where: {
+          contentType: 'comment',
+          displayName: { contains: 'reply-comment-extraction' },
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      if (replyBatches.length === 0) {
+        console.log('   ⚠️  No reply-comment-extraction batches found.');
+        return;
+      }
+
+      console.log(`   Found ${replyBatches.length} batch job(s)`);
+      console.log('='.repeat(80));
+
+      for (let i = 0; i < replyBatches.length; i++) {
+        const batch = replyBatches[i]!;
+        console.log(
+          `\n[${i + 1}/${replyBatches.length}] Processing BatchJob #${batch.id}`
+        );
+        console.log('='.repeat(80));
+
+        try {
+          await checkReplyCommentsBatch(
+            batch.id,
+            pollUntilComplete,
+            forceReprocess
+          );
+        } catch (error) {
+          console.error(`   ❌ Error processing batch ${batch.id}:`, error);
+          console.log('   Continuing to next batch...\n');
+        }
+      }
+
+      console.log('\n' + '='.repeat(80));
+      console.log(`✅ Processed all ${replyBatches.length} batch job(s)`);
+    }
   } catch (error) {
     console.error('❌ Error:', error);
     throw error;
