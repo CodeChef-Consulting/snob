@@ -1,5 +1,5 @@
 import { config } from '@dotenvx/dotenvx';
-config({ path: ['../../../.env'] });
+config({ path: ['../../.env'] });
 
 import { PrismaClient } from '@repo/db';
 import { unlink, writeFile } from 'fs/promises';

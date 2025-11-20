@@ -43,14 +43,20 @@ export const upvoteWeight = (upvotes: number): number => {
 };
 
 export const depthWeight = (depth: number): number => {
-  return 1 / (1 + depth);
+  // Depth 0 = posts and top-level comments (full weight, equally visible)
+  // Depth 1+ = nested replies (exponentially less likely to be read)
+  // Uses ^2 decay: depth 1 = 0.25, depth 2 = 0.11, depth 3 = 0.06
+  const depthFactor = 1 + depth;
+  if (depthFactor === 1) {
+    return 1;
+  }
+  return 1 / Math.pow(depthFactor, 2);
 };
 
 export const mentionsWeight = (mentions: number): number => {
-  // Single mention gets weight of 1.0
-  // 2 mentions: 0.2 (5x penalty)
-  // 3 mentions: 0.125 (8x penalty)
-  // Formula: 1 / mentions^2 for mentions >= 2
+  // Single mention = focused review (weight 1.0)
+  // Multiple mentions = comparative/list posts (gentler ^1.5 decay)
+  // 2 mentions = 0.35, 3 mentions = 0.19, 5 mentions = 0.09
   if (mentions === 1) {
     return 1.0;
   }

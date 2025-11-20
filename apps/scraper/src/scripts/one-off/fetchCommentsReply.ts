@@ -7,9 +7,16 @@ import {
   createRedditClient,
   extractMediaFromCommentBody,
 } from '../../utils/reddit';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
 const r = createRedditClient();
+
+const REPROCESSED_POSTS_FILE = path.join(
+  __dirname,
+  '../../../temp/reprocessed-posts.txt'
+);
 
 interface FetchOptions {
   subredditName?: string;
@@ -20,16 +27,45 @@ interface FetchOptions {
 async function fetchCommentsOnly(options: FetchOptions = {}) {
   const {
     subredditName = 'FoodLosAngeles',
-    batchSize = 10,
+    batchSize,
     scrapingSessionId,
   } = options;
+
+  // Ensure temp directory exists
+  const tempDir = path.dirname(REPROCESSED_POSTS_FILE);
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+
+  // Load existing reprocessed post IDs
+  let reprocessedPostIds: Set<number> = new Set();
+  if (fs.existsSync(REPROCESSED_POSTS_FILE)) {
+    const content = fs.readFileSync(REPROCESSED_POSTS_FILE, 'utf-8').trim();
+    if (content) {
+      reprocessedPostIds = new Set(
+        content.split(',').map((id) => parseInt(id))
+      );
+      console.log(
+        `📋 Loaded ${reprocessedPostIds.size} previously reprocessed post IDs`
+      );
+    }
+  }
 
   // Find posts that need comment scraping
   const postsNeedingComments = await prisma.post.findMany({
     where: {
-      commentsFullyScraped: false,
+      ...(reprocessedPostIds.size > 0 && {
+        id: { notIn: Array.from(reprocessedPostIds) },
+      }),
       ...(subredditName && { subreddit: subredditName }),
       ...(scrapingSessionId && { scrapingSessionId }),
+      comments: {
+        some: {
+          depth: {
+            gt: 0,
+          },
+        },
+      },
     },
     orderBy: { createdUtc: 'desc' },
     take: batchSize,
@@ -109,6 +145,11 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
           );
           parentDbCommentId = parentComment?.id || null;
         }
+        //TODO: remove this line later
+
+        if (!parentExternalId) {
+          continue;
+        }
 
         const commentData = {
           externalId: comment.id as string,
@@ -169,106 +210,106 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
           )
         );
         console.log(
-          `   Updated ${existingCommentUpdates.length} existing comments`
+          `   Updated ${existingCommentUpdates.length} existing comments with externalParentId`
         );
       }
 
       postCommentsScraped = allComments.length;
       totalCommentsScraped += allComments.length;
 
-      // Fetch all comment IDs for media file association
-      const allDbComments = await prisma.comment.findMany({
-        where: { externalId: { in: commentExternalIds } },
-        select: { id: true, externalId: true },
-      });
+      // // Fetch all comment IDs for media file association
+      // const allDbComments = await prisma.comment.findMany({
+      //   where: { externalId: { in: commentExternalIds } },
+      //   select: { id: true, externalId: true },
+      // });
 
-      const commentIdMap = new Map(
-        allDbComments.map((c) => [c.externalId, c.id])
-      );
+      // const commentIdMap = new Map(
+      //   allDbComments.map((c) => [c.externalId, c.id])
+      // );
 
-      // Process media files - collect all media first
-      const allMediaFiles: Array<{
-        commentId: number;
-        fileUrl: string;
-        fileType: string;
-        metadata: any;
-      }> = [];
+      // // Process media files - collect all media first
+      // const allMediaFiles: Array<{
+      //   commentId: number;
+      //   fileUrl: string;
+      //   fileType: string;
+      //   metadata: any;
+      // }> = [];
 
-      for (const comment of allComments) {
-        const dbCommentId = commentIdMap.get(comment.id as string);
-        if (!dbCommentId) continue;
+      // for (const comment of allComments) {
+      //   const dbCommentId = commentIdMap.get(comment.id as string);
+      //   if (!dbCommentId) continue;
 
-        const commentMediaUrls = extractMediaFromCommentBody(
-          comment.body as string
-        );
-        for (const media of commentMediaUrls) {
-          allMediaFiles.push({
-            commentId: dbCommentId,
-            fileUrl: media.url,
-            fileType: media.type,
-            metadata: media.metadata,
-          });
-        }
-      }
+      //   const commentMediaUrls = extractMediaFromCommentBody(
+      //     comment.body as string
+      //   );
+      //   for (const media of commentMediaUrls) {
+      //     allMediaFiles.push({
+      //       commentId: dbCommentId,
+      //       fileUrl: media.url,
+      //       fileType: media.type,
+      //       metadata: media.metadata,
+      //     });
+      //   }
+      // }
 
-      // Check which media files already exist
-      if (allMediaFiles.length > 0) {
-        const mediaFileKeys = allMediaFiles.map((m) => ({
-          commentId: m.commentId,
-          fileUrl: m.fileUrl,
-        }));
+      // // Check which media files already exist
+      // if (allMediaFiles.length > 0) {
+      //   const mediaFileKeys = allMediaFiles.map((m) => ({
+      //     commentId: m.commentId,
+      //     fileUrl: m.fileUrl,
+      //   }));
 
-        const existingMediaFiles = await prisma.file.findMany({
-          where: {
-            OR: mediaFileKeys,
-          },
-          select: { commentId: true, fileUrl: true },
-        });
+      //   const existingMediaFiles = await prisma.file.findMany({
+      //     where: {
+      //       OR: mediaFileKeys,
+      //     },
+      //     select: { commentId: true, fileUrl: true },
+      //   });
 
-        const existingMediaSet = new Set(
-          existingMediaFiles.map((m) => `${m.commentId}:${m.fileUrl}`)
-        );
+      //   const existingMediaSet = new Set(
+      //     existingMediaFiles.map((m) => `${m.commentId}:${m.fileUrl}`)
+      //   );
 
-        const newMediaFiles = [];
-        const existingMediaUpdates = [];
+      //   const newMediaFiles = [];
+      //   const existingMediaUpdates = [];
 
-        for (const media of allMediaFiles) {
-          const key = `${media.commentId}:${media.fileUrl}`;
-          if (existingMediaSet.has(key)) {
-            existingMediaUpdates.push(media);
-          } else {
-            newMediaFiles.push(media);
-          }
-        }
+      //   for (const media of allMediaFiles) {
+      //     const key = `${media.commentId}:${media.fileUrl}`;
+      //     if (existingMediaSet.has(key)) {
+      //       existingMediaUpdates.push(media);
+      //     } else {
+      //       newMediaFiles.push(media);
+      //     }
+      //   }
 
-        // Batch create new media files
-        if (newMediaFiles.length > 0) {
-          await prisma.file.createMany({
-            data: newMediaFiles,
-            skipDuplicates: true,
-          });
-        }
+      //   // Batch create new media files
+      //   if (newMediaFiles.length > 0) {
+      //     await prisma.file.createMany({
+      //       data: newMediaFiles,
+      //       skipDuplicates: true,
+      //     });
+      //   }
 
-        // Batch update existing media files
-        if (existingMediaUpdates.length > 0) {
-          await Promise.all(
-            existingMediaUpdates.map((media) =>
-              prisma.file.update({
-                where: {
-                  commentId_fileUrl: {
-                    commentId: media.commentId,
-                    fileUrl: media.fileUrl,
-                  },
-                },
-                data: {
-                  fileType: media.fileType,
-                  metadata: media.metadata,
-                },
-              })
-            )
-          );
-        }
-      }
+      //   // Batch update existing media files
+      //   if (existingMediaUpdates.length > 0) {
+      //     await Promise.all(
+      //       existingMediaUpdates.map((media) =>
+      //         prisma.file.update({
+      //           where: {
+      //             commentId_fileUrl: {
+      //               commentId: media.commentId,
+      //               fileUrl: media.fileUrl,
+      //             },
+      //           },
+      //           data: {
+      //             fileType: media.fileType,
+      //             metadata: media.metadata,
+      //           },
+      //         })
+      //       )
+      //     );
+      //   }
+      // }
 
       await prisma.post.update({
         where: { id: dbPost.id },
@@ -277,6 +318,16 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
           commentsFullyScraped: true,
         },
       });
+
+      // Track this post as reprocessed
+      reprocessedPostIds.add(dbPost.id);
+
+      // Write to file after each successful post
+      fs.writeFileSync(
+        REPROCESSED_POSTS_FILE,
+        Array.from(reprocessedPostIds).join(','),
+        'utf-8'
+      );
 
       postsCompleted++;
       console.log(
@@ -292,8 +343,8 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
         console.error(
           `\n🚨 RATE LIMIT ERROR at post ${dbPost.externalId} (ID: ${dbPost.id})`
         );
-        console.error('Waiting 60 seconds before continuing...');
-        await new Promise((resolve) => setTimeout(resolve, 60000));
+        console.error('Waiting 120 seconds before continuing...');
+        await new Promise((resolve) => setTimeout(resolve, 120_000));
         console.log('Resuming...\n');
         continue; // Skip to next post after waiting
       }
@@ -306,11 +357,13 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
   console.log(
     `\n✅ Completed: ${postsCompleted} posts, ${totalCommentsScraped} comments scraped`
   );
+  console.log(`📁 Reprocessed post IDs saved to: ${REPROCESSED_POSTS_FILE}`);
+  console.log(`   Total reprocessed: ${reprocessedPostIds.size} posts`);
 }
 
 const args = process.argv.slice(2);
 const subredditName = args[0] || 'FoodLosAngeles';
-const batchSize = parseInt(args[1]) || 10;
+const batchSize = parseInt(args[1]) || 10000;
 const scrapingSessionId = args[2] ? parseInt(args[2]) : undefined;
 
 fetchCommentsOnly({

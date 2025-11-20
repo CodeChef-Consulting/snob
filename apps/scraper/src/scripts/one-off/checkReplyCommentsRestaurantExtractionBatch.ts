@@ -1,5 +1,5 @@
 import { config } from '@dotenvx/dotenvx';
-config({ path: ['../../../.env'] });
+config({ path: ['../../.env'] });
 
 import type { BatchJob as GeminiBatchJob } from '@google/genai';
 import { JobState } from '@google/genai';
