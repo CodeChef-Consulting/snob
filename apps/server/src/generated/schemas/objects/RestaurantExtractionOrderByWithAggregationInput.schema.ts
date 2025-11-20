@@ -14,7 +14,7 @@ const makeSchema = () => z.object({
   commentId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   restaurantsMentioned: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   primaryRestaurant: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
-  dishesMentioned: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  dishesMentioned: SortOrderSchema.optional(),
   isSubjective: SortOrderSchema.optional(),
   attemptedLinkToRestaurantsMentioned: SortOrderSchema.optional(),
   extractedAt: SortOrderSchema.optional(),

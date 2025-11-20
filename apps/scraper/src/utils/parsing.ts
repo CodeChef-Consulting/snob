@@ -2,15 +2,15 @@
  * Shared parsing utilities for AI responses
  */
 
-import type {
-  RestaurantExtractionResult,
-  SentimentResult,
-} from './types';
+import type { RestaurantExtractionResult, SentimentResult } from './types';
 
 /**
  * Normalize extraction field: convert empty/'NONE' to null, remove spaces after commas, deduplicate
  */
-export function normalizeField(value: string, deduplicate = false): string | null {
+export function normalizeField(
+  value: string,
+  deduplicate = false
+): string | null {
   if (!value || value === '' || value === 'NONE') {
     return null;
   }
@@ -32,6 +32,33 @@ export function normalizeField(value: string, deduplicate = false): string | nul
 }
 
 /**
+ * Normalize extraction field to array: convert empty/'NONE' to empty array, deduplicate
+ */
+export function normalizeFieldToArray(
+  value: string,
+  deduplicate = false
+): string[] {
+  if (!value || value === '' || value === 'NONE') {
+    return [];
+  }
+
+  const items = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+  if (deduplicate) {
+    // Deduplicate case-insensitively
+    const uniqueItems = Array.from(
+      new Map(items.map((item) => [item.toLowerCase(), item])).values()
+    );
+    return uniqueItems;
+  }
+
+  return items;
+}
+
+/**
  * Parse sentiment response from AI
  * Handles multiple formats:
  * - JSON with code blocks: ```json\n{"rawAiScore": 0.8}\n```
@@ -47,7 +74,10 @@ export function parseSentimentResponse(responseText: string): SentimentResult {
   // Remove markdown code blocks if present
   let cleanedText = trimmed;
   if (trimmed.includes('```')) {
-    cleanedText = trimmed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    cleanedText = trimmed
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
   }
 
   // Pattern 0: Just "null" (after removing code blocks)
@@ -145,7 +175,7 @@ export function parseRestaurantExtractionResponse(
   return {
     restaurantsMentioned: normalizeField(restaurantsMentioned, true),
     primaryRestaurant: normalizeField(primaryRestaurant),
-    dishesMentioned: normalizeField(dishesMentioned, true), // deduplicate dishes
+    dishesMentioned: normalizeFieldToArray(dishesMentioned, true), // deduplicate dishes, return array
     isSubjective,
   };
 }

@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { IntFilterObjectSchema as IntFilterObjectSchema } from './IntFilter.schema';
 import { IntNullableFilterObjectSchema as IntNullableFilterObjectSchema } from './IntNullableFilter.schema';
 import { StringNullableFilterObjectSchema as StringNullableFilterObjectSchema } from './StringNullableFilter.schema';
+import { StringNullableListFilterObjectSchema as StringNullableListFilterObjectSchema } from './StringNullableListFilter.schema';
 import { BoolFilterObjectSchema as BoolFilterObjectSchema } from './BoolFilter.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema';
 import { PostNullableScalarRelationFilterObjectSchema as PostNullableScalarRelationFilterObjectSchema } from './PostNullableScalarRelationFilter.schema';
@@ -19,7 +20,7 @@ const restaurantextractionwhereinputSchema = z.object({
   commentId: z.union([z.lazy(() => IntNullableFilterObjectSchema), z.number().int()]).optional().nullable(),
   restaurantsMentioned: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
   primaryRestaurant: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
-  dishesMentioned: z.union([z.lazy(() => StringNullableFilterObjectSchema), z.string()]).optional().nullable(),
+  dishesMentioned: z.lazy(() => StringNullableListFilterObjectSchema).optional(),
   isSubjective: z.union([z.lazy(() => BoolFilterObjectSchema), z.boolean()]).optional(),
   attemptedLinkToRestaurantsMentioned: z.union([z.lazy(() => BoolFilterObjectSchema), z.boolean()]).optional(),
   extractedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),

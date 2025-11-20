@@ -181,7 +181,7 @@ model RestaurantExtraction {
   // Extraction results (matching RestaurantExtractionResult interface)
   restaurantsMentioned String? // Comma-separated or "NONE"
   primaryRestaurant    String? // Single restaurant name or "NONE"
-  dishesMentioned      String? // Comma-separated or "NONE"
+  dishesMentioned      String[] @default([]) // Array of dishes mentioned
   isSubjective         Boolean
 
   // Linking tracking

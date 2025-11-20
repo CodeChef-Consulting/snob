@@ -8,7 +8,6 @@ const makeSchema = () => z.object({
   commentId: z.literal(true).optional(),
   restaurantsMentioned: z.literal(true).optional(),
   primaryRestaurant: z.literal(true).optional(),
-  dishesMentioned: z.literal(true).optional(),
   isSubjective: z.literal(true).optional(),
   attemptedLinkToRestaurantsMentioned: z.literal(true).optional(),
   extractedAt: z.literal(true).optional(),

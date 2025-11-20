@@ -8,7 +8,7 @@ export const RestaurantExtractionFindManyResultSchema = z.object({
   commentId: z.number().int().optional(),
   restaurantsMentioned: z.string().optional(),
   primaryRestaurant: z.string().optional(),
-  dishesMentioned: z.string().optional(),
+  dishesMentioned: z.array(z.string()),
   isSubjective: z.boolean(),
   attemptedLinkToRestaurantsMentioned: z.boolean(),
   extractedAt: z.date(),

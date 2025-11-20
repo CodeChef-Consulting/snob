@@ -9,7 +9,7 @@ export const RestaurantExtractionInputSchema = z.object({
     commentId: z.number().int().optional().nullable(),
     restaurantsMentioned: z.string().optional().nullable(),
     primaryRestaurant: z.string().optional().nullable(),
-    dishesMentioned: z.string().optional().nullable(),
+    dishesMentioned: z.array(z.string()),
     isSubjective: z.boolean(),
     attemptedLinkToRestaurantsMentioned: z.boolean(),
     extractedAt: z.date(),

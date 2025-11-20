@@ -31,6 +31,6 @@ export interface PostExtractionInput {
 export interface RestaurantExtractionResult {
   restaurantsMentioned: string | null;
   primaryRestaurant: string | null;
-  dishesMentioned: string | null;
+  dishesMentioned: string[];
   isSubjective: boolean;
 }

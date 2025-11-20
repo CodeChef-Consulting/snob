@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "generatorVersion": "0.0.0",
-  "generatedAt": "2025-11-20T08:42:54.378Z",
+  "generatedAt": "2025-11-20T17:57:55.607Z",
   "outputPath": "/Users/jeremytong/reddit-scraper/apps/server/src/generated",
   "files": [
     "schemas/enums/TransactionIsolationLevel.schema.ts",
@@ -266,8 +266,10 @@
     "schemas/objects/CommentUpdateManyWithoutRestaurantsMentionedNestedInput.schema.ts",
     "schemas/objects/PostUncheckedUpdateManyWithoutRestaurantsMentionedNestedInput.schema.ts",
     "schemas/objects/CommentUncheckedUpdateManyWithoutRestaurantsMentionedNestedInput.schema.ts",
+    "schemas/objects/RestaurantExtractionCreatedishesMentionedInput.schema.ts",
     "schemas/objects/PostCreateNestedOneWithoutRestaurantExtractionInput.schema.ts",
     "schemas/objects/CommentCreateNestedOneWithoutRestaurantExtractionInput.schema.ts",
+    "schemas/objects/RestaurantExtractionUpdatedishesMentionedInput.schema.ts",
     "schemas/objects/PostUpdateOneWithoutRestaurantExtractionNestedInput.schema.ts",
     "schemas/objects/CommentUpdateOneWithoutRestaurantExtractionNestedInput.schema.ts",
     "schemas/objects/PostCreateNestedOneWithoutSentimentExtractionInput.schema.ts",

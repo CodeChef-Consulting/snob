@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
+import { RestaurantExtractionUpdatedishesMentionedInputObjectSchema as RestaurantExtractionUpdatedishesMentionedInputObjectSchema } from './RestaurantExtractionUpdatedishesMentionedInput.schema';
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
 import { PostUpdateOneWithoutRestaurantExtractionNestedInputObjectSchema as PostUpdateOneWithoutRestaurantExtractionNestedInputObjectSchema } from './PostUpdateOneWithoutRestaurantExtractionNestedInput.schema'
@@ -8,7 +9,7 @@ import { PostUpdateOneWithoutRestaurantExtractionNestedInputObjectSchema as Post
 const makeSchema = () => z.object({
   restaurantsMentioned: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   primaryRestaurant: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
-  dishesMentioned: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
+  dishesMentioned: z.union([z.lazy(() => RestaurantExtractionUpdatedishesMentionedInputObjectSchema), z.string().array()]).optional(),
   isSubjective: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   attemptedLinkToRestaurantsMentioned: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   extractedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
