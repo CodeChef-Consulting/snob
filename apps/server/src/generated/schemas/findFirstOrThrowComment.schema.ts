@@ -34,6 +34,7 @@ export const CommentFindFirstOrThrowSelectSchema: z.ZodType<Prisma.CommentSelect
     scrapingSessionId: z.boolean().optional(),
     files: z.boolean().optional(),
     restaurantsMentioned: z.boolean().optional(),
+    restaurantGroupsMentioned: z.boolean().optional(),
     restaurantExtraction: z.boolean().optional(),
     sentimentExtraction: z.boolean().optional(),
     _count: z.boolean().optional()
@@ -64,6 +65,7 @@ export const CommentFindFirstOrThrowSelectZodSchema = z.object({
     scrapingSessionId: z.boolean().optional(),
     files: z.boolean().optional(),
     restaurantsMentioned: z.boolean().optional(),
+    restaurantGroupsMentioned: z.boolean().optional(),
     restaurantExtraction: z.boolean().optional(),
     sentimentExtraction: z.boolean().optional(),
     _count: z.boolean().optional()

@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { CommentUncheckedCreateNestedManyWithoutParentCommentInputObjectSchema as CommentUncheckedCreateNestedManyWithoutParentCommentInputObjectSchema } from './CommentUncheckedCreateNestedManyWithoutParentCommentInput.schema';
 import { FileUncheckedCreateNestedManyWithoutCommentInputObjectSchema as FileUncheckedCreateNestedManyWithoutCommentInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutCommentInput.schema';
 import { RestaurantUncheckedCreateNestedManyWithoutCommentsInputObjectSchema as RestaurantUncheckedCreateNestedManyWithoutCommentsInputObjectSchema } from './RestaurantUncheckedCreateNestedManyWithoutCommentsInput.schema';
+import { RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInputObjectSchema as RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInputObjectSchema } from './RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInput.schema';
 import { RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema as RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema } from './RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInput.schema'
 
 const makeSchema = () => z.object({
@@ -27,6 +28,7 @@ const makeSchema = () => z.object({
   replies: z.lazy(() => CommentUncheckedCreateNestedManyWithoutParentCommentInputObjectSchema).optional(),
   files: z.lazy(() => FileUncheckedCreateNestedManyWithoutCommentInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutCommentsInputObjectSchema).optional(),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema).optional()
 }).strict();
 export const CommentUncheckedCreateWithoutSentimentExtractionInputObjectSchema: z.ZodType<Prisma.CommentUncheckedCreateWithoutSentimentExtractionInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentUncheckedCreateWithoutSentimentExtractionInput>;

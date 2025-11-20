@@ -1,0 +1,40 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { RestaurantGroupIncludeObjectSchema as RestaurantGroupIncludeObjectSchema } from './objects/RestaurantGroupInclude.schema';
+import { RestaurantGroupOrderByWithRelationInputObjectSchema as RestaurantGroupOrderByWithRelationInputObjectSchema } from './objects/RestaurantGroupOrderByWithRelationInput.schema';
+import { RestaurantGroupWhereInputObjectSchema as RestaurantGroupWhereInputObjectSchema } from './objects/RestaurantGroupWhereInput.schema';
+import { RestaurantGroupWhereUniqueInputObjectSchema as RestaurantGroupWhereUniqueInputObjectSchema } from './objects/RestaurantGroupWhereUniqueInput.schema';
+import { RestaurantGroupScalarFieldEnumSchema } from './enums/RestaurantGroupScalarFieldEnum.schema';
+
+// Select schema needs to be in file to prevent circular imports
+//------------------------------------------------------
+
+export const RestaurantGroupFindManySelectSchema: z.ZodType<Prisma.RestaurantGroupSelect> = z.object({
+    id: z.boolean().optional(),
+    name: z.boolean().optional(),
+    rawScore: z.boolean().optional(),
+    normalizedScore: z.boolean().optional(),
+    createdAt: z.boolean().optional(),
+    updatedAt: z.boolean().optional(),
+    locations: z.boolean().optional(),
+    posts: z.boolean().optional(),
+    comments: z.boolean().optional(),
+    _count: z.boolean().optional()
+  }).strict() as unknown as z.ZodType<Prisma.RestaurantGroupSelect>;
+
+export const RestaurantGroupFindManySelectZodSchema = z.object({
+    id: z.boolean().optional(),
+    name: z.boolean().optional(),
+    rawScore: z.boolean().optional(),
+    normalizedScore: z.boolean().optional(),
+    createdAt: z.boolean().optional(),
+    updatedAt: z.boolean().optional(),
+    locations: z.boolean().optional(),
+    posts: z.boolean().optional(),
+    comments: z.boolean().optional(),
+    _count: z.boolean().optional()
+  }).strict();
+
+export const RestaurantGroupFindManySchema: z.ZodType<Prisma.RestaurantGroupFindManyArgs> = z.object({ select: RestaurantGroupFindManySelectSchema.optional(), include: z.lazy(() => RestaurantGroupIncludeObjectSchema.optional()), orderBy: z.union([RestaurantGroupOrderByWithRelationInputObjectSchema, RestaurantGroupOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantGroupWhereInputObjectSchema.optional(), cursor: RestaurantGroupWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([RestaurantGroupScalarFieldEnumSchema, RestaurantGroupScalarFieldEnumSchema.array()]).optional() }).strict() as unknown as z.ZodType<Prisma.RestaurantGroupFindManyArgs>;
+
+export const RestaurantGroupFindManyZodSchema = z.object({ select: RestaurantGroupFindManySelectSchema.optional(), include: z.lazy(() => RestaurantGroupIncludeObjectSchema.optional()), orderBy: z.union([RestaurantGroupOrderByWithRelationInputObjectSchema, RestaurantGroupOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantGroupWhereInputObjectSchema.optional(), cursor: RestaurantGroupWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), distinct: z.union([RestaurantGroupScalarFieldEnumSchema, RestaurantGroupScalarFieldEnumSchema.array()]).optional() }).strict();

@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { CommentUncheckedCreateNestedManyWithoutParentCommentInputObjectSchema as CommentUncheckedCreateNestedManyWithoutParentCommentInputObjectSchema } from './CommentUncheckedCreateNestedManyWithoutParentCommentInput.schema';
 import { FileUncheckedCreateNestedManyWithoutCommentInputObjectSchema as FileUncheckedCreateNestedManyWithoutCommentInputObjectSchema } from './FileUncheckedCreateNestedManyWithoutCommentInput.schema';
 import { RestaurantUncheckedCreateNestedManyWithoutCommentsInputObjectSchema as RestaurantUncheckedCreateNestedManyWithoutCommentsInputObjectSchema } from './RestaurantUncheckedCreateNestedManyWithoutCommentsInput.schema';
+import { RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInputObjectSchema as RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInputObjectSchema } from './RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInput.schema';
 import { RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema as RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema } from './RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInput.schema';
 import { SentimentExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema as SentimentExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema } from './SentimentExtractionUncheckedCreateNestedOneWithoutCommentInput.schema'
 
@@ -27,6 +28,7 @@ const makeSchema = () => z.object({
   replies: z.lazy(() => CommentUncheckedCreateNestedManyWithoutParentCommentInputObjectSchema).optional(),
   files: z.lazy(() => FileUncheckedCreateNestedManyWithoutCommentInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUncheckedCreateNestedManyWithoutCommentsInputObjectSchema).optional(),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUncheckedCreateNestedManyWithoutCommentsInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUncheckedCreateNestedOneWithoutCommentInputObjectSchema).optional()
 }).strict();

@@ -23,6 +23,7 @@ export const PostAggregateResultSchema = z.object({  _count: z.object({
     comments: z.number(),
     files: z.number(),
     restaurantsMentioned: z.number(),
+    restaurantGroupsMentioned: z.number(),
     restaurantExtraction: z.number(),
     sentimentExtraction: z.number()
   }).optional(),

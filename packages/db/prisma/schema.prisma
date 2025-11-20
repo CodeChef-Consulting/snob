@@ -47,11 +47,12 @@ model Post {
   commentsLastScrapedAt DateTime? // When comments were last fetched
   commentsFullyScraped  Boolean   @default(false) // All nested comments fetched
 
-  comments             Comment[]
-  files                File[]
-  restaurantsMentioned Restaurant[]
-  restaurantExtraction RestaurantExtraction?
-  sentimentExtraction  SentimentExtraction?
+  comments                  Comment[]
+  files                     File[]
+  restaurantsMentioned      Restaurant[]
+  restaurantGroupsMentioned RestaurantGroup[]
+  restaurantExtraction      RestaurantExtraction?
+  sentimentExtraction       SentimentExtraction?
 
   @@index([scrapingSessionId])
   @@index([commentsFullyScraped]) // For querying posts that need comment scraping
@@ -81,10 +82,11 @@ model Comment {
   scrapingSession   ScrapingSession? @relation(fields: [scrapingSessionId], references: [id])
   scrapingSessionId Int?
 
-  files                File[]
-  restaurantsMentioned Restaurant[]
-  restaurantExtraction RestaurantExtraction?
-  sentimentExtraction  SentimentExtraction?
+  files                     File[]
+  restaurantsMentioned      Restaurant[]
+  restaurantGroupsMentioned RestaurantGroup[]
+  restaurantExtraction      RestaurantExtraction?
+  sentimentExtraction       SentimentExtraction?
 
   @@index([scrapingSessionId])
   @@index([parentExternalId])
@@ -130,6 +132,48 @@ model Restaurant {
   @@index([googlePlaceId])
   @@index([rawScore])
   @@index([normalizedScore])
+  @@index([latitude, longitude])
+}
+
+model RestaurantGroup {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique // Canonical name: "In-N-Out Burger", "Guisados", "Clark Street Diner"
+  rawScore        Float?   // Raw mathematical score from sentiment analysis (unbounded, typically -20 to +20)
+  normalizedScore Float?   // Normalized score 0-10, centered at 7 (computed from rawScore distribution)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  locations RestaurantLocation[]
+  posts     Post[]
+  comments  Comment[]
+
+  @@index([rawScore])
+  @@index([normalizedScore])
+  @@index([name])
+}
+
+model RestaurantLocation {
+  id            Int      @id @default(autoincrement())
+  name          String   // Original name from data source
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  latitude      Float?
+  longitude     Float?
+  source        String   @default("Open Data Portal") // "Open Data Portal" or "Google Places API"
+  googlePlaceId String?  @unique // Google Places ID for API lookups
+  lookupAliases String[] @default([]) // Array of alternative names for exact matching
+  metadata      Json?    // Phone, website, rating, priceLevel, types, etc.
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  group   RestaurantGroup @relation(fields: [groupId], references: [id])
+  groupId Int // Every location belongs to exactly one group
+
+  @@index([source])
+  @@index([googlePlaceId])
+  @@index([groupId])
   @@index([latitude, longitude])
 }
 

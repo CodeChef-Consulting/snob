@@ -32,6 +32,51 @@ type RestaurantGroupDuplicate = Restaurant & {
 };
 
 /**
+ * Normalize address for better matching by:
+ * - Removing suite/unit/apt numbers
+ * - Expanding directional abbreviations (N->North, S->South, etc.)
+ * - Expanding street type abbreviations (St->Street, Ave->Avenue, etc.)
+ * - Normalizing spacing and case
+ */
+function normalizeAddress(address: string | null): string | null {
+  if (!address) return null;
+
+  let normalized = address.toLowerCase().trim();
+
+  // Remove suite/unit/apartment designations and everything after
+  normalized = normalized.replace(/\s+(suite|ste|unit|apt|apartment|#)\s+.*/i, '');
+
+  // Expand directional abbreviations (must have word boundaries)
+  normalized = normalized.replace(/\bn\b/g, 'north');
+  normalized = normalized.replace(/\bs\b/g, 'south');
+  normalized = normalized.replace(/\be\b/g, 'east');
+  normalized = normalized.replace(/\bw\b/g, 'west');
+  normalized = normalized.replace(/\bne\b/g, 'northeast');
+  normalized = normalized.replace(/\bnw\b/g, 'northwest');
+  normalized = normalized.replace(/\bse\b/g, 'southeast');
+  normalized = normalized.replace(/\bsw\b/g, 'southwest');
+
+  // Expand street type abbreviations
+  normalized = normalized.replace(/\bst\b/g, 'street');
+  normalized = normalized.replace(/\bave\b/g, 'avenue');
+  normalized = normalized.replace(/\bblvd\b/g, 'boulevard');
+  normalized = normalized.replace(/\bdr\b/g, 'drive');
+  normalized = normalized.replace(/\brd\b/g, 'road');
+  normalized = normalized.replace(/\bln\b/g, 'lane');
+  normalized = normalized.replace(/\bct\b/g, 'court');
+  normalized = normalized.replace(/\bpl\b/g, 'place');
+  normalized = normalized.replace(/\bpkwy\b/g, 'parkway');
+  normalized = normalized.replace(/\bcir\b/g, 'circle');
+  normalized = normalized.replace(/\bter\b/g, 'terrace');
+  normalized = normalized.replace(/\bway\b/g, 'way');
+
+  // Normalize spacing
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  return normalized;
+}
+
+/**
  * Find duplicates in a batch of restaurants
  */
 async function findDuplicatesInBatch(
@@ -43,23 +88,9 @@ async function findDuplicatesInBatch(
   for (const r1 of batch) {
     if (processed.has(r1.id)) continue; // Skip if already in a group
 
-    // Find ALL candidates similar to r1
-    const candidates = await prisma.$queryRaw<
-      Array<
-        Restaurant & {
-          name_sim: number;
-          addr_sim: number | null;
-        }
-      >
-    >`
-      SELECT
-        r.*,
-        similarity(r.name, ${r1.name}) as name_sim,
-        CASE
-          WHEN r.address IS NOT NULL AND ${r1.address}::text IS NOT NULL
-          THEN similarity(r.address, ${r1.address}::text)
-          ELSE NULL
-        END as addr_sim
+    // Find ALL candidates similar to r1 by name
+    const candidates = await prisma.$queryRaw<Restaurant[]>`
+      SELECT r.*
       FROM "Restaurant" r
       WHERE r.id != ${r1.id}
         AND similarity(r.name, ${r1.name}) > 0.85
@@ -74,11 +105,29 @@ async function findDuplicatesInBatch(
       },
     ];
 
+    // Calculate name similarity and address similarity using normalized addresses
+    const normalizedR1Address = normalizeAddress(r1.address);
+
     for (const candidate of candidates) {
       if (processed.has(candidate.id)) continue; // Skip if already in a group
 
-      const nameSim = candidate.name_sim;
-      const addrSim = candidate.addr_sim;
+      // Calculate name similarity using pg_trgm
+      const nameSimilarityResult = await prisma.$queryRaw<Array<{ similarity: number }>>`
+        SELECT similarity(${r1.name}, ${candidate.name}) as similarity
+      `;
+      const nameSim = nameSimilarityResult[0]?.similarity ?? 0;
+
+      // Calculate address similarity using normalized addresses
+      let addrSim: number | null = null;
+      if (r1.address && candidate.address) {
+        const normalizedCandidateAddress = normalizeAddress(candidate.address);
+        if (normalizedR1Address && normalizedCandidateAddress) {
+          const addrSimilarityResult = await prisma.$queryRaw<Array<{ similarity: number }>>`
+            SELECT similarity(${normalizedR1Address}, ${normalizedCandidateAddress}) as similarity
+          `;
+          addrSim = addrSimilarityResult[0]?.similarity ?? 0;
+        }
+      }
 
       // If both have addresses, require high address similarity too
       const isAddressMatch =
@@ -87,9 +136,8 @@ async function findDuplicatesInBatch(
           : true;
 
       if (isAddressMatch) {
-        const { name_sim, addr_sim, ...rest } = candidate;
         matchingRestaurants.push({
-          ...rest,
+          ...candidate,
           nameSimilarity: nameSim,
           addressSimilarity: addrSim,
         });

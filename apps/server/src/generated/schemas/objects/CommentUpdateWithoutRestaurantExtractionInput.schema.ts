@@ -12,6 +12,7 @@ import { CommentUpdateManyWithoutParentCommentNestedInputObjectSchema as Comment
 import { ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema as ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema } from './ScrapingSessionUpdateOneWithoutCommentsNestedInput.schema';
 import { FileUpdateManyWithoutCommentNestedInputObjectSchema as FileUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUpdateManyWithoutCommentNestedInput.schema';
 import { RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutCommentsNestedInput.schema';
+import { RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantGroupUpdateManyWithoutCommentsNestedInput.schema';
 import { SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema as SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './SentimentExtractionUpdateOneWithoutCommentNestedInput.schema'
 
 const makeSchema = () => z.object({
@@ -35,6 +36,7 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutCommentNestedInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional()
 }).strict();
 export const CommentUpdateWithoutRestaurantExtractionInputObjectSchema: z.ZodType<Prisma.CommentUpdateWithoutRestaurantExtractionInput> = makeSchema() as unknown as z.ZodType<Prisma.CommentUpdateWithoutRestaurantExtractionInput>;

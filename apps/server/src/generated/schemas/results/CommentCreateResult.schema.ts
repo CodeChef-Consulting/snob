@@ -24,6 +24,7 @@ export const CommentCreateResultSchema = z.object({
   scrapingSessionId: z.number().int().optional(),
   files: z.array(z.unknown()),
   restaurantsMentioned: z.array(z.unknown()),
+  restaurantGroupsMentioned: z.array(z.unknown()),
   restaurantExtraction: z.unknown().optional(),
   sentimentExtraction: z.unknown().optional()
 });

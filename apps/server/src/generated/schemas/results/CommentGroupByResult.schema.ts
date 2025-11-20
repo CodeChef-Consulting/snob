@@ -43,6 +43,7 @@ export const CommentGroupByResultSchema = z.array(z.object({
     scrapingSessionId: z.number(),
     files: z.number(),
     restaurantsMentioned: z.number(),
+    restaurantGroupsMentioned: z.number(),
     restaurantExtraction: z.number(),
     sentimentExtraction: z.number()
   }).optional(),

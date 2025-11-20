@@ -1,0 +1,14 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { RestaurantGroupOrderByWithRelationInputObjectSchema as RestaurantGroupOrderByWithRelationInputObjectSchema } from './objects/RestaurantGroupOrderByWithRelationInput.schema';
+import { RestaurantGroupWhereInputObjectSchema as RestaurantGroupWhereInputObjectSchema } from './objects/RestaurantGroupWhereInput.schema';
+import { RestaurantGroupWhereUniqueInputObjectSchema as RestaurantGroupWhereUniqueInputObjectSchema } from './objects/RestaurantGroupWhereUniqueInput.schema';
+import { RestaurantGroupCountAggregateInputObjectSchema as RestaurantGroupCountAggregateInputObjectSchema } from './objects/RestaurantGroupCountAggregateInput.schema';
+import { RestaurantGroupMinAggregateInputObjectSchema as RestaurantGroupMinAggregateInputObjectSchema } from './objects/RestaurantGroupMinAggregateInput.schema';
+import { RestaurantGroupMaxAggregateInputObjectSchema as RestaurantGroupMaxAggregateInputObjectSchema } from './objects/RestaurantGroupMaxAggregateInput.schema';
+import { RestaurantGroupAvgAggregateInputObjectSchema as RestaurantGroupAvgAggregateInputObjectSchema } from './objects/RestaurantGroupAvgAggregateInput.schema';
+import { RestaurantGroupSumAggregateInputObjectSchema as RestaurantGroupSumAggregateInputObjectSchema } from './objects/RestaurantGroupSumAggregateInput.schema';
+
+export const RestaurantGroupAggregateSchema: z.ZodType<Prisma.RestaurantGroupAggregateArgs> = z.object({ orderBy: z.union([RestaurantGroupOrderByWithRelationInputObjectSchema, RestaurantGroupOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantGroupWhereInputObjectSchema.optional(), cursor: RestaurantGroupWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), RestaurantGroupCountAggregateInputObjectSchema ]).optional(), _min: RestaurantGroupMinAggregateInputObjectSchema.optional(), _max: RestaurantGroupMaxAggregateInputObjectSchema.optional(), _avg: RestaurantGroupAvgAggregateInputObjectSchema.optional(), _sum: RestaurantGroupSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.RestaurantGroupAggregateArgs>;
+
+export const RestaurantGroupAggregateZodSchema = z.object({ orderBy: z.union([RestaurantGroupOrderByWithRelationInputObjectSchema, RestaurantGroupOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantGroupWhereInputObjectSchema.optional(), cursor: RestaurantGroupWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), RestaurantGroupCountAggregateInputObjectSchema ]).optional(), _min: RestaurantGroupMinAggregateInputObjectSchema.optional(), _max: RestaurantGroupMaxAggregateInputObjectSchema.optional(), _avg: RestaurantGroupAvgAggregateInputObjectSchema.optional(), _sum: RestaurantGroupSumAggregateInputObjectSchema.optional() }).strict();

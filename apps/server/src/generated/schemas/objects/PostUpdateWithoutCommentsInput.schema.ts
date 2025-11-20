@@ -10,6 +10,7 @@ import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperations
 import { ScrapingSessionUpdateOneWithoutPostsNestedInputObjectSchema as ScrapingSessionUpdateOneWithoutPostsNestedInputObjectSchema } from './ScrapingSessionUpdateOneWithoutPostsNestedInput.schema';
 import { FileUpdateManyWithoutPostNestedInputObjectSchema as FileUpdateManyWithoutPostNestedInputObjectSchema } from './FileUpdateManyWithoutPostNestedInput.schema';
 import { RestaurantUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutPostsNestedInput.schema';
+import { RestaurantGroupUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantGroupUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantGroupUpdateManyWithoutPostsNestedInput.schema';
 import { RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutPostNestedInput.schema';
 import { SentimentExtractionUpdateOneWithoutPostNestedInputObjectSchema as SentimentExtractionUpdateOneWithoutPostNestedInputObjectSchema } from './SentimentExtractionUpdateOneWithoutPostNestedInput.schema'
 
@@ -34,6 +35,7 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionUpdateOneWithoutPostsNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutPostNestedInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutPostsNestedInputObjectSchema).optional(),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUpdateManyWithoutPostsNestedInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutPostNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUpdateOneWithoutPostNestedInputObjectSchema).optional()
 }).strict();

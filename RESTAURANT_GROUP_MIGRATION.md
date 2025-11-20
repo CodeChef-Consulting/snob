@@ -17,17 +17,19 @@ Represents a restaurant brand/concept (whether single-location or chain).
 
 ```prisma
 model RestaurantGroup {
-  id            Int      @id @default(autoincrement())
-  name          String   @unique // Canonical name: "In-N-Out Burger", "Guisados", "Clark Street Diner"
-  rawScore      Float?   // Consolidated sentiment score for entire group
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  name            String   @unique // Canonical name: "In-N-Out Burger", "Guisados", "Clark Street Diner"
+  rawScore        Float?   // Raw mathematical score from sentiment analysis (unbounded, typically -20 to +20)
+  normalizedScore Float?   // Normalized score 0-10, centered at 7 (computed from rawScore distribution)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   locations     RestaurantLocation[]
   posts         Post[]
   comments      Comment[]
 
   @@index([rawScore])
+  @@index([normalizedScore])
   @@index([name])
 }
 ```
@@ -43,10 +45,12 @@ model RestaurantLocation {
   city            String?
   state           String?
   zipCode         String?
-  source          String           @default("Open Data Portal")
-  googlePlaceId   String?          @unique
-  lookupAliases   String?          // Alternative names for fuzzy matching
-  metadata        Json?            // Phone, website, rating, etc.
+  latitude        Float?
+  longitude       Float?
+  source          String           @default("Open Data Portal") // "Open Data Portal" or "Google Places API"
+  googlePlaceId   String?          @unique // Google Places ID for API lookups
+  lookupAliases   String[]         @default([]) // Array of alternative names for exact matching
+  metadata        Json?            // Phone, website, rating, priceLevel, types, etc.
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -56,6 +60,7 @@ model RestaurantLocation {
   @@index([source])
   @@index([googlePlaceId])
   @@index([groupId])
+  @@index([latitude, longitude])
 }
 ```
 
@@ -98,32 +103,89 @@ model Comment {
    - Don't delete old relations yet
    - Run `npm run db:push` to create new tables
 
-### Phase 2: Data Migration
-1. **Create initial groups and locations** (1:1 mapping)
-   ```typescript
-   // For each existing Restaurant:
-   // 1. Create a RestaurantGroup with same name
-   // 2. Create a RestaurantLocation linked to that group
-   // 3. Copy all fields (address, metadata, etc.)
-   ```
+### Phase 2: Data Migration (Smart Grouping Strategy)
 
-2. **Consolidate chain restaurants**
-   - Use fuzzy matching to identify chains (Subway, McDonald's, In-N-Out, etc.)
-   - Merge locations under shared `RestaurantGroup`
-   - Script: `src/scripts/consolidateChains.ts` (to be created)
+**Goal**: Create RestaurantGroups intelligently, prioritizing multi-location chains before single-location restaurants.
 
-3. **Verify data integrity**
-   ```sql
-   -- Every location should have a group
-   SELECT COUNT(*) FROM "RestaurantLocation" WHERE "groupId" IS NULL;
-   -- Should return 0
+#### Step 1: Process Known Chains (LA_CHAIN_RESTAURANTS.md)
+Use the canonical chain mapping from `LA_CHAIN_RESTAURANTS.md`:
 
-   -- Check group distribution
-   SELECT
-     COUNT(*) as location_count,
-     COUNT(DISTINCT "groupId") as group_count
-   FROM "RestaurantLocation";
-   ```
+```typescript
+// For each chain in LA_CHAIN_RESTAURANTS.md:
+// 1. Create ONE RestaurantGroup with canonical name
+// 2. Find all matching Restaurant records (using variations list)
+// 3. Create RestaurantLocation for each match, linked to the group
+// 4. Copy scores to the group (initially preserve best score from locations)
+```
+
+**Example**:
+- Canonical: `McDonald's`
+- Variations: "Mcdonalds", "Mc Donalds", "McDonald's", "Mcdonalds Restaurant"
+- Result: 1 RestaurantGroup + 83 RestaurantLocations
+
+#### Step 2: Fuzzy Match Remaining Multi-Location Restaurants
+Use PostgreSQL trigram similarity (pg_trgm) to find similar restaurant names:
+
+```sql
+-- Find potential chains not in LA_CHAIN_RESTAURANTS.md
+SELECT
+  normalized_name,
+  COUNT(*) as location_count,
+  array_agg(id) as restaurant_ids
+FROM (
+  SELECT
+    id,
+    LOWER(TRIM(REGEXP_REPLACE(name, '\s+\d+$', ''))) as normalized_name
+  FROM "Restaurant"
+  WHERE id NOT IN (SELECT id FROM already_grouped_restaurants)
+) normalized
+GROUP BY normalized_name
+HAVING COUNT(*) >= 3  -- Only consider 3+ locations
+ORDER BY COUNT(*) DESC;
+```
+
+**Validation**:
+- Manual review of fuzzy matches (similarity threshold: 0.85)
+- Generate review report: `potential_chains_review.json`
+- Apply approved consolidations
+
+#### Step 3: Create Single-Location Groups
+For all remaining ungrouped restaurants:
+
+```typescript
+// For each remaining Restaurant:
+// 1. Create RestaurantGroup with same name
+// 2. Create RestaurantLocation linked to that group
+// 3. This is a 1:1 mapping (restaurant = group)
+```
+
+**Note**: Even single-location restaurants get a RestaurantGroup for consistency.
+
+#### Step 4: Verify Data Integrity
+```sql
+-- Every location should have a group
+SELECT COUNT(*) FROM "RestaurantLocation" WHERE "groupId" IS NULL;
+-- Should return 0
+
+-- Check group distribution
+SELECT
+  COUNT(*) as total_locations,
+  COUNT(DISTINCT "groupId") as total_groups,
+  SUM(CASE WHEN location_count > 1 THEN 1 ELSE 0 END) as multi_location_groups,
+  SUM(CASE WHEN location_count = 1 THEN 1 ELSE 0 END) as single_location_groups
+FROM (
+  SELECT "groupId", COUNT(*) as location_count
+  FROM "RestaurantLocation"
+  GROUP BY "groupId"
+) grouped;
+
+-- Verify known chains are grouped correctly
+SELECT rg.name, COUNT(rl.id) as locations
+FROM "RestaurantGroup" rg
+JOIN "RestaurantLocation" rl ON rl."groupId" = rg.id
+WHERE rg.name IN ('McDonald''s', 'Subway', 'In-N-Out Burger')
+GROUP BY rg.name;
+```
 
 ### Phase 3: Migrate Relations
 1. **Copy post/comment links to new tables**
@@ -310,18 +372,39 @@ posts: {
 ## Scripts to Create
 
 ### `src/scripts/migrateToRestaurantGroups.ts`
-- Create initial 1:1 mapping of Restaurant → Group + Location
-- Preserve all data fields
+Main migration orchestrator with three phases:
 
-### `src/scripts/consolidateChains.ts`
-- Identify chain candidates using pattern matching
-- Generate review report with fuzzy matches
-- Apply approved consolidations
+**Phase 1: Process Known Chains**
+- Parse `LA_CHAIN_RESTAURANTS.md` for canonical names and variations
+- Create RestaurantGroups for each chain
+- Match existing Restaurants to variations
+- Create RestaurantLocations linked to groups
+- Track processed restaurant IDs
+
+**Phase 2: Fuzzy Match Remaining Multi-Location**
+- Query for normalized name duplicates (3+ locations)
+- Use pg_trgm similarity (threshold: 0.85)
+- Generate `potential_chains_review.json` for manual approval
+- Apply approved matches
+- Create groups and locations
+
+**Phase 3: Single-Location Groups**
+- For all remaining ungrouped Restaurants
+- Create 1:1 RestaurantGroup + RestaurantLocation mapping
+- Preserve all fields (name, address, scores, metadata)
+
+### `src/scripts/consolidateChains.ts` (Optional Enhancement)
+- Interactive CLI for reviewing fuzzy matches
+- Approve/reject potential chain consolidations
+- Update `potential_chains_review.json` with decisions
+- Re-run migration with approved changes
 
 ### `src/scripts/verifyMigration.ts`
-- Data integrity checks
-- Count comparisons (old vs new)
-- Score validation
+- Data integrity checks (all locations have groups)
+- Count comparisons (Restaurant vs RestaurantLocation)
+- Score validation (groups have scores from locations)
+- Chain verification (known chains grouped correctly)
+- Generate migration report with statistics
 
 ---
 

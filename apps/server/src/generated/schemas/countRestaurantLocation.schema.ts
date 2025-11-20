@@ -1,0 +1,10 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { RestaurantLocationOrderByWithRelationInputObjectSchema as RestaurantLocationOrderByWithRelationInputObjectSchema } from './objects/RestaurantLocationOrderByWithRelationInput.schema';
+import { RestaurantLocationWhereInputObjectSchema as RestaurantLocationWhereInputObjectSchema } from './objects/RestaurantLocationWhereInput.schema';
+import { RestaurantLocationWhereUniqueInputObjectSchema as RestaurantLocationWhereUniqueInputObjectSchema } from './objects/RestaurantLocationWhereUniqueInput.schema';
+import { RestaurantLocationCountAggregateInputObjectSchema as RestaurantLocationCountAggregateInputObjectSchema } from './objects/RestaurantLocationCountAggregateInput.schema';
+
+export const RestaurantLocationCountSchema: z.ZodType<Prisma.RestaurantLocationCountArgs> = z.object({ orderBy: z.union([RestaurantLocationOrderByWithRelationInputObjectSchema, RestaurantLocationOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantLocationWhereInputObjectSchema.optional(), cursor: RestaurantLocationWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), RestaurantLocationCountAggregateInputObjectSchema ]).optional() }).strict() as unknown as z.ZodType<Prisma.RestaurantLocationCountArgs>;
+
+export const RestaurantLocationCountZodSchema = z.object({ orderBy: z.union([RestaurantLocationOrderByWithRelationInputObjectSchema, RestaurantLocationOrderByWithRelationInputObjectSchema.array()]).optional(), where: RestaurantLocationWhereInputObjectSchema.optional(), cursor: RestaurantLocationWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), RestaurantLocationCountAggregateInputObjectSchema ]).optional() }).strict();

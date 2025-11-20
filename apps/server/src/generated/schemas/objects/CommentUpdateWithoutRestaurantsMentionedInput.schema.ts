@@ -11,6 +11,7 @@ import { CommentUpdateOneWithoutRepliesNestedInputObjectSchema as CommentUpdateO
 import { CommentUpdateManyWithoutParentCommentNestedInputObjectSchema as CommentUpdateManyWithoutParentCommentNestedInputObjectSchema } from './CommentUpdateManyWithoutParentCommentNestedInput.schema';
 import { ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema as ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema } from './ScrapingSessionUpdateOneWithoutCommentsNestedInput.schema';
 import { FileUpdateManyWithoutCommentNestedInputObjectSchema as FileUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUpdateManyWithoutCommentNestedInput.schema';
+import { RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantGroupUpdateManyWithoutCommentsNestedInput.schema';
 import { RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutCommentNestedInput.schema';
 import { SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema as SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './SentimentExtractionUpdateOneWithoutCommentNestedInput.schema'
 
@@ -34,6 +35,7 @@ const makeSchema = () => z.object({
   replies: z.lazy(() => CommentUpdateManyWithoutParentCommentNestedInputObjectSchema).optional(),
   scrapingSession: z.lazy(() => ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutCommentNestedInputObjectSchema).optional(),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional()
 }).strict();

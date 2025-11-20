@@ -4,6 +4,7 @@ import { ScrapingSessionArgsObjectSchema as ScrapingSessionArgsObjectSchema } fr
 import { CommentFindManySchema as CommentFindManySchema } from '../findManyComment.schema';
 import { FileFindManySchema as FileFindManySchema } from '../findManyFile.schema';
 import { RestaurantFindManySchema as RestaurantFindManySchema } from '../findManyRestaurant.schema';
+import { RestaurantGroupFindManySchema as RestaurantGroupFindManySchema } from '../findManyRestaurantGroup.schema';
 import { RestaurantExtractionArgsObjectSchema as RestaurantExtractionArgsObjectSchema } from './RestaurantExtractionArgs.schema';
 import { SentimentExtractionArgsObjectSchema as SentimentExtractionArgsObjectSchema } from './SentimentExtractionArgs.schema';
 import { PostCountOutputTypeArgsObjectSchema as PostCountOutputTypeArgsObjectSchema } from './PostCountOutputTypeArgs.schema'
@@ -32,6 +33,7 @@ const makeSchema = () => z.object({
   comments: z.union([z.boolean(), z.lazy(() => CommentFindManySchema)]).optional(),
   files: z.union([z.boolean(), z.lazy(() => FileFindManySchema)]).optional(),
   restaurantsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantFindManySchema)]).optional(),
+  restaurantGroupsMentioned: z.union([z.boolean(), z.lazy(() => RestaurantGroupFindManySchema)]).optional(),
   restaurantExtraction: z.union([z.boolean(), z.lazy(() => RestaurantExtractionArgsObjectSchema)]).optional(),
   sentimentExtraction: z.union([z.boolean(), z.lazy(() => SentimentExtractionArgsObjectSchema)]).optional(),
   _count: z.union([z.boolean(), z.lazy(() => PostCountOutputTypeArgsObjectSchema)]).optional()

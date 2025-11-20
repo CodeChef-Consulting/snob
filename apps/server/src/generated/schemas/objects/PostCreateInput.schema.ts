@@ -4,6 +4,7 @@ import { ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema as Scraping
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
 import { FileCreateNestedManyWithoutPostInputObjectSchema as FileCreateNestedManyWithoutPostInputObjectSchema } from './FileCreateNestedManyWithoutPostInput.schema';
 import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema';
+import { RestaurantGroupCreateNestedManyWithoutPostsInputObjectSchema as RestaurantGroupCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantGroupCreateNestedManyWithoutPostsInput.schema';
 import { RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema as RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema } from './RestaurantExtractionCreateNestedOneWithoutPostInput.schema';
 import { SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema as SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema } from './SentimentExtractionCreateNestedOneWithoutPostInput.schema'
 
@@ -28,6 +29,7 @@ const makeSchema = () => z.object({
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema),
   files: z.lazy(() => FileCreateNestedManyWithoutPostInputObjectSchema),
   restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupCreateNestedManyWithoutPostsInputObjectSchema),
   restaurantExtraction: z.lazy(() => RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema).optional()
 }).strict();

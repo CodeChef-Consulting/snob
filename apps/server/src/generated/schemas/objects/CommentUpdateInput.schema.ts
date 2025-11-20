@@ -12,6 +12,7 @@ import { CommentUpdateManyWithoutParentCommentNestedInputObjectSchema as Comment
 import { ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema as ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema } from './ScrapingSessionUpdateOneWithoutCommentsNestedInput.schema';
 import { FileUpdateManyWithoutCommentNestedInputObjectSchema as FileUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUpdateManyWithoutCommentNestedInput.schema';
 import { RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutCommentsNestedInput.schema';
+import { RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantGroupUpdateManyWithoutCommentsNestedInput.schema';
 import { RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema as RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './RestaurantExtractionUpdateOneWithoutCommentNestedInput.schema';
 import { SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema as SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './SentimentExtractionUpdateOneWithoutCommentNestedInput.schema'
 
@@ -36,6 +37,7 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutCommentNestedInputObjectSchema).optional(),
   restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
+  restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional()
 }).strict();
