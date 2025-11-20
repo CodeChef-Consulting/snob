@@ -100,6 +100,12 @@ importers:
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.5
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       tsx:
         specifier: ^4.7.0
         version: 4.20.6
@@ -109,6 +115,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@dotenvx/dotenvx':
+        specifier: ^1.51.0
+        version: 1.51.0
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -142,6 +151,9 @@ importers:
       zod:
         specifier: ^4.1.11
         version: 4.1.11
+      zustand:
+        specifier: ^5.0.8
+        version: 5.0.8(@types/react@19.2.6)(react@19.2.0)
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -3308,6 +3320,24 @@ packages:
 
   zod@4.1.11:
     resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
+
+  zustand@5.0.8:
+    resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
 snapshots:
 
@@ -6757,3 +6787,8 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zod@4.1.11: {}
+
+  zustand@5.0.8(@types/react@19.2.6)(react@19.2.0):
+    optionalDependencies:
+      '@types/react': 19.2.6
+      react: 19.2.0

@@ -5,6 +5,7 @@ import GoogleMapReact from 'google-map-react';
 import { useState, useRef } from 'react';
 import RestaurantSidebar from './RestaurantSidebar';
 import RestaurantSearch from './RestaurantSearch';
+import { useSearchStore } from '../store/searchStore';
 
 type Restaurant = {
   id: string;
@@ -82,6 +83,8 @@ export default function RestaurantMap() {
   const [additionalRestaurants, setAdditionalRestaurants] = useState<Restaurant[]>([]);
   const mapRef = useRef<any>(null);
 
+  const { searchResults, hasActiveSearch } = useSearchStore();
+
   const {
     data: restaurants,
     isLoading,
@@ -130,8 +133,28 @@ export default function RestaurantMap() {
   const validRestaurants =
     restaurants?.filter((r) => r.latitude !== null && r.longitude !== null) ?? [];
 
-  // Combine originally loaded restaurants with any additional ones from search
-  const allRestaurants = [...validRestaurants, ...additionalRestaurants];
+  // Convert search results to Restaurant type
+  const searchResultRestaurants: Restaurant[] = searchResults
+    .filter((r) => r.latitude !== null && r.longitude !== null)
+    .map((r) => ({
+      id: String(r.id),
+      name: r.name,
+      address: r.address,
+      city: r.city,
+      state: r.state,
+      zipCode: null,
+      latitude: r.latitude!,
+      longitude: r.longitude!,
+      source: 'search',
+      googlePlaceId: null,
+      normalizedScore: r.normalizedScore,
+      rawScore: null,
+    }));
+
+  // If there's an active search, show only search results; otherwise show default restaurants
+  const allRestaurants = hasActiveSearch
+    ? searchResultRestaurants
+    : [...validRestaurants, ...additionalRestaurants];
 
   const handleSelectRestaurant = (restaurant: { id: number; name: string; address: string | null; city: string | null; state: string | null; latitude: number | null; longitude: number | null; normalizedScore: number | null }) => {
     // Check if restaurant is already in the list
@@ -176,7 +199,9 @@ export default function RestaurantMap() {
           <div>
             <h1 className="text-2xl font-bold">Restaurant Map</h1>
             <p className="text-sm text-gray-600">
-              {validRestaurants.length} restaurants with coordinates
+              {hasActiveSearch
+                ? `${searchResultRestaurants.length} search results`
+                : `${validRestaurants.length} restaurants with coordinates`}
             </p>
           </div>
           <RestaurantSearch onSelectRestaurant={handleSelectRestaurant} />

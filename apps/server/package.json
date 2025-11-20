@@ -21,6 +21,8 @@
     "@dotenvx/dotenvx": "^1.51.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "tsx": "^4.7.0",
     "typescript": "^5.9.3"
   }

@@ -1,7 +1,236 @@
 import { z } from 'zod';
+import _ from 'lodash';
 import { publicProcedure, t } from './generated/routers/helpers/createRouter';
 
 export const restaurantRouter = t.router({
+  getRestaurantsByDish: publicProcedure
+    .input(
+      z.object({
+        dishName: z.string().min(3), // Minimum 3 characters to avoid useless searches
+        similarityThreshold: z.number().min(0).max(1).optional().default(0.3),
+        limit: z.number().min(1).max(50).optional().default(10),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { dishName, similarityThreshold, limit } = input;
+
+      // Step 1: Find all extractions with dishes that match the search term using trigram similarity
+      const extractionsWithDishes = await ctx.prisma.$queryRaw<
+        Array<{
+          id: number;
+          post_id: number | null;
+          comment_id: number | null;
+          dishes_mentioned: string[];
+          primary_restaurant: string | null;
+          dish_match: string;
+          similarity: number;
+        }>
+      >`
+        SELECT DISTINCT
+          e.id,
+          e."postId" as post_id,
+          e."commentId" as comment_id,
+          e."dishesMentioned" as dishes_mentioned,
+          e."primaryRestaurant" as primary_restaurant,
+          dish as dish_match,
+          similarity(dish, ${dishName}) as similarity
+        FROM "RestaurantExtraction" e,
+        LATERAL unnest(e."dishesMentioned") as dish
+        WHERE similarity(dish, ${dishName}) > ${similarityThreshold}
+        ORDER BY similarity DESC
+        LIMIT 100
+      `;
+
+      if (extractionsWithDishes.length === 0) {
+        return [];
+      }
+
+      // Step 2: Get the restaurant IDs from these extractions
+      const postIds = _.compact(_.map(extractionsWithDishes, 'post_id'));
+      const commentIds = _.compact(_.map(extractionsWithDishes, 'comment_id'));
+
+      // Step 3: Get posts with their linked restaurants (with full restaurant details)
+      const posts = await ctx.prisma.post.findMany({
+        where: {
+          id: { in: postIds },
+        },
+        select: {
+          id: true,
+          restaurantsMentioned: {
+            select: {
+              id: true,
+              name: true,
+              address: true,
+              city: true,
+              state: true,
+              latitude: true,
+              longitude: true,
+              normalizedScore: true,
+            },
+          },
+          sentimentExtraction: {
+            select: {
+              rawAiScore: true,
+            },
+          },
+        },
+      });
+
+      // Step 4: Get comments with their linked restaurants (with full restaurant details)
+      const comments = await ctx.prisma.comment.findMany({
+        where: {
+          id: { in: commentIds },
+        },
+        select: {
+          id: true,
+          restaurantsMentioned: {
+            select: {
+              id: true,
+              name: true,
+              address: true,
+              city: true,
+              state: true,
+              latitude: true,
+              longitude: true,
+              normalizedScore: true,
+              rawScore: true,
+            },
+          },
+          sentimentExtraction: {
+            select: {
+              rawAiScore: true,
+            },
+          },
+        },
+      });
+
+      // Step 5: Build restaurant scoring map
+      type RestaurantDetails = {
+        id: number;
+        name: string;
+        address: string | null;
+        city: string | null;
+        state: string | null;
+        latitude: number | null;
+        longitude: number | null;
+        normalizedScore: number | null;
+      };
+
+      const restaurantScores = new Map<
+        number,
+        {
+          restaurant: RestaurantDetails;
+          dishMatches: string[];
+          sentiments: number[];
+          mentions: number;
+        }
+      >();
+
+      _.forEach(extractionsWithDishes, (extraction) => {
+        let restaurants: RestaurantDetails[] = [];
+        let sentiment: number | null = null;
+
+        if (extraction.post_id) {
+          const post = _.find(posts, { id: extraction.post_id });
+          if (post) {
+            restaurants = post.restaurantsMentioned;
+            sentiment = _.get(post, 'sentimentExtraction.rawAiScore', null);
+          }
+        } else if (extraction.comment_id) {
+          const comment = _.find(comments, { id: extraction.comment_id });
+          if (comment) {
+            restaurants = comment.restaurantsMentioned;
+            sentiment = _.get(comment, 'sentimentExtraction.rawAiScore', null);
+          }
+        }
+
+        // Only count if exactly one restaurant is mentioned (to avoid ambiguity)
+        if (restaurants.length === 1) {
+          const restaurant = restaurants[0];
+          if (restaurant && !restaurantScores.has(restaurant.id)) {
+            restaurantScores.set(restaurant.id, {
+              restaurant: restaurant,
+              dishMatches: [],
+              sentiments: [],
+              mentions: 0,
+            });
+          }
+
+          if (restaurant) {
+            const score = restaurantScores.get(restaurant.id)!;
+            score.mentions++;
+            if (!_.includes(score.dishMatches, extraction.dish_match)) {
+              score.dishMatches.push(extraction.dish_match);
+            }
+            if (sentiment !== null) {
+              score.sentiments.push(sentiment);
+            }
+          }
+        }
+      });
+
+      // Step 6: Calculate raw scores and normalize
+      const resultsWithRawScores = _.map(
+        Array.from(restaurantScores.values()),
+        (r) => {
+          const avgSentiment = _.isEmpty(r.sentiments)
+            ? null
+            : _.mean(r.sentiments);
+
+          // Calculate raw compound score using actual raw scores
+          // Dish sentiment ranges from -1 to 1, need to convert to 0-1 scale
+          // Restaurant normalizedScore is already 1-10 scale
+          const dishRawScore =
+            avgSentiment !== null
+              ? (avgSentiment + 1) / 2 // Convert -1 to 1 range into 0-1 scale
+              : 0.5; // Default to neutral if no sentiment
+          const restaurantRawScore = r.restaurant.normalizedScore
+            ? r.restaurant.normalizedScore / 10 // Convert 1-10 scale to 0-1
+            : 0.5; // Default to neutral if no overall score
+
+          // Weighted raw score: 30% dish-specific, 70% overall restaurant
+          const rawCompoundScore =
+            dishRawScore * 0.3 + restaurantRawScore * 0.7;
+
+          return {
+            ...r.restaurant,
+            dishMatches: r.dishMatches,
+            mentions: r.mentions,
+            avgSentiment,
+            sentimentCount: r.sentiments.length,
+            rawCompoundScore,
+          };
+        }
+      );
+
+      // Find min/max raw scores for normalization
+      const minRaw =
+        _.minBy(resultsWithRawScores, 'rawCompoundScore')?.rawCompoundScore ??
+        0;
+      const maxRaw =
+        _.maxBy(resultsWithRawScores, 'rawCompoundScore')?.rawCompoundScore ??
+        1;
+      const range = maxRaw - minRaw;
+
+      // Normalize to 0-100 scale
+      const results = _.map(resultsWithRawScores, (r) => ({
+        ...r,
+        compoundScore:
+          range > 0
+            ? ((r.rawCompoundScore - minRaw) / range) * 100 // Scale to 0-100
+            : 50, // If all scores are the same, default to middle
+      }));
+
+      // Sort by compound score DESC (highest first), then by mentions
+      const sortedResults = _.orderBy(
+        results,
+        ['compoundScore', 'mentions'],
+        ['desc', 'desc']
+      );
+
+      return _.take(sortedResults, limit);
+    }),
+
   getRestaurantDishes: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -78,42 +307,38 @@ export const restaurantRouter = t.router({
       // Extract dishes with sentiment scores
       const dishSentiments = new Map<string, number[]>();
 
-      posts.forEach((post) => {
+      _.forEach(posts, (post) => {
         const extraction = post.restaurantExtraction;
-        const sentiment = post.sentimentExtraction?.rawAiScore;
+        const sentiment = _.get(post, 'sentimentExtraction.rawAiScore');
 
         // Only include dishes if exactly one restaurant is mentioned
-        if (
-          extraction?.dishesMentioned &&
-          extraction.dishesMentioned.length > 0
-        ) {
-          extraction.dishesMentioned.forEach((dish) => {
+        if (!_.isEmpty(extraction?.dishesMentioned)) {
+          _.forEach(extraction!.dishesMentioned, (dish) => {
             if (!dishSentiments.has(dish)) {
               dishSentiments.set(dish, []);
             }
-            if (sentiment !== null && sentiment !== undefined) {
+            if (!_.isNil(sentiment)) {
               dishSentiments.get(dish)!.push(sentiment);
             }
           });
         }
       });
 
-      comments.forEach((comment) => {
+      _.forEach(comments, (comment) => {
         const extraction = comment.restaurantExtraction;
-        const sentiment = comment.sentimentExtraction?.rawAiScore;
+        const sentiment = _.get(comment, 'sentimentExtraction.rawAiScore');
 
         // Only include dishes if exactly one restaurant is mentioned
         if (
-          extraction?.dishesMentioned &&
-          extraction.dishesMentioned.length > 0 &&
+          !_.isEmpty(extraction?.dishesMentioned) &&
           comment.post.restaurantsMentioned.length === 1 &&
-          comment.post.restaurantsMentioned[0].id === input.id
+          comment.post.restaurantsMentioned[0]?.id === input.id
         ) {
-          extraction.dishesMentioned.forEach((dish) => {
+          _.forEach(extraction!.dishesMentioned, (dish) => {
             if (!dishSentiments.has(dish)) {
               dishSentiments.set(dish, []);
             }
-            if (sentiment !== null && sentiment !== undefined) {
+            if (!_.isNil(sentiment)) {
               dishSentiments.get(dish)!.push(sentiment);
             }
           });
@@ -121,26 +346,23 @@ export const restaurantRouter = t.router({
       });
 
       // Calculate average sentiment for each dish and sort
-      const dishesWithScores = Array.from(dishSentiments.entries()).map(
+      const dishesWithScores = _.map(
+        Array.from(dishSentiments.entries()),
         ([dish, sentiments]) => ({
           dish,
-          avgSentiment:
-            sentiments.length > 0
-              ? sentiments.reduce((sum, s) => sum + s, 0) / sentiments.length
-              : 0,
+          avgSentiment: _.isEmpty(sentiments) ? 0 : _.mean(sentiments),
           count: sentiments.length,
         })
       );
 
       // Sort by average sentiment (highest first), then alphabetically
-      dishesWithScores.sort((a, b) => {
-        if (b.avgSentiment !== a.avgSentiment) {
-          return b.avgSentiment - a.avgSentiment;
-        }
-        return a.dish.localeCompare(b.dish);
-      });
+      const sortedDishes = _.orderBy(
+        dishesWithScores,
+        ['avgSentiment', (d) => d.dish.toLowerCase()],
+        ['desc', 'asc']
+      );
 
-      return dishesWithScores.map((d) => d.dish);
+      return _.map(sortedDishes, 'dish');
     }),
 
   getRestaurantMentions: publicProcedure
@@ -194,31 +416,32 @@ export const restaurantRouter = t.router({
       });
 
       // Format mentions for display
-      const mentions = [
-        ...posts.map((post) => ({
-          id: `post-${post.id}`,
-          type: 'post' as const,
-          author: post.author,
-          body: post.body || post.title || '',
-          permalink: post.permalink,
-          score: post.score,
-          createdUtc: post.createdUtc,
-        })),
-        ...comments.map((comment) => ({
-          id: `comment-${comment.id}`,
-          type: 'comment' as const,
-          author: comment.author,
-          body: comment.body || '',
-          permalink: comment.permalink,
-          score: comment.score,
-          createdUtc: comment.createdUtc,
-          postTitle: comment.post?.title,
-        })),
-      ].sort((a, b) => {
-        const dateA = a.createdUtc ? new Date(a.createdUtc).getTime() : 0;
-        const dateB = b.createdUtc ? new Date(b.createdUtc).getTime() : 0;
-        return dateB - dateA; // Most recent first
-      });
+      const postMentions = _.map(posts, (post) => ({
+        id: `post-${post.id}`,
+        type: 'post' as const,
+        author: post.author,
+        body: post.body || post.title || '',
+        permalink: post.permalink,
+        score: post.score,
+        createdUtc: post.createdUtc,
+      }));
+
+      const commentMentions = _.map(comments, (comment) => ({
+        id: `comment-${comment.id}`,
+        type: 'comment' as const,
+        author: comment.author,
+        body: comment.body || '',
+        permalink: comment.permalink,
+        score: comment.score,
+        createdUtc: comment.createdUtc,
+        postTitle: comment.post?.title,
+      }));
+
+      const mentions = _.orderBy(
+        [...postMentions, ...commentMentions],
+        [(m) => (m.createdUtc ? new Date(m.createdUtc).getTime() : 0)],
+        ['desc']
+      );
 
       return mentions;
     }),

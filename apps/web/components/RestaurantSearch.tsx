@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { trpc } from '../lib/providers';
+import { useSearchStore } from '../store/searchStore';
 
 type Restaurant = {
   id: number;
@@ -18,15 +19,25 @@ type RestaurantSearchProps = {
   onSelectRestaurant: (restaurant: Restaurant) => void;
 };
 
-export default function RestaurantSearch({ onSelectRestaurant }: RestaurantSearchProps) {
+type SearchMode = 'restaurant' | 'dish';
+
+export default function RestaurantSearch({
+  onSelectRestaurant,
+}: RestaurantSearchProps) {
+  const [searchMode, setSearchMode] = useState<SearchMode>('restaurant');
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
+  const { setSearchResults, clearSearchResults, setHasActiveSearch } = useSearchStore();
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -35,30 +46,45 @@ export default function RestaurantSearch({ onSelectRestaurant }: RestaurantSearc
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const { data: searchResults, isLoading } = trpc.restaurant.findManyRestaurant.useQuery(
-    {
-      where: {
-        name: {
-          contains: searchQuery,
-          mode: 'insensitive',
-        },
-        latitude: { not: null },
-        longitude: { not: null },
-      },
-      orderBy: [
-        {
-          normalizedScore: {
-            sort: 'desc',
-            nulls: 'last',
+  // Restaurant search query
+  const { data: restaurantResults, isLoading: isLoadingRestaurants } =
+    trpc.restaurant.findManyRestaurant.useQuery(
+      {
+        where: {
+          name: {
+            contains: searchQuery,
+            mode: 'insensitive',
           },
+          latitude: { not: null },
+          longitude: { not: null },
         },
-      ],
-      take: 10,
-    },
-    {
-      enabled: searchQuery.length >= 2, // Only search if 2+ characters
-    }
-  );
+        orderBy: [
+          {
+            normalizedScore: {
+              sort: 'desc',
+              nulls: 'last',
+            },
+          },
+        ],
+        take: 20,
+      },
+      {
+        enabled: searchMode === 'restaurant' && searchQuery.length >= 2,
+      }
+    );
+
+  // Dish search query
+  const { data: dishResults, isLoading: isLoadingDishes } =
+    trpc.customRestaurant.getRestaurantsByDish.useQuery(
+      {
+        dishName: searchQuery,
+        similarityThreshold: 0.3,
+        limit: 20,
+      },
+      {
+        enabled: searchMode === 'dish' && searchQuery.length >= 3,
+      }
+    );
 
   const handleSelectRestaurant = (restaurant: Restaurant) => {
     setSearchQuery('');
@@ -68,18 +94,101 @@ export default function RestaurantSearch({ onSelectRestaurant }: RestaurantSearc
 
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
-    setIsOpen(value.length >= 2);
+    const minLength = searchMode === 'dish' ? 3 : 2;
+    setIsOpen(value.length >= minLength);
+
+    // Clear search results if query is too short
+    if (value.length < minLength) {
+      clearSearchResults();
+    }
   };
+
+  const handleModeChange = (mode: SearchMode) => {
+    setSearchMode(mode);
+    setSearchQuery('');
+    setIsOpen(false);
+    clearSearchResults();
+  };
+
+  const isLoading =
+    searchMode === 'restaurant' ? isLoadingRestaurants : isLoadingDishes;
+  const results = searchMode === 'restaurant' ? restaurantResults : dishResults;
+  const minQueryLength = searchMode === 'dish' ? 3 : 2;
+
+  // Update store when results change
+  useEffect(() => {
+    const minLength = searchMode === 'dish' ? 3 : 2;
+
+    if (searchQuery.length >= minLength) {
+      // Active search - set hasActiveSearch to true regardless of results
+      setHasActiveSearch(true);
+
+      // Update results (could be empty array if no matches)
+      if (results && results.length > 0) {
+        setSearchResults(results.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          address: r.address,
+          city: r.city,
+          state: r.state,
+          latitude: r.latitude,
+          longitude: r.longitude,
+          normalizedScore: r.normalizedScore,
+          dishMatches: r.dishMatches,
+          mentions: r.mentions,
+          avgSentiment: r.avgSentiment,
+          compoundScore: r.compoundScore,
+        })));
+      } else {
+        // No results found for this search
+        setSearchResults([]);
+      }
+    } else {
+      // No active search
+      clearSearchResults();
+    }
+  }, [results, searchQuery, searchMode, setSearchResults, clearSearchResults, setHasActiveSearch]);
 
   return (
     <div ref={searchRef} className="relative w-full max-w-md">
+      {/* Tab Buttons */}
+      <div className="flex mb-2 border-b border-gray-200">
+        <button
+          onClick={() => handleModeChange('restaurant')}
+          className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            searchMode === 'restaurant'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          By Restaurant
+        </button>
+        <button
+          onClick={() => handleModeChange('dish')}
+          className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            searchMode === 'dish'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          By Dish
+        </button>
+      </div>
+
+      {/* Search Input */}
       <div className="relative">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => handleInputChange(e.target.value)}
-          onFocus={() => searchQuery.length >= 2 && setIsOpen(true)}
-          placeholder="Search restaurants..."
+          onFocus={() =>
+            searchQuery.length >= minQueryLength && setIsOpen(true)
+          }
+          placeholder={
+            searchMode === 'restaurant'
+              ? 'Search restaurants...'
+              : 'Search dishes (e.g., tacos, pizza)...'
+          }
           className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -105,49 +214,114 @@ export default function RestaurantSearch({ onSelectRestaurant }: RestaurantSearc
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
           {isLoading ? (
             <div className="px-4 py-3 text-sm text-gray-500">Searching...</div>
-          ) : searchResults && searchResults.length > 0 ? (
+          ) : results && results.length > 0 ? (
             <ul className="divide-y divide-gray-100">
-              {searchResults.map((restaurant) => (
-                <li
-                  key={restaurant.id}
-                  onClick={() => handleSelectRestaurant(restaurant as Restaurant)}
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
-                        {restaurant.name}
-                      </div>
-                      {restaurant.address && (
-                        <div className="text-sm text-gray-500 truncate">
-                          {restaurant.address}
-                          {restaurant.city && `, ${restaurant.city}`}
-                          {restaurant.state && `, ${restaurant.state}`}
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-3 flex-shrink-0">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          restaurant.normalizedScore !== null
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
+              {searchMode === 'restaurant'
+                ? (results as typeof restaurantResults)?.map(
+                    (restaurant: any) => (
+                      <li
+                        key={restaurant.id}
+                        onClick={() =>
+                          handleSelectRestaurant(restaurant as Restaurant)
+                        }
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
-                        {restaurant.normalizedScore !== null
-                          ? restaurant.normalizedScore.toFixed(1)
-                          : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </li>
-              ))}
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {restaurant.name}
+                            </div>
+                            {restaurant.address && (
+                              <div className="text-sm text-gray-500 truncate">
+                                {restaurant.address}
+                                {restaurant.city && `, ${restaurant.city}`}
+                                {restaurant.state && `, ${restaurant.state}`}
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-3 flex-shrink-0">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                restaurant.normalizedScore !== null
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              {restaurant.normalizedScore !== null
+                                ? restaurant.normalizedScore.toFixed(1)
+                                : 'N/A'}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  )
+                : (results as NonNullable<typeof dishResults>)?.map(
+                    (result: any) => (
+                      <li
+                        key={result.id}
+                        onClick={() =>
+                          handleSelectRestaurant(
+                            result as unknown as Restaurant
+                          )
+                        }
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {result.name}
+                            </div>
+                            {result.address && (
+                              <div className="text-sm text-gray-500 truncate">
+                                {result.address}
+                                {result.city && `, ${result.city}`}
+                                {result.state && `, ${result.state}`}
+                              </div>
+                            )}
+                            <div className="text-sm text-blue-600 mt-1">
+                              <span className="font-medium">Dishes:</span>{' '}
+                              {result.dishMatches.join(', ')}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-0.5">
+                              {result.mentions} mention
+                              {result.mentions !== 1 ? 's' : ''}
+                              {result.avgSentiment !== null &&
+                                ` • Dish sentiment: ${((result.avgSentiment + 1) / 2 * 10).toFixed(1)}`}
+                              {result.normalizedScore !== null &&
+                                ` • Restaurant: ${result.normalizedScore.toFixed(1)}`}
+                            </div>
+                          </div>
+                          <div className="ml-3 flex-shrink-0">
+                            {result.compoundScore !== undefined && (
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  result.compoundScore >= 70
+                                    ? 'bg-green-100 text-green-800'
+                                    : result.compoundScore >= 50
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {result.compoundScore.toFixed(0)}% Match
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  )}
             </ul>
-          ) : searchQuery.length >= 2 ? (
+          ) : searchQuery.length >= minQueryLength ? (
             <div className="px-4 py-3 text-sm text-gray-500">
-              No restaurants found matching &quot;{searchQuery}&quot;
+              No {searchMode === 'restaurant' ? 'restaurants' : 'dishes'} found
+              matching &quot;{searchQuery}&quot;
             </div>
-          ) : null}
+          ) : (
+            <div className="px-4 py-3 text-sm text-gray-400">
+              Type at least {minQueryLength} characters to search
+            </div>
+          )}
         </div>
       )}
     </div>
