@@ -2,8 +2,9 @@
 
 import { trpc } from '../lib/providers';
 import GoogleMapReact from 'google-map-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import RestaurantSidebar from './RestaurantSidebar';
+import RestaurantSearch from './RestaurantSearch';
 
 type Restaurant = {
   id: string;
@@ -27,8 +28,12 @@ type MarkerProps = {
   onClick: () => void;
 };
 
-// Smooth color gradient from red (0) → yellow (5) → green (10)
-const getScoreColor = (score: number): string => {
+// Smooth color gradient from red (0) → yellow (5) → green (10), or gray for no score
+const getScoreColor = (score: number | null): string => {
+  if (score === null) {
+    return 'rgb(156, 163, 175)'; // gray-400
+  }
+
   const clampedScore = Math.max(0, Math.min(10, score));
 
   if (clampedScore < 5) {
@@ -49,7 +54,7 @@ const getScoreColor = (score: number): string => {
 };
 
 const Marker = ({ restaurant, onClick }: MarkerProps) => {
-  const score = restaurant.normalizedScore ?? 0;
+  const score = restaurant.normalizedScore;
   const color = getScoreColor(score);
 
   return (
@@ -62,7 +67,7 @@ const Marker = ({ restaurant, onClick }: MarkerProps) => {
         className="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold"
         style={{ backgroundColor: color }}
       >
-        {score.toFixed(1)}
+        {score !== null ? score.toFixed(1) : '?'}
       </div>
       <div
         className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-transparent mx-auto"
@@ -74,6 +79,8 @@ const Marker = ({ restaurant, onClick }: MarkerProps) => {
 
 export default function RestaurantMap() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
+  const [additionalRestaurants, setAdditionalRestaurants] = useState<Restaurant[]>([]);
+  const mapRef = useRef<any>(null);
 
   const {
     data: restaurants,
@@ -123,16 +130,57 @@ export default function RestaurantMap() {
   const validRestaurants =
     restaurants?.filter((r) => r.latitude !== null && r.longitude !== null) ?? [];
 
+  // Combine originally loaded restaurants with any additional ones from search
+  const allRestaurants = [...validRestaurants, ...additionalRestaurants];
+
+  const handleSelectRestaurant = (restaurant: { id: number; name: string; address: string | null; city: string | null; state: string | null; latitude: number | null; longitude: number | null; normalizedScore: number | null }) => {
+    // Check if restaurant is already in the list
+    const existingRestaurant = validRestaurants.find(r => Number(r.id) === restaurant.id);
+
+    if (!existingRestaurant && restaurant.latitude && restaurant.longitude) {
+      // Add to additional restaurants list with proper typing
+      const newRestaurant: Restaurant = {
+        id: String(restaurant.id),
+        name: restaurant.name,
+        address: restaurant.address,
+        city: restaurant.city,
+        state: restaurant.state,
+        zipCode: null,
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        source: 'search',
+        googlePlaceId: null,
+        normalizedScore: restaurant.normalizedScore,
+        rawScore: null,
+      };
+      setAdditionalRestaurants(prev => [...prev, newRestaurant]);
+    }
+
+    // Pan to restaurant location and zoom in
+    if (restaurant.latitude && restaurant.longitude && mapRef.current) {
+      mapRef.current.panTo({ lat: restaurant.latitude, lng: restaurant.longitude });
+      mapRef.current.setZoom(15);
+    }
+
+    // Select the restaurant
+    setSelectedRestaurantId(restaurant.id);
+  };
+
   const defaultCenter = { lat: 34.0522, lng: -118.2437 };
   const defaultZoom = 11;
 
   return (
     <div className="h-screen flex flex-col">
       <div className="bg-white border-b px-6 py-4">
-        <h1 className="text-2xl font-bold">Restaurant Map</h1>
-        <p className="text-sm text-gray-600">
-          {validRestaurants.length} restaurants with coordinates
-        </p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Restaurant Map</h1>
+            <p className="text-sm text-gray-600">
+              {validRestaurants.length} restaurants with coordinates
+            </p>
+          </div>
+          <RestaurantSearch onSelectRestaurant={handleSelectRestaurant} />
+        </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
@@ -145,8 +193,12 @@ export default function RestaurantMap() {
             defaultCenter={defaultCenter}
             defaultZoom={defaultZoom}
             onClick={() => setSelectedRestaurantId(null)}
+            onGoogleApiLoaded={({ map }) => {
+              mapRef.current = map;
+            }}
+            yesIWantToUseGoogleMapApiInternals
           >
-            {validRestaurants.map((restaurant) => (
+            {allRestaurants.map((restaurant) => (
               <Marker
                 key={restaurant.id}
                 lat={restaurant.latitude!}
@@ -160,7 +212,7 @@ export default function RestaurantMap() {
 
         {/* Sidebar */}
         {selectedRestaurantId && (() => {
-          const selectedRestaurant = validRestaurants.find(r => Number(r.id) === selectedRestaurantId);
+          const selectedRestaurant = allRestaurants.find(r => Number(r.id) === selectedRestaurantId);
           if (!selectedRestaurant) return null;
 
           return (
