@@ -115,8 +115,11 @@ async function displayGroup(group: RestaurantGroupDuplicate[], index: number) {
   console.log(`GROUP ${index + 1} (${group.length} restaurants)`);
   console.log(`${'='.repeat(80)}`);
 
-  // Sort by createdAt to identify winner
-  const sorted = _.sortBy(group, (r) => r.createdAt.getTime());
+  // Sort to identify winner: Open Data Portal first, then by createdAt
+  const sorted = _.sortBy(group, [
+    (r) => (r.source === 'Open Data Portal' ? 0 : 1),
+    (r) => r.createdAt.getTime(),
+  ]);
   const winner = _.first(sorted)!;
   const losers = _.tail(sorted);
 
@@ -242,7 +245,11 @@ async function mergeGroup(
   group: RestaurantGroupDuplicate[],
   dryRun: boolean = false
 ): Promise<void> {
-  const sorted = _.sortBy(group, (r) => r.createdAt.getTime());
+  // Sort to identify winner: Open Data Portal first, then by createdAt
+  const sorted = _.sortBy(group, [
+    (r) => (r.source === 'Open Data Portal' ? 0 : 1),
+    (r) => r.createdAt.getTime(),
+  ]);
   const winner = _.first(sorted)!;
   const losers = _.tail(sorted);
   const loserIds = _.map(losers, 'id');
@@ -379,12 +386,84 @@ function prompt(question: string): Promise<string> {
 }
 
 /**
+ * Manual merge mode - merge specific restaurant IDs
+ */
+async function manualMerge(restaurantIds: number[], dryRun: boolean) {
+  console.log(
+    `\n🔧 MANUAL MERGE MODE - Merging ${restaurantIds.length} restaurants\n`
+  );
+
+  // Fetch all restaurants
+  const restaurants = await prisma.restaurant.findMany({
+    where: { id: { in: restaurantIds } },
+  });
+
+  if (restaurants.length === 0) {
+    console.log('❌ No restaurants found with the provided IDs');
+    return;
+  }
+
+  if (restaurants.length !== restaurantIds.length) {
+    const foundIds = restaurants.map((r) => r.id);
+    const missingIds = restaurantIds.filter((id) => !foundIds.includes(id));
+    console.log(
+      `⚠️  Warning: Could not find restaurants with IDs: ${missingIds.join(', ')}`
+    );
+  }
+
+  if (restaurants.length < 2) {
+    console.log('❌ Need at least 2 restaurants to merge');
+    return;
+  }
+
+  // Create a group with 100% similarity (manual merge)
+  const group: RestaurantGroupDuplicate[] = restaurants.map((r) => ({
+    ...r,
+    nameSimilarity: 1.0,
+    addressSimilarity: r.address ? 1.0 : null,
+  }));
+
+  // Display the merge preview
+  await displayGroup(group, 0);
+
+  // Prompt for confirmation
+  console.log(`\n${'='.repeat(80)}`);
+  const answer = await prompt('\nProceed with merge? (yes/no): ');
+
+  if (answer !== 'yes' && answer !== 'y') {
+    console.log('\nMerge cancelled.');
+    return;
+  }
+
+  // Perform the merge
+  await mergeGroup(group, dryRun);
+  console.log('\n✅ Manual merge complete');
+}
+
+/**
  * Main execution
  */
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const reviewAll = args.includes('--review-all');
+
+  // Check for manual merge mode: --ids=1,2,3
+  const idsArg = args.find((arg) => arg.startsWith('--ids='));
+  if (idsArg) {
+    const idsStr = idsArg.split('=')[1];
+    const restaurantIds = idsStr
+      .split(',')
+      .map((id) => parseInt(id.trim(), 10));
+
+    if (restaurantIds.some((id) => isNaN(id))) {
+      console.error('❌ Invalid restaurant IDs. Use: --ids=1,2,3');
+      process.exit(1);
+    }
+
+    await manualMerge(restaurantIds, dryRun);
+    return;
+  }
 
   if (dryRun) {
     console.log('🔍 DRY RUN MODE - No changes will be made\n');
@@ -471,7 +550,10 @@ async function main() {
           `\n🔄 Auto-merging ${perfectMatches.length} perfect match group(s) (100% similarity)...`
         );
         for (const group of perfectMatches) {
-          const sorted = _.sortBy(group, (r) => r.createdAt.getTime());
+          const sorted = _.sortBy(group, [
+            (r) => (r.source === 'Open Data Portal' ? 0 : 1),
+            (r) => r.createdAt.getTime(),
+          ]);
           const winner = _.first(sorted)!;
           const losers = _.tail(sorted);
           console.log(

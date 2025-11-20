@@ -161,7 +161,6 @@ async function processRestaurantGroup(
   stats: LinkingStats,
   fuse: Fuse<{ id: number; name: string }>,
   restaurants: { id: number; name: string }[],
-  addressFuse: Fuse<{ id: number; address: string }> | null,
   prisma: PrismaClient
 ) {
   const icon = groupType === 'primary' ? '🎯' : '📍';
@@ -237,7 +236,6 @@ async function processRestaurantGroup(
       //   stats,
       //   fuse,
       //   restaurants,
-      //   addressFuse
       // );
 
       if (result.hadError) {
@@ -357,6 +355,7 @@ async function clearExistingConnections() {
   );
 }
 
+//TODO: when google places is applicable, we should use trigram to name and address deduplicate similar to mergeDuplicateRestaurants.ts
 async function linkCommentsAndPostsToRestaurants() {
   try {
     // Check for --clear flag
@@ -435,16 +434,16 @@ async function linkCommentsAndPostsToRestaurants() {
       })
       .filter((r): r is { id: number; address: string } => r !== null);
 
-    // Create Fuse.js instance for address-based fuzzy matching
-    const addressFuse =
-      restaurantAddresses.length > 0
-        ? new Fuse(restaurantAddresses, {
-            keys: ['address'],
-            threshold: 0.3,
-            ignoreLocation: true,
-            includeScore: true,
-          })
-        : null;
+    // // Create Fuse.js instance for address-based fuzzy matching
+    // const addressFuse =
+    //   restaurantAddresses.length > 0
+    //     ? new Fuse(restaurantAddresses, {
+    //         keys: ['address'],
+    //         threshold: 0.3,
+    //         ignoreLocation: true,
+    //         includeScore: true,
+    //       })
+    //     : null;
 
     console.log(
       `Created address-based Fuse index with ${restaurantAddresses.length} addresses\n`
@@ -509,7 +508,6 @@ async function linkCommentsAndPostsToRestaurants() {
           stats,
           fuse,
           restaurants,
-          addressFuse,
           prisma
         );
       }
@@ -526,7 +524,6 @@ async function linkCommentsAndPostsToRestaurants() {
           stats,
           fuse,
           restaurants,
-          addressFuse,
           prisma
         );
       }

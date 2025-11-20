@@ -1,6 +1,7 @@
 import { PlacesClient, protos } from '@googlemaps/places';
 import { PrismaClient } from '@repo/db';
 import Fuse from 'fuse.js';
+import _ from 'lodash';
 
 // Lazy initialization for Places API client
 let placesClient: PlacesClient | null = null;
@@ -213,24 +214,103 @@ export async function lookupAndAddRestaurant(
     const lookupAliases =
       normalizedName !== canonicalNameNormalized ? normalizedName : null;
 
-    // Check if a non-Google Places restaurant exists with similar address
-    if (addressFuse && formattedAddress) {
-      const addressResults = addressFuse.search(formattedAddress);
-      if (
-        addressResults.length > 0 &&
-        addressResults?.[0]?.score !== undefined &&
-        addressResults?.[0]?.score < 0.3
-      ) {
-        const existingRestaurant = await prisma.restaurant.findUnique({
-          where: { id: addressResults?.[0]?.item?.id },
-          select: { id: true, name: true, source: true },
-        });
+    // Check if a similar restaurant exists using pg_trgm
+    if (formattedAddress) {
+      const candidates = await prisma.$queryRaw<
+        Array<{
+          id: number;
+          name: string;
+          address: string | null;
+          source: string;
+          googlePlaceId: string | null;
+          lookupAliases: string | null;
+          metadata: any;
+          createdAt: Date;
+          latitude: number | null;
+          longitude: number | null;
+          name_sim: number;
+          addr_sim: number | null;
+        }>
+      >`
+        SELECT
+          r.*,
+          similarity(r.name, ${displayName}) as name_sim,
+          CASE
+            WHEN r.address IS NOT NULL
+            THEN similarity(r.address, ${formattedAddress})
+            ELSE NULL
+          END as addr_sim
+        FROM "Restaurant" r
+        WHERE similarity(r.name, ${displayName}) > 0.85
+        LIMIT 5
+      `;
 
-        if (existingRestaurant) {
+      // Find best match with avg similarity > 91%
+      for (const candidate of candidates) {
+        const nameSim = candidate.name_sim;
+        const addrSim = candidate.addr_sim;
+
+        // Calculate average similarity
+        const avgSim = addrSim !== null ? (nameSim + addrSim) / 2 : nameSim;
+
+        if (avgSim > 0.91) {
           console.log(
-            `   🔗 Address match found: "${restaurantName}" → existing "${existingRestaurant.name}" (source: ${existingRestaurant.source}, address score: ${addressResults[0].score.toFixed(3)})`
+            `   🔗 High similarity match found: "${displayName}" → existing "${candidate.name}" (source: ${candidate.source}, name: ${(nameSim * 100).toFixed(1)}%, addr: ${addrSim ? (addrSim * 100).toFixed(1) : 'N/A'}%, avg: ${(avgSim * 100).toFixed(1)}%)`
           );
-          return { restaurantId: existingRestaurant.id, hadError: false };
+
+          // Determine final values using merge strategy
+          const finalName =
+            candidate.source === 'Open Data Portal'
+              ? displayName // Use Google Place name if merging into Open Data Portal
+              : candidate.name;
+
+          const finalGooglePlaceId = candidate.googlePlaceId || placeId;
+
+          // Merge aliases
+          const existingAliases = candidate.lookupAliases
+            ? candidate.lookupAliases.split(',').map((a) => a.trim())
+            : [];
+          const newAliases = lookupAliases ? [lookupAliases] : [];
+          const finalAliases =
+            _.compact(_.uniq([...existingAliases, ...newAliases])).join(',') ||
+            null;
+
+          // Merge metadata (new data takes priority for new keys)
+          const newMetadata = {
+            rating,
+            priceLevel,
+            types,
+            nationalPhoneNumber,
+            websiteUri,
+          };
+          const finalMetadata = _.merge(
+            {},
+            candidate.metadata || {},
+            newMetadata
+          );
+
+          // Update existing restaurant
+          await prisma.restaurant.update({
+            where: { id: candidate.id },
+            data: {
+              name: finalName,
+              googlePlaceId: finalGooglePlaceId,
+              lookupAliases: finalAliases,
+              metadata: finalMetadata,
+              // Update coordinates if they didn't exist
+              ...((!candidate.latitude || !candidate.longitude) &&
+              latitude &&
+              longitude
+                ? { latitude, longitude }
+                : {}),
+            },
+          });
+
+          console.log(
+            `   ✨ Merged Google Place data into existing restaurant ID ${candidate.id}`
+          );
+
+          return { restaurantId: candidate.id, hadError: false };
         }
       }
     }
