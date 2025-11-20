@@ -158,9 +158,13 @@ export default function RestaurantSidebar({
                       <span className="px-2 py-0.5 bg-gray-100 rounded flex-shrink-0">
                         {mention.type}
                       </span>
-                      {mention.author && <span className="truncate">by u/{mention.author}</span>}
+                      {mention.author && (
+                        <span className="truncate">by u/{mention.author}</span>
+                      )}
                       {mention.score !== null && (
-                        <span className="flex-shrink-0">• {mention.score} points</span>
+                        <span className="flex-shrink-0">
+                          • {mention.score} points
+                        </span>
                       )}
                     </div>
                   </div>

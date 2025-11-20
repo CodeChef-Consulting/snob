@@ -65,6 +65,13 @@ export const restaurantRouter = t.router({
           restaurantsMentioned: {
             select: { id: true },
           },
+          post: {
+            select: {
+              restaurantsMentioned: {
+                select: { id: true },
+              },
+            },
+          },
         },
       });
 
@@ -78,14 +85,9 @@ export const restaurantRouter = t.router({
         // Only include dishes if exactly one restaurant is mentioned
         if (
           extraction?.dishesMentioned &&
-          extraction.primaryRestaurant === restaurant.name
+          extraction.dishesMentioned.length > 0
         ) {
-          const dishes = extraction.dishesMentioned
-            .split(',')
-            .map((d) => d.trim())
-            .filter((d) => !!d);
-
-          dishes.forEach((dish) => {
+          extraction.dishesMentioned.forEach((dish) => {
             if (!dishSentiments.has(dish)) {
               dishSentiments.set(dish, []);
             }
@@ -103,14 +105,11 @@ export const restaurantRouter = t.router({
         // Only include dishes if exactly one restaurant is mentioned
         if (
           extraction?.dishesMentioned &&
-          extraction.primaryRestaurant === restaurant.name
+          extraction.dishesMentioned.length > 0 &&
+          comment.post.restaurantsMentioned.length === 1 &&
+          comment.post.restaurantsMentioned[0].id === input.id
         ) {
-          const dishes = extraction.dishesMentioned
-            .split(',')
-            .map((d) => d.trim())
-            .filter((d) => !!d);
-
-          dishes.forEach((dish) => {
+          extraction.dishesMentioned.forEach((dish) => {
             if (!dishSentiments.has(dish)) {
               dishSentiments.set(dish, []);
             }
