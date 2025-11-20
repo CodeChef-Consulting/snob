@@ -13,7 +13,8 @@
     "init-batch": "dotenvx run -f ../../.env -- tsx src/scripts/initializeBatch.ts",
     "compute-scores": "dotenvx run -f ../../.env -- tsx src/scripts/computeScores.ts",
     "check-batch": "dotenvx run -f ../../.env -- tsx src/scripts/checkBatch.ts",
-    "backfill-latlng": "dotenvx run -f ../../.env -- tsx src/scripts/backfillLatLng.ts"
+    "backfill-latlng": "dotenvx run -f ../../.env -- tsx src/scripts/backfillLatLng.ts",
+    "merge-duplicates": "dotenvx run -f ../../.env -- tsx src/scripts/mergeDuplicateRestaurants.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
