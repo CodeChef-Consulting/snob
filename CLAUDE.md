@@ -45,6 +45,25 @@ npm run backfill-sessions
 - All `db:*` commands automatically run with `dotenvx run --`
 - Database URL: `postgresql://user:password@localhost:5434/snob?schema=public`
 
+### Database Backup
+To create a backup of the database:
+```bash
+# Find the container running on port 5434
+CONTAINER_ID=$(docker ps --filter "publish=5434" --format "{{.ID}}")
+
+# Create backup with timestamp
+BACKUP_FILE="backups/snob_backup_$(date +%Y%m%d_%H%M%S).dump"
+docker exec $CONTAINER_ID pg_dump -U user -d snob --format=custom -f /tmp/backup.dump
+docker cp $CONTAINER_ID:/tmp/backup.dump "$BACKUP_FILE"
+```
+
+To restore from a backup:
+```bash
+CONTAINER_ID=$(docker ps --filter "publish=5434" --format "{{.ID}}")
+docker cp backups/snob_backup_YYYYMMDD_HHMMSS.dump $CONTAINER_ID:/tmp/restore.dump
+docker exec $CONTAINER_ID pg_restore -U user -d snob --clean /tmp/restore.dump
+```
+
 ## Architecture Overview
 
 ### Two-Phase Scraping System
