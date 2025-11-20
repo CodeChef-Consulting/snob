@@ -7,7 +7,7 @@ export const RestaurantExtractionInputSchema = z.object({
     postId: z.number().int().optional().nullable(),
     comment: z.unknown().optional().nullable(),
     commentId: z.number().int().optional().nullable(),
-    restaurantsMentioned: z.string().optional().nullable(),
+    restaurantsMentioned: z.array(z.string()),
     primaryRestaurant: z.string().optional().nullable(),
     dishesMentioned: z.array(z.string()),
     isSubjective: z.boolean(),

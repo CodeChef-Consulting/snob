@@ -6,7 +6,6 @@ const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
   postId: SortOrderSchema.optional(),
   commentId: SortOrderSchema.optional(),
-  restaurantsMentioned: SortOrderSchema.optional(),
   primaryRestaurant: SortOrderSchema.optional(),
   isSubjective: SortOrderSchema.optional(),
   attemptedLinkToRestaurantsMentioned: SortOrderSchema.optional(),

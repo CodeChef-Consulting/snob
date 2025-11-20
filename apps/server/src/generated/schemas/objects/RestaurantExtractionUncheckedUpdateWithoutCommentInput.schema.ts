@@ -2,6 +2,7 @@ import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { IntFieldUpdateOperationsInputObjectSchema as IntFieldUpdateOperationsInputObjectSchema } from './IntFieldUpdateOperationsInput.schema';
 import { NullableIntFieldUpdateOperationsInputObjectSchema as NullableIntFieldUpdateOperationsInputObjectSchema } from './NullableIntFieldUpdateOperationsInput.schema';
+import { RestaurantExtractionUpdaterestaurantsMentionedInputObjectSchema as RestaurantExtractionUpdaterestaurantsMentionedInputObjectSchema } from './RestaurantExtractionUpdaterestaurantsMentionedInput.schema';
 import { NullableStringFieldUpdateOperationsInputObjectSchema as NullableStringFieldUpdateOperationsInputObjectSchema } from './NullableStringFieldUpdateOperationsInput.schema';
 import { RestaurantExtractionUpdatedishesMentionedInputObjectSchema as RestaurantExtractionUpdatedishesMentionedInputObjectSchema } from './RestaurantExtractionUpdatedishesMentionedInput.schema';
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
@@ -10,7 +11,7 @@ import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOp
 const makeSchema = () => z.object({
   id: z.union([z.number().int(), z.lazy(() => IntFieldUpdateOperationsInputObjectSchema)]).optional(),
   postId: z.union([z.number().int(), z.lazy(() => NullableIntFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
-  restaurantsMentioned: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
+  restaurantsMentioned: z.union([z.lazy(() => RestaurantExtractionUpdaterestaurantsMentionedInputObjectSchema), z.string().array()]).optional(),
   primaryRestaurant: z.union([z.string(), z.lazy(() => NullableStringFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   dishesMentioned: z.union([z.lazy(() => RestaurantExtractionUpdatedishesMentionedInputObjectSchema), z.string().array()]).optional(),
   isSubjective: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),

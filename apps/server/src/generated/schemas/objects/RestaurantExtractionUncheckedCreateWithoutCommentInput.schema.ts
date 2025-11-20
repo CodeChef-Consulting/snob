@@ -1,11 +1,12 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
+import { RestaurantExtractionCreaterestaurantsMentionedInputObjectSchema as RestaurantExtractionCreaterestaurantsMentionedInputObjectSchema } from './RestaurantExtractionCreaterestaurantsMentionedInput.schema';
 import { RestaurantExtractionCreatedishesMentionedInputObjectSchema as RestaurantExtractionCreatedishesMentionedInputObjectSchema } from './RestaurantExtractionCreatedishesMentionedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.number().int().optional(),
   postId: z.number().int().optional().nullable(),
-  restaurantsMentioned: z.string().optional().nullable(),
+  restaurantsMentioned: z.union([z.lazy(() => RestaurantExtractionCreaterestaurantsMentionedInputObjectSchema), z.string().array()]).optional(),
   primaryRestaurant: z.string().optional().nullable(),
   dishesMentioned: z.union([z.lazy(() => RestaurantExtractionCreatedishesMentionedInputObjectSchema), z.string().array()]).optional(),
   isSubjective: z.boolean(),

@@ -179,7 +179,7 @@ model RestaurantExtraction {
   commentId Int?
 
   // Extraction results (matching RestaurantExtractionResult interface)
-  restaurantsMentioned String? // Comma-separated or "NONE"
+  restaurantsMentioned String[] @default([]) // Array of restaurants mentioned
   primaryRestaurant    String? // Single restaurant name or "NONE"
   dishesMentioned      String[] @default([]) // Array of dishes mentioned
   isSubjective         Boolean

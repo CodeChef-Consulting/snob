@@ -59,6 +59,44 @@ export function normalizeFieldToArray(
 }
 
 /**
+ * Normalize restaurantsMentioned to array, handling cases where primaryRestaurant contains commas
+ * If primaryRestaurant has commas and appears in restaurantsMentioned, preserve it as one item
+ */
+export function normalizeRestaurantsMentionedToArray(
+  restaurantsMentioned: string,
+  primaryRestaurant: string | null
+): string[] {
+  if (!restaurantsMentioned || restaurantsMentioned === '' || restaurantsMentioned === 'NONE') {
+    return [];
+  }
+
+  // If primaryRestaurant has commas and appears in the list, use placeholder strategy
+  if (
+    primaryRestaurant &&
+    primaryRestaurant.includes(',') &&
+    restaurantsMentioned.includes(primaryRestaurant)
+  ) {
+    const placeholder = '<<<PRIMARY_RESTAURANT>>>';
+    const withPlaceholder = restaurantsMentioned.replace(primaryRestaurant, placeholder);
+
+    const items = withPlaceholder
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+      .map((item) => (item === placeholder ? primaryRestaurant : item));
+
+    // Deduplicate case-insensitively
+    const uniqueItems = Array.from(
+      new Map(items.map((item) => [item.toLowerCase(), item])).values()
+    );
+    return uniqueItems;
+  }
+
+  // Default: just split by commas and deduplicate
+  return normalizeFieldToArray(restaurantsMentioned, true);
+}
+
+/**
  * Parse sentiment response from AI
  * Handles multiple formats:
  * - JSON with code blocks: ```json\n{"rawAiScore": 0.8}\n```
@@ -172,9 +210,14 @@ export function parseRestaurantExtractionResponse(
     }
   }
 
+  const normalizedPrimaryRestaurant = normalizeField(primaryRestaurant);
+
   return {
-    restaurantsMentioned: normalizeField(restaurantsMentioned, true),
-    primaryRestaurant: normalizeField(primaryRestaurant),
+    restaurantsMentioned: normalizeRestaurantsMentionedToArray(
+      restaurantsMentioned,
+      normalizedPrimaryRestaurant
+    ),
+    primaryRestaurant: normalizedPrimaryRestaurant,
     dishesMentioned: normalizeFieldToArray(dishesMentioned, true), // deduplicate dishes, return array
     isSubjective,
   };

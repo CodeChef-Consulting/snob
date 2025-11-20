@@ -6,7 +6,6 @@ const makeSchema = () => z.object({
   id: z.literal(true).optional(),
   postId: z.literal(true).optional(),
   commentId: z.literal(true).optional(),
-  restaurantsMentioned: z.literal(true).optional(),
   primaryRestaurant: z.literal(true).optional(),
   isSubjective: z.literal(true).optional(),
   attemptedLinkToRestaurantsMentioned: z.literal(true).optional(),

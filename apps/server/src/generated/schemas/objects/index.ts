@@ -385,6 +385,7 @@ export * from './RestaurantExtractionCreateOrConnectWithoutPostInput.schema';
 export * from './RestaurantExtractionCreateWithoutCommentInput.schema';
 export * from './RestaurantExtractionCreateWithoutPostInput.schema';
 export * from './RestaurantExtractionCreatedishesMentionedInput.schema';
+export * from './RestaurantExtractionCreaterestaurantsMentionedInput.schema';
 export * from './RestaurantExtractionInclude.schema';
 export * from './RestaurantExtractionMaxAggregateInput.schema';
 export * from './RestaurantExtractionMaxOrderByAggregateInput.schema';
@@ -417,6 +418,7 @@ export * from './RestaurantExtractionUpdateToOneWithWhereWithoutPostInput.schema
 export * from './RestaurantExtractionUpdateWithoutCommentInput.schema';
 export * from './RestaurantExtractionUpdateWithoutPostInput.schema';
 export * from './RestaurantExtractionUpdatedishesMentionedInput.schema';
+export * from './RestaurantExtractionUpdaterestaurantsMentionedInput.schema';
 export * from './RestaurantExtractionUpsertWithoutCommentInput.schema';
 export * from './RestaurantExtractionUpsertWithoutPostInput.schema';
 export * from './RestaurantExtractionWhereInput.schema';

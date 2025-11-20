@@ -5,7 +5,7 @@ export const RestaurantExtractionFindFirstResultSchema = z.nullable(z.object({
   postId: z.number().int().optional(),
   comment: z.unknown().optional(),
   commentId: z.number().int().optional(),
-  restaurantsMentioned: z.string().optional(),
+  restaurantsMentioned: z.array(z.string()),
   primaryRestaurant: z.string().optional(),
   dishesMentioned: z.array(z.string()),
   isSubjective: z.boolean(),

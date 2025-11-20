@@ -622,7 +622,7 @@ async function initializeCommentSentimentBatch(
         restaurantExtraction: {
           isSubjective: true,
           OR: [
-            { restaurantsMentioned: { not: null } },
+            { restaurantsMentioned: { isEmpty: false } },
             { primaryRestaurant: { not: null } },
           ],
         },

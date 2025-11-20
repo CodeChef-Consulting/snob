@@ -12,7 +12,7 @@ const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
   postId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   commentId: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
-  restaurantsMentioned: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
+  restaurantsMentioned: SortOrderSchema.optional(),
   primaryRestaurant: z.union([SortOrderSchema, z.lazy(() => SortOrderInputObjectSchema)]).optional(),
   dishesMentioned: SortOrderSchema.optional(),
   isSubjective: SortOrderSchema.optional(),

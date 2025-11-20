@@ -29,7 +29,7 @@ export interface PostExtractionInput {
 }
 
 export interface RestaurantExtractionResult {
-  restaurantsMentioned: string | null;
+  restaurantsMentioned: string[];
   primaryRestaurant: string | null;
   dishesMentioned: string[];
   isSubjective: boolean;
