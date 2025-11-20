@@ -169,16 +169,14 @@ export async function lookupAndAddRestaurant(
       );
 
       // If this is a new alias for an existing restaurant, add it
-      const existingAliases = existing.lookupAliases
-        ? existing.lookupAliases.split(',')
-        : [];
+      const existingAliases = existing.lookupAliases || [];
 
       // Add new alias if it's different from the canonical name
       if (
         normalizedName !== existing.name.trim().toLowerCase() &&
         !existingAliases.some((a) => a === normalizedName)
       ) {
-        const updatedAliases = [...existingAliases, normalizedName].join(',');
+        const updatedAliases = [...existingAliases, normalizedName];
 
         await prisma.restaurant.update({
           where: { id: existing.id },
@@ -212,7 +210,7 @@ export async function lookupAndAddRestaurant(
     // If the searched name differs from the canonical name, add it as a lookup alias
     const canonicalNameNormalized = displayName.trim().toLowerCase();
     const lookupAliases =
-      normalizedName !== canonicalNameNormalized ? normalizedName : null;
+      normalizedName !== canonicalNameNormalized ? [normalizedName] : [];
 
     // Check if a similar restaurant exists using pg_trgm
     if (formattedAddress) {
@@ -223,7 +221,7 @@ export async function lookupAndAddRestaurant(
           address: string | null;
           source: string;
           googlePlaceId: string | null;
-          lookupAliases: string | null;
+          lookupAliases: string[];
           metadata: any;
           createdAt: Date;
           latitude: number | null;
@@ -267,13 +265,8 @@ export async function lookupAndAddRestaurant(
           const finalGooglePlaceId = candidate.googlePlaceId || placeId;
 
           // Merge aliases
-          const existingAliases = candidate.lookupAliases
-            ? candidate.lookupAliases.split(',').map((a) => a.trim())
-            : [];
-          const newAliases = lookupAliases ? [lookupAliases] : [];
-          const finalAliases =
-            _.compact(_.uniq([...existingAliases, ...newAliases])).join(',') ||
-            null;
+          const existingAliases = candidate.lookupAliases || [];
+          const finalAliases = _.compact(_.uniq([...existingAliases, ...lookupAliases]));
 
           // Merge metadata (new data takes priority for new keys)
           const newMetadata = {

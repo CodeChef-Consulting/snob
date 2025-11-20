@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
+import { RestaurantCreatelookupAliasesInputObjectSchema as RestaurantCreatelookupAliasesInputObjectSchema } from './RestaurantCreatelookupAliasesInput.schema';
 import { NullableJsonNullValueInputSchema } from '../enums/NullableJsonNullValueInput.schema';
 import { CommentCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema as CommentCreateNestedManyWithoutRestaurantsMentionedInputObjectSchema } from './CommentCreateNestedManyWithoutRestaurantsMentionedInput.schema'
 
@@ -15,7 +16,7 @@ const makeSchema = () => z.object({
   longitude: z.number().optional().nullable(),
   source: z.string().optional(),
   googlePlaceId: z.string().optional().nullable(),
-  lookupAliases: z.string().optional().nullable(),
+  lookupAliases: z.union([z.lazy(() => RestaurantCreatelookupAliasesInputObjectSchema), z.string().array()]).optional(),
   metadata: z.union([NullableJsonNullValueInputSchema, jsonSchema]).optional(),
   rawScore: z.number().optional().nullable(),
   normalizedScore: z.number().optional().nullable(),

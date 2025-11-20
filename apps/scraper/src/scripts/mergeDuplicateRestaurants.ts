@@ -18,7 +18,7 @@ type Restaurant = {
   longitude: number | null;
   source: string;
   googlePlaceId: string | null;
-  lookupAliases: string | null;
+  lookupAliases: string[];
   metadata: any;
   rawScore: number | null;
   normalizedScore: number | null;
@@ -175,8 +175,8 @@ async function displayGroup(group: RestaurantGroupDuplicate[], index: number) {
     if (r.googlePlaceId) {
       console.log(`   Google Place ID: ${r.googlePlaceId}`);
     }
-    if (r.lookupAliases) {
-      console.log(`   Aliases: ${r.lookupAliases}`);
+    if (r.lookupAliases.length > 0) {
+      console.log(`   Aliases: ${r.lookupAliases.join(', ')}`);
     }
     if (r.normalizedScore !== null) {
       console.log(`   Score: ${r.normalizedScore.toFixed(2)}`);
@@ -203,10 +203,8 @@ async function displayGroup(group: RestaurantGroupDuplicate[], index: number) {
     null;
 
   // Merge lookupAliases
-  const allAliases = _.flatMap(sorted, (r) =>
-    r.lookupAliases ? r.lookupAliases.split(',').map((a) => a.trim()) : []
-  );
-  const finalAliases = _.compact(_.uniq(allAliases)).join(',');
+  const allAliases = _.flatMap(sorted, (r) => r.lookupAliases);
+  const finalAliases = _.compact(_.uniq(allAliases));
 
   // Merge metadata
   const allMetadata = _.map(sorted, (r) => r.metadata || {});
@@ -227,8 +225,8 @@ async function displayGroup(group: RestaurantGroupDuplicate[], index: number) {
     `Final Name: ${finalName} ${finalName !== winner.name ? '(changed from Google Place)' : ''}`
   );
   console.log(`Final Google Place ID: ${finalGooglePlaceId || 'null'}`);
-  if (finalAliases) {
-    console.log(`Final Aliases: ${finalAliases}`);
+  if (finalAliases.length > 0) {
+    console.log(`Final Aliases: ${finalAliases.join(', ')}`);
   }
   console.log(
     `Will move ${totalPostsToMove} post link(s) and ${totalCommentsToMove} comment link(s) to winner`
@@ -266,10 +264,8 @@ async function mergeGroup(
     losers.find((l) => l.googlePlaceId)?.googlePlaceId ||
     null;
 
-  const allAliases = _.flatMap(sorted, (r) =>
-    r.lookupAliases ? r.lookupAliases.split(',').map((a) => a.trim()) : []
-  );
-  const finalAliases = _.compact(_.uniq(allAliases)).join(',') || null;
+  const allAliases = _.flatMap(sorted, (r) => r.lookupAliases);
+  const finalAliases = _.compact(_.uniq(allAliases));
 
   const allMetadata = _.map(sorted, (r) => r.metadata || {});
   const finalMetadata = _.merge(
@@ -293,7 +289,7 @@ async function mergeGroup(
       `    name: "${finalName}"${finalName !== winner.name ? ' (changed from Google Place)' : ''}`
     );
     console.log(`    googlePlaceId: ${finalGooglePlaceId || 'null'}`);
-    console.log(`    lookupAliases: ${finalAliases || 'null'}`);
+    console.log(`    lookupAliases: ${finalAliases.length > 0 ? finalAliases.join(', ') : 'null'}`);
     console.log(
       `    metadata keys: ${_.keys(finalMetadata).join(', ') || 'none'}`
     );

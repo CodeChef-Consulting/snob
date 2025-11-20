@@ -10,7 +10,7 @@ export const RestaurantFindFirstResultSchema = z.nullable(z.object({
   longitude: z.number().optional(),
   source: z.string(),
   googlePlaceId: z.string().optional(),
-  lookupAliases: z.string().optional(),
+  lookupAliases: z.array(z.string()),
   metadata: z.unknown().optional(),
   rawScore: z.number().optional(),
   normalizedScore: z.number().optional(),

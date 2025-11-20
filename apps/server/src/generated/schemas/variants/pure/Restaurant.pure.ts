@@ -12,7 +12,7 @@ export const RestaurantModelSchema = z.object({
     longitude: z.number().nullable(),
     source: z.string(),
     googlePlaceId: z.string().nullable(),
-    lookupAliases: z.string().nullable(),
+    lookupAliases: z.array(z.string()),
     metadata: z.unknown().nullable(),
     rawScore: z.number().nullable(),
     normalizedScore: z.number().nullable(),

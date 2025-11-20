@@ -13,7 +13,6 @@ const makeSchema = () => z.object({
   longitude: SortOrderSchema.optional(),
   source: SortOrderSchema.optional(),
   googlePlaceId: SortOrderSchema.optional(),
-  lookupAliases: SortOrderSchema.optional(),
   rawScore: SortOrderSchema.optional(),
   normalizedScore: SortOrderSchema.optional(),
   createdAt: SortOrderSchema.optional(),

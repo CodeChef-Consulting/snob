@@ -187,7 +187,7 @@ async function processRestaurantGroup(
     const aliasMatch = await prisma.restaurant.findMany({
       where: {
         lookupAliases: {
-          contains: normalizedName, // This will do a case-insensitive LIKE search
+          has: normalizedName, // Check if array contains the normalized name
         },
       },
       select: { id: true, name: true, lookupAliases: true },
@@ -195,10 +195,9 @@ async function processRestaurantGroup(
 
     let hasExactAliasMatch = false;
     for (const alias of aliasMatch) {
-      if (alias && alias.lookupAliases) {
+      if (alias?.lookupAliases && alias.lookupAliases.length > 0) {
         // Verify it's an exact match (not just a substring)
-        const aliases = alias.lookupAliases.split(',');
-        if (aliases.includes(normalizedName)) {
+        if (alias.lookupAliases.includes(normalizedName)) {
           console.log(
             `   🔗 Exact alias match: "${restaurantName}" → "${alias.name}"`
           );
