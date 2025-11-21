@@ -3,8 +3,8 @@ config({ path: ['../../.env'] });
 
 import { PrismaClient } from '@repo/db';
 import {
-  getRestaurantsWithSentiment,
-  loadRestaurantItems,
+  getRestaurantGroupsWithSentiment,
+  loadRestaurantGroupItems,
 } from '../scoring/dataLoader';
 import {
   aggregateRestaurant,
@@ -22,10 +22,10 @@ async function computeScores() {
   // Show help
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`
-Restaurant Scoring Engine
+Restaurant Group Scoring Engine
 
 Usage:
-  npm run compute-scores [restaurantIds] [options]
+  npm run compute-scores [groupIds] [options]
 
 Options:
   --raw-only         Compute only raw scores (skip normalization)
@@ -33,10 +33,10 @@ Options:
   -h, --help         Show this help message
 
 Examples:
-  npm run compute-scores                    # Compute both raw and normalized for all restaurants
+  npm run compute-scores                    # Compute both raw and normalized for all restaurant groups
   npm run compute-scores -- --raw-only      # Compute only raw scores
   npm run compute-scores -- --normalized-only  # Compute only normalized scores
-  npm run compute-scores -- 1,2,3           # Compute for specific restaurant IDs
+  npm run compute-scores -- 1,2,3           # Compute for specific restaurant group IDs
   npm run compute-scores -- 1,2,3 --raw-only   # Compute raw scores for specific IDs
 
 Scoring:
@@ -50,41 +50,41 @@ Scoring:
   }
 
   console.log('='.repeat(80));
-  console.log('RESTAURANT SCORING ENGINE');
+  console.log('RESTAURANT GROUP SCORING ENGINE');
   console.log('='.repeat(80));
   console.log();
 
   const rawOnly = args.includes('--raw-only');
   const normalizedOnly = args.includes('--normalized-only');
 
-  // Filter out flags to get restaurant IDs
+  // Filter out flags to get group IDs
   const idArgs = args.filter((arg) => !arg.startsWith('--'));
-  let restaurantIds: number[];
+  let groupIds: number[];
 
   if (idArgs.length > 0) {
-    // Parse comma-separated restaurant IDs from command line
-    restaurantIds = idArgs[0]
+    // Parse comma-separated group IDs from command line
+    groupIds = idArgs[0]
       .split(',')
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
     console.log(
-      `Computing scores for ${restaurantIds.length} specific restaurants: ${restaurantIds.join(', ')}`
+      `Computing scores for ${groupIds.length} specific restaurant groups: ${groupIds.join(', ')}`
     );
     console.log();
   } else {
-    // Get all restaurants with sentiment data
-    console.log('Finding restaurants with sentiment data...');
-    restaurantIds = await getRestaurantsWithSentiment();
+    // Get all restaurant groups with sentiment data
+    console.log('Finding restaurant groups with sentiment data...');
+    groupIds = await getRestaurantGroupsWithSentiment();
     console.log(
-      `✓ Found ${restaurantIds.length} restaurants with sentiment data`
+      `✓ Found ${groupIds.length} restaurant groups with sentiment data`
     );
     console.log();
   }
 
-  if (restaurantIds.length === 0) {
-    console.log('No restaurants found. Make sure you have:');
+  if (groupIds.length === 0) {
+    console.log('No restaurant groups found. Make sure you have:');
     console.log('  1. Posts/comments with sentiment extractions');
-    console.log('  2. Restaurants linked to posts/comments');
+    console.log('  2. Restaurant groups linked to posts/comments');
     return;
   }
 
@@ -94,40 +94,40 @@ Scoring:
   if (!normalizedOnly) {
     console.log('Computing raw scores...');
 
-    for (let i = 0; i < restaurantIds.length; i++) {
-      const restaurantId = restaurantIds[i];
+    for (let i = 0; i < groupIds.length; i++) {
+      const groupId = groupIds[i];
 
       if (i % 100 === 0) {
-        console.log(`  Progress: ${i}/${restaurantIds.length}`);
+        console.log(`  Progress: ${i}/${groupIds.length}`);
       }
 
-      const items = await loadRestaurantItems(restaurantId);
-      const score = aggregateRestaurant(items, String(restaurantId));
+      const items = await loadRestaurantGroupItems(groupId);
+      const score = aggregateRestaurant(items, String(groupId));
       scores.push(score);
 
       // Save raw score to database
-      await prisma.restaurant.update({
-        where: { id: restaurantId },
+      await prisma.restaurantGroup.update({
+        where: { id: groupId },
         data: { rawScore: score.score },
       });
     }
 
     console.log(
-      `✓ Computed and saved raw scores for ${scores.length} restaurants`
+      `✓ Computed and saved raw scores for ${scores.length} restaurant groups`
     );
     console.log();
   } else {
     // Load existing raw scores for normalization
     console.log('Loading existing raw scores for normalization...');
-    const restaurants = await prisma.restaurant.findMany({
+    const groups = await prisma.restaurantGroup.findMany({
       where: {
-        id: { in: restaurantIds },
+        id: { in: groupIds },
         rawScore: { not: null },
       },
       select: { id: true, rawScore: true },
     });
 
-    scores = restaurants.map((r) => ({
+    scores = groups.map((r) => ({
       restaurantId: String(r.id),
       score: r.rawScore!,
       itemCount: 0,
@@ -148,14 +148,14 @@ Scoring:
 
     // Save normalized scores to database
     for (const normalized of normalizedScores) {
-      await prisma.restaurant.update({
+      await prisma.restaurantGroup.update({
         where: { id: parseInt(normalized.restaurantId) },
         data: { normalizedScore: normalized.normalizedScore },
       });
     }
 
     console.log(
-      `✓ Computed and saved normalized scores for ${normalizedScores.length} restaurants`
+      `✓ Computed and saved normalized scores for ${normalizedScores.length} restaurant groups`
     );
     console.log();
   }
@@ -207,19 +207,28 @@ Scoring:
       totalWeight = raw.totalWeight;
     }
 
-    // Fetch restaurant details
-    const restaurant = await prisma.restaurant.findUnique({
+    // Fetch restaurant group details
+    const group = await prisma.restaurantGroup.findUnique({
       where: { id: parseInt(restaurantId) },
       select: {
         name: true,
-        address: true,
-        city: true,
+        locations: {
+          select: {
+            address: true,
+            city: true,
+          },
+          take: 1,
+        },
       },
     });
 
-    if (!restaurant) continue;
+    if (!group) continue;
 
-    console.log(`${i + 1}. ${restaurant.name}`);
+    const locationCount = await prisma.restaurantLocation.count({
+      where: { groupId: parseInt(restaurantId) },
+    });
+
+    console.log(`${i + 1}. ${group.name}${locationCount > 1 ? ` (${locationCount} locations)` : ''}`);
     if (normalizedScore !== undefined) {
       console.log(
         `   Normalized Score: ${normalizedScore.toFixed(3)} | Raw Score: ${rawScore.toFixed(2)}`
@@ -227,9 +236,11 @@ Scoring:
     } else {
       console.log(`   Raw Score: ${rawScore.toFixed(2)}`);
     }
-    console.log(
-      `   Location: ${restaurant.address ?? 'N/A'}${restaurant.city ? `, ${restaurant.city}` : ''}`
-    );
+    if (group.locations[0]) {
+      console.log(
+        `   Location: ${group.locations[0].address ?? 'N/A'}${group.locations[0].city ? `, ${group.locations[0].city}` : ''}`
+      );
+    }
     console.log(
       `   Items: ${itemCount} | Threads: ${threadCount} | Weight: ${totalWeight.toFixed(2)}`
     );
@@ -279,19 +290,28 @@ Scoring:
       totalWeight = raw.totalWeight;
     }
 
-    // Fetch restaurant details
-    const restaurant = await prisma.restaurant.findUnique({
+    // Fetch restaurant group details
+    const group = await prisma.restaurantGroup.findUnique({
       where: { id: parseInt(restaurantId) },
       select: {
         name: true,
-        address: true,
-        city: true,
+        locations: {
+          select: {
+            address: true,
+            city: true,
+          },
+          take: 1,
+        },
       },
     });
 
-    if (!restaurant) continue;
+    if (!group) continue;
 
-    console.log(`${i + 1}. ${restaurant.name}`);
+    const locationCount = await prisma.restaurantLocation.count({
+      where: { groupId: parseInt(restaurantId) },
+    });
+
+    console.log(`${i + 1}. ${group.name}${locationCount > 1 ? ` (${locationCount} locations)` : ''}`);
     if (normalizedScore !== undefined) {
       console.log(
         `   Normalized Score: ${normalizedScore.toFixed(3)} | Raw Score: ${rawScore.toFixed(2)}`
@@ -299,9 +319,11 @@ Scoring:
     } else {
       console.log(`   Raw Score: ${rawScore.toFixed(2)}`);
     }
-    console.log(
-      `   Location: ${restaurant.address ?? 'N/A'}${restaurant.city ? `, ${restaurant.city}` : ''}`
-    );
+    if (group.locations[0]) {
+      console.log(
+        `   Location: ${group.locations[0].address ?? 'N/A'}${group.locations[0].city ? `, ${group.locations[0].city}` : ''}`
+      );
+    }
     console.log(
       `   Items: ${itemCount} | Threads: ${threadCount} | Weight: ${totalWeight.toFixed(2)}`
     );

@@ -4,6 +4,7 @@ import { commentRouter } from './comment';
 import { fileRouter } from './file';
 import { postRouter } from './post';
 import { restaurantRouter } from './restaurant';
+import { restaurantGroupRouter } from './restaurantGroup';
 
 //merge with generated router
 const combinedRouter = t.mergeRouters(
@@ -13,6 +14,7 @@ const combinedRouter = t.mergeRouters(
     customFile: fileRouter,
     customPost: postRouter,
     customRestaurant: restaurantRouter,
+    customRestaurantGroup: restaurantGroupRouter,
   })
 );
 

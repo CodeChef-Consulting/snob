@@ -3,17 +3,10 @@
 import { trpc } from '../lib/providers';
 
 interface RestaurantSidebarProps {
-  restaurantId: number;
-  restaurantName: string;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zipCode?: string | null;
-  normalizedScore?: number | null;
-  rawScore?: number | null;
-  source: string;
-  googlePlaceId?: string | null;
+  groupId: number;
+  selectedLocationId: number | null;
   onClose: () => void;
+  onSelectLocation: (locationId: number) => void;
 }
 
 // Smooth color gradient from red (0) → yellow (5) → green (10)
@@ -48,25 +41,54 @@ const getExcerpt = (text: string): string => {
 };
 
 export default function RestaurantSidebar({
-  restaurantId,
-  restaurantName,
-  address,
-  city,
-  state,
-  zipCode,
-  normalizedScore,
-  rawScore,
-  source,
-  googlePlaceId,
+  groupId,
+  selectedLocationId,
   onClose,
+  onSelectLocation,
 }: RestaurantSidebarProps) {
+  // Fetch group details with all locations
+  const { data: group, isLoading: isLoadingGroup } =
+    trpc.customRestaurantGroup.getGroupById.useQuery({ id: groupId });
+
   // Fetch restaurant dishes
   const { data: dishes, isLoading: isLoadingDishes } =
-    trpc.customRestaurant.getRestaurantDishes.useQuery({ id: restaurantId });
+    trpc.customRestaurantGroup.getGroupDishes.useQuery({ id: groupId });
 
   // Fetch restaurant mentions
   const { data: mentions, isLoading: isLoadingMentions } =
-    trpc.customRestaurant.getRestaurantMentions.useQuery({ id: restaurantId });
+    trpc.customRestaurantGroup.getGroupMentions.useQuery({ id: groupId });
+
+  if (isLoadingGroup) {
+    return (
+      <div className="w-96 bg-white border-l flex flex-col h-full">
+        <div className="flex-shrink-0 bg-white border-b p-6">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 mb-4"
+          >
+            ✕ Close
+          </button>
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!group) {
+    return (
+      <div className="w-96 bg-white border-l flex flex-col h-full">
+        <div className="flex-shrink-0 bg-white border-b p-6">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 mb-4"
+          >
+            ✕ Close
+          </button>
+          <div className="text-red-500">Group not found</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-96 bg-white border-l flex flex-col h-full">
@@ -78,38 +100,65 @@ export default function RestaurantSidebar({
           ✕ Close
         </button>
 
-        <h2 className="text-2xl font-bold mb-4">{restaurantName}</h2>
+        <h2 className="text-2xl font-bold mb-2">{group.name}</h2>
 
-        {address && <p className="text-gray-600 mb-2">{address}</p>}
-        {city && state && (
-          <p className="text-gray-600 mb-4">
-            {city}, {state}
-            {zipCode && ` ${zipCode}`}
-          </p>
-        )}
+        <p className="text-sm text-gray-600 mb-4">
+          {group.locationCount} location{group.locationCount !== 1 ? 's' : ''}
+        </p>
 
-        {normalizedScore !== null && normalizedScore !== undefined && (
+        {group.normalizedScore !== null && group.normalizedScore !== undefined && (
           <div className="mb-4">
             <span className="font-semibold text-sm">Score:</span>
             <span
               className="ml-2 px-3 py-1 rounded text-sm font-medium text-white"
               style={{
-                backgroundColor: getScoreColor(normalizedScore),
+                backgroundColor: getScoreColor(group.normalizedScore),
               }}
             >
-              {normalizedScore.toFixed(1)}/10
+              {group.normalizedScore.toFixed(1)}/10
             </span>
           </div>
         )}
 
-        {rawScore !== null && rawScore !== undefined && (
+        {group.rawScore !== null && group.rawScore !== undefined && (
           <p className="text-sm text-gray-600 mb-4">
-            Raw Score: {rawScore.toFixed(2)}
+            Raw Score: {group.rawScore.toFixed(2)}
           </p>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
+        {/* Locations List */}
+        {group.locations.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-semibold text-sm mb-3">
+              Locations ({group.locations.length})
+            </h3>
+            <div className="space-y-2">
+              {group.locations.map((location) => (
+                <button
+                  key={location.id}
+                  onClick={() => onSelectLocation(location.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                    selectedLocationId === location.id
+                      ? 'bg-blue-50 border-blue-500'
+                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="font-medium text-sm">{location.name}</div>
+                  {location.address && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      {location.address}
+                      {location.city && `, ${location.city}`}
+                      {location.state && `, ${location.state}`}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Dishes Mentioned */}
         {isLoadingDishes ? (
           <div className="text-sm text-gray-500 mb-6">Loading dishes...</div>

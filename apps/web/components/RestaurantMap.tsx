@@ -7,8 +7,8 @@ import RestaurantSidebar from './RestaurantSidebar';
 import RestaurantSearch from './RestaurantSearch';
 import { useSearchStore } from '../store/searchStore';
 
-type Restaurant = {
-  id: string;
+type RestaurantLocation = {
+  id: number;
   name: string;
   address: string | null;
   city: string | null;
@@ -16,16 +16,27 @@ type Restaurant = {
   zipCode: string | null;
   latitude: number | null;
   longitude: number | null;
-  source: string;
   googlePlaceId: string | null;
+};
+
+type RestaurantGroup = {
+  id: number;
+  name: string;
   normalizedScore: number | null;
   rawScore: number | null;
+  locationCount: number;
+  locations: RestaurantLocation[];
 };
 
 type MarkerProps = {
   lat: number;
   lng: number;
-  restaurant: Restaurant;
+  location: RestaurantLocation;
+  groupId: number;
+  groupName: string;
+  normalizedScore: number | null;
+  isSelected: boolean;
+  isHighlighted: boolean;
   onClick: () => void;
 };
 
@@ -54,21 +65,24 @@ const getScoreColor = (score: number | null): string => {
   }
 };
 
-const Marker = ({ restaurant, onClick }: MarkerProps) => {
-  const score = restaurant.normalizedScore;
-  const color = getScoreColor(score);
+const Marker = ({ normalizedScore, isSelected, isHighlighted, onClick }: MarkerProps) => {
+  const color = getScoreColor(normalizedScore);
 
   return (
     <div
       onClick={onClick}
-      className="cursor-pointer transform -translate-x-1/2 -translate-y-full"
-      style={{ position: 'absolute' }}
+      className="cursor-pointer transform -translate-x-1/2 -translate-y-full relative"
+      style={{ position: 'absolute', zIndex: isSelected ? 1000 : isHighlighted ? 500 : 1 }}
     >
       <div
-        className="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold"
+        className={`rounded-full shadow-lg flex items-center justify-center text-white text-xs font-bold transition-all ${
+          isSelected
+            ? 'w-10 h-10 border-2 border-white'
+            : 'w-8 h-8 border-2 border-white'
+        }`}
         style={{ backgroundColor: color }}
       >
-        {score !== null ? score.toFixed(1) : '?'}
+        {normalizedScore !== null ? normalizedScore.toFixed(1) : '?'}
       </div>
       <div
         className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-transparent mx-auto"
@@ -79,43 +93,27 @@ const Marker = ({ restaurant, onClick }: MarkerProps) => {
 };
 
 export default function RestaurantMap() {
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
-  const [additionalRestaurants, setAdditionalRestaurants] = useState<Restaurant[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const isDraggingRef = useRef(false);
   const mapRef = useRef<any>(null);
 
   const { searchResults, hasActiveSearch } = useSearchStore();
 
   const {
-    data: restaurants,
+    data: groups,
     isLoading,
     error,
-  } = trpc.restaurant.findManyRestaurant.useQuery({
-    orderBy: {
-      normalizedScore: 'desc',
-    },
-    where: {
-      normalizedScore: {
-        not: null,
-        gt: 8,
-      },
-      latitude: {
-        not: null,
-      },
-      longitude: {
-        not: null,
-      },
-    },
-  }) as {
-    data: Restaurant[] | undefined;
-    isLoading: boolean;
-    error: any;
-  };
+  } = trpc.customRestaurantGroup.getHighScoringGroups.useQuery({
+    minScore: 8,
+    limit: 500,
+  });
 
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-xl text-gray-700">Loading restaurants...</div>
+        <div className="text-xl text-gray-700">Loading restaurant groups...</div>
       </div>
     );
   }
@@ -124,73 +122,110 @@ export default function RestaurantMap() {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-xl text-red-600">
-          Error loading restaurants: {error.message}
+          Error loading restaurant groups: {error.message}
         </div>
       </div>
     );
   }
 
-  const validRestaurants =
-    restaurants?.filter((r) => r.latitude !== null && r.longitude !== null) ?? [];
+  // Flatten all locations from all groups for marker display
+  const allLocations =
+    groups?.flatMap((group) =>
+      group.locations
+        .filter((loc) => loc.latitude !== null && loc.longitude !== null)
+        .map((loc) => ({
+          ...loc,
+          groupId: group.id,
+          groupName: group.name,
+          normalizedScore: group.normalizedScore,
+        }))
+    ) ?? [];
 
-  // Convert search results to Restaurant type
-  const searchResultRestaurants: Restaurant[] = searchResults
-    .filter((r) => r.latitude !== null && r.longitude !== null)
-    .map((r) => ({
-      id: String(r.id),
-      name: r.name,
-      address: r.address,
-      city: r.city,
-      state: r.state,
-      zipCode: null,
-      latitude: r.latitude!,
-      longitude: r.longitude!,
-      source: 'search',
-      googlePlaceId: null,
-      normalizedScore: r.normalizedScore,
-      rawScore: null,
-    }));
+  // If there's an active search, use search results; otherwise show all locations
+  const displayGroups = hasActiveSearch ? searchResults : groups ?? [];
 
-  // If there's an active search, show only search results; otherwise show default restaurants
-  const allRestaurants = hasActiveSearch
-    ? searchResultRestaurants
-    : [...validRestaurants, ...additionalRestaurants];
+  // Determine which locations to display
+  let displayLocations;
+  if (selectedGroupId) {
+    // If a group is selected, only show locations for that group
+    const selectedGroup = displayGroups.find((g) => g.id === selectedGroupId);
+    displayLocations = selectedGroup
+      ? selectedGroup.locations
+          .filter((loc) => loc.latitude !== null && loc.longitude !== null)
+          .map((loc) => ({
+            ...loc,
+            groupId: selectedGroup.id,
+            groupName: selectedGroup.name,
+            normalizedScore: selectedGroup.normalizedScore,
+          }))
+      : [];
+  } else if (hasActiveSearch) {
+    // If searching but no group selected, show all search results
+    displayLocations = searchResults.flatMap((group) =>
+      group.locations
+        .filter((loc) => loc.latitude !== null && loc.longitude !== null)
+        .map((loc) => ({
+          ...loc,
+          groupId: group.id,
+          groupName: group.name,
+          normalizedScore: group.normalizedScore,
+        }))
+    );
+  } else {
+    // Default: show all locations
+    displayLocations = allLocations;
+  }
 
-  const handleSelectRestaurant = (restaurant: { id: number; name: string; address: string | null; city: string | null; state: string | null; latitude: number | null; longitude: number | null; normalizedScore: number | null }) => {
-    // Check if restaurant is already in the list
-    const existingRestaurant = validRestaurants.find(r => Number(r.id) === restaurant.id);
-
-    if (!existingRestaurant && restaurant.latitude && restaurant.longitude) {
-      // Add to additional restaurants list with proper typing
-      const newRestaurant: Restaurant = {
-        id: String(restaurant.id),
-        name: restaurant.name,
-        address: restaurant.address,
-        city: restaurant.city,
-        state: restaurant.state,
-        zipCode: null,
-        latitude: restaurant.latitude,
-        longitude: restaurant.longitude,
-        source: 'search',
-        googlePlaceId: null,
-        normalizedScore: restaurant.normalizedScore,
-        rawScore: null,
-      };
-      setAdditionalRestaurants(prev => [...prev, newRestaurant]);
+  const handleSelectGroup = (groupId: number, locationId?: number) => {
+    // Ignore clicks that happened during/after drag
+    if (isDraggingRef.current) {
+      return;
     }
 
-    // Pan to restaurant location and zoom in
-    if (restaurant.latitude && restaurant.longitude && mapRef.current) {
-      mapRef.current.panTo({ lat: restaurant.latitude, lng: restaurant.longitude });
-      mapRef.current.setZoom(15);
+    setSelectedGroupId(groupId);
+    setSelectedLocationId(locationId ?? null);
+
+    // Find the group to get bounds
+    const group = displayGroups.find((g) => g.id === groupId);
+    if (!group || !mapRef.current) return;
+
+    const validLocations = group.locations.filter(
+      (loc) => loc.latitude !== null && loc.longitude !== null
+    );
+
+    if (validLocations.length === 0) return;
+
+    // If specific location selected, pan to it
+    if (locationId) {
+      const location = validLocations.find((loc) => loc.id === locationId);
+      if (location && location.latitude && location.longitude) {
+        mapRef.current.panTo({ lat: location.latitude, lng: location.longitude });
+        mapRef.current.setZoom(15);
+        return;
+      }
     }
 
-    // Select the restaurant
-    setSelectedRestaurantId(restaurant.id);
+    // Otherwise, fit bounds to show all locations
+    if (validLocations.length === 1) {
+      // Single location - just pan and zoom
+      const loc = validLocations[0];
+      mapRef.current.panTo({ lat: loc.latitude!, lng: loc.longitude! });
+      mapRef.current.setZoom(14);
+    } else {
+      // Multiple locations - fit bounds
+      const bounds = new google.maps.LatLngBounds();
+      validLocations.forEach((loc) => {
+        bounds.extend({ lat: loc.latitude!, lng: loc.longitude! });
+      });
+      mapRef.current.fitBounds(bounds);
+    }
   };
 
   const defaultCenter = { lat: 34.0522, lng: -118.2437 };
   const defaultZoom = 11;
+
+  const totalLocations = displayLocations.length;
+  const totalGroups = displayGroups.length;
 
   return (
     <div className="h-screen flex flex-col">
@@ -200,11 +235,11 @@ export default function RestaurantMap() {
             <h1 className="text-2xl font-bold">Restaurant Map</h1>
             <p className="text-sm text-gray-600">
               {hasActiveSearch
-                ? `${searchResultRestaurants.length} search results`
-                : `${validRestaurants.length} restaurants with coordinates`}
+                ? `${totalGroups} groups, ${totalLocations} locations`
+                : `${totalGroups} groups (score > 8), ${totalLocations} locations`}
             </p>
           </div>
-          <RestaurantSearch onSelectRestaurant={handleSelectRestaurant} />
+          <RestaurantSearch onSelectGroup={handleSelectGroup} />
         </div>
       </div>
 
@@ -217,45 +252,60 @@ export default function RestaurantMap() {
             }}
             defaultCenter={defaultCenter}
             defaultZoom={defaultZoom}
-            onClick={() => setSelectedRestaurantId(null)}
+            onClick={() => {
+              setSelectedGroupId(null);
+              setSelectedLocationId(null);
+            }}
             onGoogleApiLoaded={({ map }) => {
               mapRef.current = map;
+
+              // Track drag events using ref to avoid state timing issues
+              map.addListener('dragstart', () => {
+                isDraggingRef.current = true;
+              });
+              map.addListener('dragend', () => {
+                // Keep dragging flag set for a short time after drag ends
+                setTimeout(() => {
+                  isDraggingRef.current = false;
+                }, 200);
+              });
             }}
             yesIWantToUseGoogleMapApiInternals
           >
-            {allRestaurants.map((restaurant) => (
-              <Marker
-                key={restaurant.id}
-                lat={restaurant.latitude!}
-                lng={restaurant.longitude!}
-                restaurant={restaurant}
-                onClick={() => setSelectedRestaurantId(Number(restaurant.id))}
-              />
-            ))}
+            {displayLocations.map((location) => {
+              const isPartOfSelectedGroup = selectedGroupId === location.groupId;
+              const isThisLocationSelected = selectedLocationId === location.id;
+
+              return (
+                <Marker
+                  key={`${location.groupId}-${location.id}`}
+                  lat={location.latitude!}
+                  lng={location.longitude!}
+                  location={location}
+                  groupId={location.groupId}
+                  groupName={location.groupName}
+                  normalizedScore={location.normalizedScore}
+                  isSelected={isThisLocationSelected}
+                  isHighlighted={isPartOfSelectedGroup}
+                  onClick={() => handleSelectGroup(location.groupId, location.id)}
+                />
+              );
+            })}
           </GoogleMapReact>
         </div>
 
         {/* Sidebar */}
-        {selectedRestaurantId && (() => {
-          const selectedRestaurant = allRestaurants.find(r => Number(r.id) === selectedRestaurantId);
-          if (!selectedRestaurant) return null;
-
-          return (
-            <RestaurantSidebar
-              restaurantId={selectedRestaurantId}
-              restaurantName={selectedRestaurant.name}
-              address={selectedRestaurant.address}
-              city={selectedRestaurant.city}
-              state={selectedRestaurant.state}
-              zipCode={selectedRestaurant.zipCode}
-              normalizedScore={selectedRestaurant.normalizedScore}
-              rawScore={selectedRestaurant.rawScore}
-              source={selectedRestaurant.source}
-              googlePlaceId={selectedRestaurant.googlePlaceId}
-              onClose={() => setSelectedRestaurantId(null)}
-            />
-          );
-        })()}
+        {selectedGroupId && (
+          <RestaurantSidebar
+            groupId={selectedGroupId}
+            selectedLocationId={selectedLocationId}
+            onClose={() => {
+              setSelectedGroupId(null);
+              setSelectedLocationId(null);
+            }}
+            onSelectLocation={(locationId) => handleSelectGroup(selectedGroupId, locationId)}
+          />
+        )}
       </div>
     </div>
   );

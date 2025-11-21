@@ -4,32 +4,39 @@ import { useState, useEffect, useRef } from 'react';
 import { trpc } from '../lib/providers';
 import { useSearchStore } from '../store/searchStore';
 
-type Restaurant = {
+type RestaurantGroup = {
   id: number;
   name: string;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  latitude: number | null;
-  longitude: number | null;
   normalizedScore: number | null;
+  rawScore: number | null;
+  locationCount: number;
+  locations: Array<{
+    id: number;
+    name: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  }>;
 };
 
 type RestaurantSearchProps = {
-  onSelectRestaurant: (restaurant: Restaurant) => void;
+  onSelectGroup: (groupId: number, locationId?: number) => void;
 };
 
 type SearchMode = 'restaurant' | 'dish';
 
 export default function RestaurantSearch({
-  onSelectRestaurant,
+  onSelectGroup,
 }: RestaurantSearchProps) {
   const [searchMode, setSearchMode] = useState<SearchMode>('restaurant');
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const { setSearchResults, clearSearchResults, setHasActiveSearch } = useSearchStore();
+  const { setSearchResults, clearSearchResults, setHasActiveSearch } =
+    useSearchStore();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -46,27 +53,12 @@ export default function RestaurantSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Restaurant search query
-  const { data: restaurantResults, isLoading: isLoadingRestaurants } =
-    trpc.restaurant.findManyRestaurant.useQuery(
+  // Restaurant group search query
+  const { data: groupResults, isLoading: isLoadingGroups } =
+    trpc.customRestaurantGroup.searchGroups.useQuery(
       {
-        where: {
-          name: {
-            contains: searchQuery,
-            mode: 'insensitive',
-          },
-          latitude: { not: null },
-          longitude: { not: null },
-        },
-        orderBy: [
-          {
-            normalizedScore: {
-              sort: 'desc',
-              nulls: 'last',
-            },
-          },
-        ],
-        take: 20,
+        query: searchQuery,
+        limit: 20,
       },
       {
         enabled: searchMode === 'restaurant' && searchQuery.length >= 2,
@@ -75,7 +67,7 @@ export default function RestaurantSearch({
 
   // Dish search query
   const { data: dishResults, isLoading: isLoadingDishes } =
-    trpc.customRestaurant.getRestaurantsByDish.useQuery(
+    trpc.customRestaurantGroup.getGroupsByDish.useQuery(
       {
         dishName: searchQuery,
         similarityThreshold: 0.3,
@@ -86,10 +78,10 @@ export default function RestaurantSearch({
       }
     );
 
-  const handleSelectRestaurant = (restaurant: Restaurant) => {
+  const handleSelectGroup = (group: RestaurantGroup) => {
     setSearchQuery('');
     setIsOpen(false);
-    onSelectRestaurant(restaurant);
+    onSelectGroup(group.id);
   };
 
   const handleInputChange = (value: string) => {
@@ -111,8 +103,8 @@ export default function RestaurantSearch({
   };
 
   const isLoading =
-    searchMode === 'restaurant' ? isLoadingRestaurants : isLoadingDishes;
-  const results = searchMode === 'restaurant' ? restaurantResults : dishResults;
+    searchMode === 'restaurant' ? isLoadingGroups : isLoadingDishes;
+  const results = searchMode === 'restaurant' ? groupResults : dishResults;
   const minQueryLength = searchMode === 'dish' ? 3 : 2;
 
   // Update store when results change
@@ -125,20 +117,7 @@ export default function RestaurantSearch({
 
       // Update results (could be empty array if no matches)
       if (results && results.length > 0) {
-        setSearchResults(results.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          address: r.address,
-          city: r.city,
-          state: r.state,
-          latitude: r.latitude,
-          longitude: r.longitude,
-          normalizedScore: r.normalizedScore,
-          dishMatches: r.dishMatches,
-          mentions: r.mentions,
-          avgSentiment: r.avgSentiment,
-          compoundScore: r.compoundScore,
-        })));
+        setSearchResults(results);
       } else {
         // No results found for this search
         setSearchResults([]);
@@ -147,7 +126,14 @@ export default function RestaurantSearch({
       // No active search
       clearSearchResults();
     }
-  }, [results, searchQuery, searchMode, setSearchResults, clearSearchResults, setHasActiveSearch]);
+  }, [
+    results,
+    searchQuery,
+    searchMode,
+    setSearchResults,
+    clearSearchResults,
+    setHasActiveSearch,
+  ]);
 
   return (
     <div ref={searchRef} className="relative w-full max-w-md">
@@ -217,53 +203,46 @@ export default function RestaurantSearch({
           ) : results && results.length > 0 ? (
             <ul className="divide-y divide-gray-100">
               {searchMode === 'restaurant'
-                ? (results as typeof restaurantResults)?.map(
-                    (restaurant: any) => (
-                      <li
-                        key={restaurant.id}
-                        onClick={() =>
-                          handleSelectRestaurant(restaurant as Restaurant)
-                        }
-                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 truncate">
-                              {restaurant.name}
-                            </div>
-                            {restaurant.address && (
-                              <div className="text-sm text-gray-500 truncate">
-                                {restaurant.address}
-                                {restaurant.city && `, ${restaurant.city}`}
-                                {restaurant.state && `, ${restaurant.state}`}
-                              </div>
-                            )}
+                ? (results as typeof groupResults)?.map((group: any) => (
+                    <li
+                      key={group.id}
+                      onClick={() =>
+                        handleSelectGroup(group as RestaurantGroup)
+                      }
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">
+                            {group.name}
                           </div>
-                          <div className="ml-3 flex-shrink-0">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                restaurant.normalizedScore !== null
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}
-                            >
-                              {restaurant.normalizedScore !== null
-                                ? restaurant.normalizedScore.toFixed(1)
-                                : 'N/A'}
-                            </span>
+                          <div className="text-sm text-gray-500">
+                            {group.locationCount} location
+                            {group.locationCount !== 1 ? 's' : ''}
                           </div>
                         </div>
-                      </li>
-                    )
-                  )
+                        <div className="ml-3 flex-shrink-0">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              group.normalizedScore !== null
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {group.normalizedScore !== null
+                              ? group.normalizedScore.toFixed(1)
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  ))
                 : (results as NonNullable<typeof dishResults>)?.map(
                     (result: any) => (
                       <li
                         key={result.id}
                         onClick={() =>
-                          handleSelectRestaurant(
-                            result as unknown as Restaurant
-                          )
+                          handleSelectGroup(result as RestaurantGroup)
                         }
                         className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
@@ -272,13 +251,10 @@ export default function RestaurantSearch({
                             <div className="font-medium text-gray-900 truncate">
                               {result.name}
                             </div>
-                            {result.address && (
-                              <div className="text-sm text-gray-500 truncate">
-                                {result.address}
-                                {result.city && `, ${result.city}`}
-                                {result.state && `, ${result.state}`}
-                              </div>
-                            )}
+                            <div className="text-sm text-gray-500">
+                              {result.locationCount} location
+                              {result.locationCount !== 1 ? 's' : ''}
+                            </div>
                             <div className="text-sm text-blue-600 mt-1">
                               <span className="font-medium">Dishes:</span>{' '}
                               {result.dishMatches.join(', ')}
@@ -287,7 +263,7 @@ export default function RestaurantSearch({
                               {result.mentions} mention
                               {result.mentions !== 1 ? 's' : ''}
                               {result.avgSentiment !== null &&
-                                ` • Dish sentiment: ${((result.avgSentiment + 1) / 2 * 10).toFixed(1)}`}
+                                ` • Dish sentiment: ${(((result.avgSentiment + 1) / 2) * 10).toFixed(1)}`}
                               {result.normalizedScore !== null &&
                                 ` • Restaurant: ${result.normalizedScore.toFixed(1)}`}
                             </div>
@@ -303,7 +279,7 @@ export default function RestaurantSearch({
                                       : 'bg-red-100 text-red-800'
                                 }`}
                               >
-                                {result.compoundScore.toFixed(0)}% Match
+                                {result.compoundScore.toFixed(0)}%
                               </span>
                             )}
                           </div>

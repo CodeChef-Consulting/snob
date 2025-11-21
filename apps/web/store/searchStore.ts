@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type SearchResult = {
+type RestaurantLocation = {
   id: number;
   name: string;
   address: string | null;
@@ -8,7 +8,16 @@ type SearchResult = {
   state: string | null;
   latitude: number | null;
   longitude: number | null;
+};
+
+type RestaurantGroup = {
+  id: number;
+  name: string;
   normalizedScore: number | null;
+  rawScore: number | null;
+  locationCount: number;
+  locations: RestaurantLocation[];
+  // Dish search specific fields
   dishMatches?: string[];
   mentions?: number;
   avgSentiment?: number | null;
@@ -16,8 +25,8 @@ type SearchResult = {
 };
 
 type SearchStore = {
-  searchResults: SearchResult[];
-  setSearchResults: (results: SearchResult[]) => void;
+  searchResults: RestaurantGroup[];
+  setSearchResults: (results: RestaurantGroup[]) => void;
   clearSearchResults: () => void;
   hasActiveSearch: boolean;
   setHasActiveSearch: (active: boolean) => void;

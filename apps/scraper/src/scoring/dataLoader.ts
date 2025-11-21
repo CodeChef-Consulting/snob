@@ -4,18 +4,18 @@ import type { RedditItem } from './engine';
 const prisma = new PrismaClient();
 
 /**
- * Loads all Reddit items for a specific restaurant
+ * Loads all Reddit items for a specific restaurant group
  */
-export const loadRestaurantItems = async (restaurantId: number): Promise<RedditItem[]> => {
+export const loadRestaurantGroupItems = async (groupId: number): Promise<RedditItem[]> => {
   const items: RedditItem[] = [];
   const now = Date.now();
 
-  // Load posts for this restaurant
+  // Load posts for this restaurant group
   const posts = await prisma.post.findMany({
     where: {
-      restaurantsMentioned: {
+      restaurantGroupsMentioned: {
         some: {
-          id: restaurantId
+          id: groupId
         }
       },
       sentimentExtraction: {
@@ -35,7 +35,7 @@ export const loadRestaurantItems = async (restaurantId: number): Promise<RedditI
           rawAiScore: true
         }
       },
-      restaurantsMentioned: {
+      restaurantGroupsMentioned: {
         select: {
           id: true
         }
@@ -48,10 +48,10 @@ export const loadRestaurantItems = async (restaurantId: number): Promise<RedditI
 
     const ageDays = (now - post.createdUtc.getTime()) / (1000 * 60 * 60 * 24);
     const upvotes = post.ups ?? 0;
-    const mentions = post.restaurantsMentioned.length;
+    const mentions = post.restaurantGroupsMentioned.length;
 
     items.push({
-      restaurantId: String(restaurantId),
+      restaurantId: String(groupId),
       rawAiScore: post.sentimentExtraction.rawAiScore,
       upvotes,
       ageDays,
@@ -61,12 +61,12 @@ export const loadRestaurantItems = async (restaurantId: number): Promise<RedditI
     });
   }
 
-  // Load comments for this restaurant
+  // Load comments for this restaurant group
   const comments = await prisma.comment.findMany({
     where: {
-      restaurantsMentioned: {
+      restaurantGroupsMentioned: {
         some: {
-          id: restaurantId
+          id: groupId
         }
       },
       sentimentExtraction: {
@@ -91,7 +91,7 @@ export const loadRestaurantItems = async (restaurantId: number): Promise<RedditI
           rawAiScore: true
         }
       },
-      restaurantsMentioned: {
+      restaurantGroupsMentioned: {
         select: {
           id: true
         }
@@ -105,10 +105,10 @@ export const loadRestaurantItems = async (restaurantId: number): Promise<RedditI
     const ageDays = (now - comment.createdUtc.getTime()) / (1000 * 60 * 60 * 24);
     const upvotes = comment.ups ?? 0;
     const depth = comment.depth ?? 1;
-    const mentions = comment.restaurantsMentioned.length;
+    const mentions = comment.restaurantGroupsMentioned.length;
 
     items.push({
-      restaurantId: String(restaurantId),
+      restaurantId: String(groupId),
       rawAiScore: comment.sentimentExtraction.rawAiScore,
       upvotes,
       ageDays,
@@ -122,11 +122,11 @@ export const loadRestaurantItems = async (restaurantId: number): Promise<RedditI
 };
 
 /**
- * Gets all restaurant IDs that have sentiment data
+ * Gets all restaurant group IDs that have sentiment data
  */
-export const getRestaurantsWithSentiment = async (): Promise<number[]> => {
-  // Get restaurants mentioned in posts with sentiment
-  const postsRestaurants = await prisma.restaurant.findMany({
+export const getRestaurantGroupsWithSentiment = async (): Promise<number[]> => {
+  // Get restaurant groups mentioned in posts with sentiment
+  const postsGroups = await prisma.restaurantGroup.findMany({
     where: {
       posts: {
         some: {
@@ -141,8 +141,8 @@ export const getRestaurantsWithSentiment = async (): Promise<number[]> => {
     }
   });
 
-  // Get restaurants mentioned in comments with sentiment
-  const commentsRestaurants = await prisma.restaurant.findMany({
+  // Get restaurant groups mentioned in comments with sentiment
+  const commentsGroups = await prisma.restaurantGroup.findMany({
     where: {
       comments: {
         some: {
@@ -159,8 +159,8 @@ export const getRestaurantsWithSentiment = async (): Promise<number[]> => {
 
   // Combine and deduplicate
   const allIds = new Set([
-    ...postsRestaurants.map(r => r.id),
-    ...commentsRestaurants.map(r => r.id)
+    ...postsGroups.map(r => r.id),
+    ...commentsGroups.map(r => r.id)
   ]);
 
   return Array.from(allIds);
