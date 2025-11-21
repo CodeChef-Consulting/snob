@@ -2,6 +2,12 @@ import { PlacesClient, protos } from '@googlemaps/places';
 import { PrismaClient } from '@repo/db';
 import Fuse from 'fuse.js';
 import _ from 'lodash';
+import { calculateDistance } from './haversineQuery';
+import {
+  ingestRestaurantGroupAndLocations,
+  type PotentialRestaurant,
+} from './restaurantGroupIngestion';
+import { calculateMergedData } from './restaurantLocationMerge';
 
 // Lazy initialization for Places API client
 let placesClient: PlacesClient | null = null;
@@ -117,6 +123,11 @@ export interface GooglePlacesStats {
 
 export interface GooglePlacesResult {
   restaurantId: number | null;
+  hadError: boolean;
+}
+
+export interface GooglePlacesGroupResult {
+  groupId: number | null;
   hadError: boolean;
 }
 
@@ -266,7 +277,9 @@ export async function lookupAndAddRestaurant(
 
           // Merge aliases
           const existingAliases = candidate.lookupAliases || [];
-          const finalAliases = _.compact(_.uniq([...existingAliases, ...lookupAliases]));
+          const finalAliases = _.compact(
+            _.uniq([...existingAliases, ...lookupAliases])
+          );
 
           // Merge metadata (new data takes priority for new keys)
           const newMetadata = {
@@ -352,5 +365,271 @@ export async function lookupAndAddRestaurant(
     stats.googlePlacesFailed++;
     console.error(`   ⚠️  Google Places error for "${restaurantName}":`, error);
     return { restaurantId: null, hadError: true }; // Error occurred
+  }
+}
+
+/**
+ * Lookup and add a restaurant location with Google Places API
+ * Creates a RestaurantLocation, tries to find matching RestaurantGroup via fuzzy matching,
+ * and creates both if no group exists
+ *
+ * @param restaurantName Name extracted from post/comment
+ * @param prisma Prisma client
+ * @param stats Google Places statistics tracker
+ * @param restaurantLocationNameFuse Fuse instance for finding matching groups by location name
+ * @param restaurantLocations Array of locations to update with new location
+ * @returns Object with groupId if successful, null if failed/not found
+ */
+export async function lookupAndAddRestaurantLocationAndGroup(
+  restaurantName: string,
+  prisma: PrismaClient,
+  stats: GooglePlacesStats,
+  restaurantLocationNameFuse: Fuse<{
+    id: number;
+    name: string;
+    groupId: number;
+  }>,
+  restaurantLocations: { id: number; name: string; groupId: number }[]
+): Promise<GooglePlacesGroupResult> {
+  const normalizedName = restaurantName.trim().toLowerCase();
+  stats.googlePlacesLookups++;
+
+  try {
+    const place = await findPlaceByName(restaurantName);
+
+    if (!place) {
+      stats.googlePlacesFailed++;
+      return { groupId: null, hadError: false }; // Not found, but no error
+    }
+
+    // Extract place ID from the resource name (format: "places/{place_id}")
+    const placeId = place.id || place.name?.split('/').pop() || '';
+
+    if (!placeId) {
+      stats.googlePlacesFailed++;
+      console.log(`   ⚠️  No place ID found in response`);
+      return { groupId: null, hadError: false };
+    }
+
+    // Check if we already have this place_id as a RestaurantLocation
+    const existingLocation = await prisma.restaurantLocation.findUnique({
+      where: { googlePlaceId: placeId },
+      select: { id: true, name: true, lookupAliases: true, groupId: true },
+    });
+
+    if (existingLocation) {
+      console.log(
+        `   ℹ️  Found via Google (already in DB): "${existingLocation.name}" (Group ID: ${existingLocation.groupId})`
+      );
+
+      // If this is a new alias for an existing location, add it
+      const existingAliases = existingLocation.lookupAliases || [];
+
+      if (
+        normalizedName !== existingLocation.name.trim().toLowerCase() &&
+        !existingAliases.some((a) => a === normalizedName)
+      ) {
+        const updatedAliases = [...existingAliases, normalizedName];
+
+        await prisma.restaurantLocation.update({
+          where: { id: existingLocation.id },
+          data: { lookupAliases: updatedAliases },
+        });
+
+        console.log(
+          `   ✨ Added new alias "${normalizedName}" to location "${existingLocation.name}"`
+        );
+      }
+
+      return { groupId: existingLocation.groupId, hadError: false };
+    }
+
+    // Extract data from Google Places response
+    const displayName = place.displayName?.text || restaurantName;
+    const formattedAddress = place.formattedAddress || '';
+    const rating = place.rating;
+    const priceLevel = place.priceLevel;
+    const types = place.types || [];
+    const nationalPhoneNumber = place.nationalPhoneNumber;
+    const websiteUri = place.websiteUri;
+    const latitude = place.location?.latitude;
+    const longitude = place.location?.longitude;
+
+    const { address, city, state, zipCode } = extractAddressComponents(
+      place.addressComponents || []
+    );
+
+    // If the searched name differs from the canonical name, add it as a lookup alias
+    const canonicalNameNormalized = displayName.trim().toLowerCase();
+    const lookupAliases =
+      normalizedName !== canonicalNameNormalized ? [normalizedName] : [];
+
+    // Try to find a matching RestaurantGroup using fuzzy name matching + lat/lng distance
+    const locationMatches = restaurantLocationNameFuse.search(displayName);
+    let groupId: number | null = null;
+
+    // If we have coordinates, check distance for fuzzy matches
+    if (
+      latitude &&
+      longitude &&
+      locationMatches.length > 0 &&
+      locationMatches[0].score !== undefined &&
+      locationMatches[0].score < 0.3
+    ) {
+      // Get the full location data with coordinates
+      const candidateLocation = await prisma.restaurantLocation.findUnique({
+        where: { id: locationMatches[0].item.id },
+        select: {
+          id: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          groupId: true,
+        },
+      });
+
+      if (candidateLocation?.latitude && candidateLocation?.longitude) {
+        // Calculate Haversine distance
+        const distanceMeters = await calculateDistance(
+          prisma,
+          latitude,
+          longitude,
+          candidateLocation.latitude,
+          candidateLocation.longitude
+        );
+
+        // Accept if name matches AND distance is reasonable (< 100m)
+        if (distanceMeters < 100) {
+          groupId = candidateLocation.groupId;
+          console.log(
+            `   🔗 Matched to existing location: "${candidateLocation.name}" (ID: ${candidateLocation.id}, distance: ${distanceMeters.toFixed(1)}m)`
+          );
+
+          // Update existing location with Google Places data using merge strategy
+          const existingLocation = await prisma.restaurantLocation.findUnique({
+            where: { id: candidateLocation.id },
+          });
+
+          if (existingLocation) {
+            // Create a virtual "Google Places" location to merge with existing
+            const googlePlaceLocation = {
+              id: -1, // Dummy ID
+              name: displayName,
+              source: 'Google Places API',
+              googlePlaceId: placeId,
+              lookupAliases,
+              metadata: {
+                rating,
+                priceLevel,
+                types,
+                formattedAddress,
+                nationalPhoneNumber,
+                websiteUri,
+              },
+              createdAt: new Date(), // New, so will be loser
+            };
+
+            // Use the same merge logic as mergeDuplicateRestaurantLocations
+            const {
+              finalName,
+              finalGooglePlaceId,
+              finalAliases,
+              finalMetadata,
+            } = calculateMergedData([existingLocation, googlePlaceLocation]);
+
+            await prisma.restaurantLocation.update({
+              where: { id: candidateLocation.id },
+              data: {
+                name: finalName,
+                googlePlaceId: finalGooglePlaceId,
+                lookupAliases: finalAliases,
+                metadata: finalMetadata,
+              },
+            });
+
+            console.log(
+              `   ✨ Updated existing location "${existingLocation.name}" → "${finalName}" (aliases: ${finalAliases.length})`
+            );
+
+            stats.googlePlacesAdded++;
+            return { groupId, hadError: false };
+          }
+        } else {
+          console.log(
+            `   ⚠️  Name match but too far: "${candidateLocation.name}" (distance: ${distanceMeters.toFixed(0)}m > 100m threshold)`
+          );
+        }
+      }
+    }
+
+    // If no distance match, use the 4-phase gauntlet to find/create group
+    if (groupId === null) {
+      const potentialRestaurant: PotentialRestaurant = {
+        name: displayName,
+        address,
+        city,
+        state,
+        zipCode,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        source: 'Google Places API',
+        googlePlaceId: placeId,
+        lookupAliases,
+        metadata: {
+          rating,
+          priceLevel,
+          types,
+          formattedAddress,
+          nationalPhoneNumber,
+          websiteUri,
+        },
+      };
+
+      // Use the 4-phase gauntlet (Phase 0: exact, Phase 1: chains, Phase 2: fuzzy, Phase 3: word-based, Phase 4: new)
+      const ingestionResult = await ingestRestaurantGroupAndLocations(
+        potentialRestaurant,
+        prisma,
+        undefined // No chain mappings for Google Places lookups
+      );
+
+      groupId = ingestionResult.groupId;
+      const location = await prisma.restaurantLocation.findUnique({
+        where: { id: ingestionResult.locationId },
+      });
+
+      console.log(
+        `   🎯 Used 4-phase gauntlet: ${ingestionResult.matchPhase}, Group ID: ${groupId}, ${ingestionResult.wasNewGroup ? 'NEW' : 'EXISTING'} group, ${ingestionResult.wasNewLocation ? 'NEW' : 'EXISTING'} location`
+      );
+
+      stats.googlePlacesAdded++;
+
+      // Update array and Fuse index with new location
+      if (location) {
+        const newLocation = {
+          id: location.id,
+          name: location.name,
+          groupId: location.groupId,
+        };
+        restaurantLocations.push(newLocation);
+        restaurantLocationNameFuse.setCollection(restaurantLocations);
+        console.log(
+          `   ✨ Updated Fuse index with new location (total: ${restaurantLocations.length})`
+        );
+      }
+
+      // Rate limiting: Wait 500ms between API calls
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      return { groupId, hadError: false };
+    }
+
+    // If we found a group via distance match, we already updated the location above
+    // Rate limiting and return
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return { groupId, hadError: false };
+  } catch (error) {
+    stats.googlePlacesFailed++;
+    console.error(`   ⚠️  Google Places error for "${restaurantName}":`, error);
+    return { groupId: null, hadError: true }; // Error occurred
   }
 }

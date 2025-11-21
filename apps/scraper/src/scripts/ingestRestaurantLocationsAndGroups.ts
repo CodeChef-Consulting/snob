@@ -1,8 +1,15 @@
+import { config } from '@dotenvx/dotenvx';
+config({ path: ['../../.env'] });
+
 import { PrismaClient } from '@repo/db';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from 'csv-parse/sync';
 import { startCase, toLower } from 'lodash';
+import {
+  ingestRestaurantGroupAndLocations,
+  type PotentialRestaurant,
+} from '../utils/restaurantGroupIngestion';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +32,7 @@ interface RestaurantCSVRow {
   LOCATION: string;
 }
 
-async function ingestRestaurants() {
+async function ingestRestaurantLocationsAndGroups() {
   try {
     const csvPath = path.join(process.cwd(), 'Restaurants_in_LA_20251004.csv');
     const fileContent = fs.readFileSync(csvPath, 'utf-8');
@@ -36,9 +43,10 @@ async function ingestRestaurants() {
       trim: true,
     });
 
-    console.log(`Found ${records.length} restaurants to ingest`);
+    console.log(`Found ${records.length} restaurant locations to ingest`);
 
-    let inserted = 0;
+    let groupsCreated = 0;
+    let locationsCreated = 0;
     let skipped = 0;
 
     for (const record of records) {
@@ -55,6 +63,15 @@ async function ingestRestaurants() {
         const locationMatch = record['LOCATION']?.match(
           /POINT \(([^ ]+) ([^ ]+)\)/
         );
+
+        let latitude: number | null = null;
+        let longitude: number | null = null;
+
+        if (locationMatch && locationMatch[1] && locationMatch[2]) {
+          longitude = parseFloat(locationMatch[1]);
+          latitude = parseFloat(locationMatch[2]);
+        }
+
         const metadata: any = {
           locationAccountNumber: record['LOCATION ACCOUNT #'],
           businessName: record['BUSINESS NAME'],
@@ -66,39 +83,48 @@ async function ingestRestaurants() {
           locationEndDate: record['LOCATION END DATE'],
         };
 
-        if (locationMatch && locationMatch[1] && locationMatch[2]) {
-          metadata.coordinates = {
-            longitude: parseFloat(locationMatch[1]),
-            latitude: parseFloat(locationMatch[2]),
-          };
-        }
-        const existingRestaurant = await prisma.restaurant.findFirst({
-          where: { name: startCase(toLower(name!)) },
-        });
+        // Create potential restaurant object
+        const potentialRestaurant: PotentialRestaurant = {
+          name: startCase(toLower(name)),
+          address: record['STREET ADDRESS']
+            ? startCase(toLower(record['STREET ADDRESS']))
+            : null,
+          city: record['CITY'] ? startCase(toLower(record['CITY'])) : null,
+          state: 'CA',
+          zipCode: record['ZIP CODE'] || null,
+          latitude,
+          longitude,
+          source: 'Open Data Portal',
+          googlePlaceId: null,
+          lookupAliases: [],
+          metadata,
+        };
 
-        if (existingRestaurant) {
-          console.log(`Restaurant already exists: ${name}`);
+        // Ingest using the utility function (now takes single restaurant)
+        const result = await ingestRestaurantGroupAndLocations(
+          potentialRestaurant,
+          prisma,
+          undefined // No chain mappings for CSV ingestion
+        );
+
+        // Phase 0 check is now done inside the utility
+        if (!result.wasNewLocation) {
+          console.log(`Location already exists: ${name} (${result.matchPhase})`);
           skipped++;
           continue;
         }
 
-        await prisma.restaurant.create({
-          data: {
-            name: name ? startCase(toLower(name)) : '',
-            address: record['STREET ADDRESS']
-              ? startCase(toLower(record['STREET ADDRESS']))
-              : null,
-            city: record['CITY'] ? startCase(toLower(record['CITY'])) : null,
-            state: 'CA', // All restaurants are in California (Los Angeles)
-            zipCode: record['ZIP CODE'] || null,
-            metadata,
-          },
-        });
+        if (result.wasNewGroup) {
+          groupsCreated++;
+        }
+        if (result.wasNewLocation) {
+          locationsCreated++;
+        }
 
-        inserted++;
-
-        if (inserted % 100 === 0) {
-          console.log(`Progress: ${inserted} restaurants inserted`);
+        if ((groupsCreated + locationsCreated) % 100 === 0) {
+          console.log(
+            `Progress: ${groupsCreated} groups, ${locationsCreated} locations`
+          );
         }
       } catch (error) {
         console.error(
@@ -111,7 +137,8 @@ async function ingestRestaurants() {
 
     console.log('\n=== Ingestion Complete ===');
     console.log(`Total restaurants in CSV: ${records.length}`);
-    console.log(`Successfully inserted: ${inserted}`);
+    console.log(`Groups created: ${groupsCreated}`);
+    console.log(`Locations created: ${locationsCreated}`);
     console.log(`Skipped: ${skipped}`);
   } catch (error) {
     console.error('Error ingesting restaurants:', error);
@@ -121,9 +148,9 @@ async function ingestRestaurants() {
   }
 }
 
-ingestRestaurants()
+ingestRestaurantLocationsAndGroups()
   .then(() => {
-    console.log('Restaurant ingestion completed successfully');
+    console.log('Restaurant location and group ingestion completed successfully');
     process.exit(0);
   })
   .catch((error) => {
