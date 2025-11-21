@@ -62,14 +62,36 @@ function parseChainRestaurantsFile(): ChainMapping[] {
 
 // Normalize restaurant name for matching
 function normalizeRestaurantName(name: string): string {
-  return name
+  const normalized = name
     .toLowerCase()
     .trim()
-    .replace(/\s+\d+$/, '') // Remove trailing numbers
-    .replace(/\s+#\d+/, '') // Remove store numbers with hash
-    .replace(/\s+/g, ' ') // Normalize spacing
-    .replace(/['']/g, "'") // Normalize apostrophes
+    .replace(/['']/g, '') // Remove apostrophes early (dave's -> daves)
     .replace(/&/g, 'and'); // Normalize ampersands
+
+  // Don't remove trailing numbers for restaurants where numbers are part of brand identity
+  // (e.g., "Tacos #1", "Pho 79", "Phở 54", "Number 1 Chinese")
+  const hasNumberBrand = /\b(tacos?|ph[oở]|number)\b.*\d+$|^\d+\s+\w+/.test(
+    normalized
+  );
+
+  let result = normalized;
+
+  // Remove store numbers with hash (e.g., "Starbucks #123") BEFORE checking for number brands
+  result = result.replace(/\s+#\d+/, '');
+
+  // Remove business entity suffixes (must be at end with word boundary)
+  result = result.replace(
+    /\s+(inc\.?|llc\.?|corp\.?|corporation|ltd\.?|limited|co\.?)$/i,
+    ''
+  );
+
+  if (!hasNumberBrand) {
+    result = result.replace(/\s+\d+$/, ''); // Remove trailing numbers only if not a number-branded restaurant
+  }
+
+  result = result.replace(/\s+/g, ' '); // Normalize spacing
+
+  return result;
 }
 
 // Phase 1: Process known chains from LA_CHAIN_RESTAURANTS.md
@@ -251,8 +273,10 @@ async function displayPotentialChain(
     (r: any) => r.createdAt.getTime(),
   ]);
 
-  const proposed = sorted[0];
-  console.log(`\n👑 PROPOSED CANONICAL NAME: "${proposed.name}"`);
+  // Use the shortest name as canonical (likely without business suffix)
+  const canonicalName =
+    _.minBy(restaurants, (r: any) => r.name.length)?.name || sorted[0].name;
+  console.log(`\n👑 PROPOSED CANONICAL NAME: "${canonicalName}"`);
 
   sorted.forEach((r: any, i: number) => {
     console.log(`\n  ${i + 1}. [ID: ${r.id}] ${r.name}`);
@@ -269,7 +293,7 @@ async function displayPotentialChain(
   });
 }
 
-// Prompt user for approval
+// Prompt user for approval (Enter defaults to 'y')
 function promptUser(question: string): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -279,9 +303,38 @@ function promptUser(question: string): Promise<string> {
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
       rl.close();
-      resolve(answer.trim().toLowerCase());
+      const trimmed = answer.trim().toLowerCase();
+      // Empty string (just Enter) defaults to 'y'
+      resolve(trimmed === '' ? 'y' : trimmed);
     });
   });
+}
+
+// Helper: Find restaurants that haven't been migrated to RestaurantLocation yet
+async function findRestaurantsNotMigrated(): Promise<void> {
+  // Get IDs of restaurants already in groups by matching name+address
+  const existingLocations = await prisma.restaurantLocation.findMany({
+    select: {
+      name: true,
+      address: true,
+    },
+  });
+
+  // Process in batches to avoid "too many bind variables" error
+  const batchSize = 1000;
+  for (let i = 0; i < existingLocations.length; i += batchSize) {
+    const batch = existingLocations.slice(i, i + batchSize);
+    const alreadyInGroups = await prisma.restaurant.findMany({
+      where: {
+        OR: batch.map((loc) => ({
+          AND: [{ name: loc.name }, { address: loc.address }],
+        })),
+      },
+      select: { id: true },
+    });
+
+    alreadyInGroups.forEach((r) => processedRestaurantIds.add(r.id));
+  }
 }
 
 // Phase 2: Fuzzy match remaining multi-location restaurants
@@ -296,28 +349,8 @@ async function fuzzyMatchMultiLocation(
     console.log('⚙️  INTERACTIVE MODE - You will review each potential chain');
   }
 
-  // Get IDs of restaurants already in groups
-  const existingLocationRestaurantIds =
-    await prisma.restaurantLocation.findMany({
-      select: {
-        // We need to find the original restaurant ID somehow
-        // For now, we'll use the restaurant name to find matches
-        name: true,
-        address: true,
-      },
-    });
-
-  // Find restaurants that match existing locations (already processed)
-  const alreadyInGroups = await prisma.restaurant.findMany({
-    where: {
-      OR: existingLocationRestaurantIds.map((loc) => ({
-        AND: [{ name: loc.name }, { address: loc.address }],
-      })),
-    },
-    select: { id: true },
-  });
-
-  alreadyInGroups.forEach((r) => processedRestaurantIds.add(r.id));
+  // Mark already-migrated restaurants as processed
+  await findRestaurantsNotMigrated();
 
   // Get remaining unprocessed restaurants
   const remainingRestaurants = await prisma.restaurant.findMany({
@@ -343,13 +376,14 @@ async function fuzzyMatchMultiLocation(
     nameGroups.get(normalized)!.push(restaurant);
   }
 
-  // Find groups with 3+ locations
+  // Find groups with 2+ locations
   const potentialChains = Array.from(nameGroups.entries())
-    .filter(([_, restaurants]) => restaurants.length >= 3)
+    //TODO: change back to >= 2
+    .filter(([_, restaurants]) => restaurants.length === 2)
     .sort((a, b) => b[1].length - a[1].length);
 
   console.log(
-    `🔗 Found ${potentialChains.length} potential chains (3+ locations)`
+    `🔗 Found ${potentialChains.length} potential chains (2+ locations)`
   );
 
   let groupsCreated = 0;
@@ -362,10 +396,14 @@ async function fuzzyMatchMultiLocation(
       (r: any) => (r.source === 'Open Data Portal' ? 0 : 1),
       (r: any) => r.createdAt.getTime(),
     ]);
-    const canonicalName = sorted[0].name;
+
+    // Use the shortest name as canonical (likely without business suffix)
+    // or the first one if they're all the same length
+    const canonicalName =
+      _.minBy(restaurants, (r: any) => r.name.length)?.name || sorted[0].name;
 
     // Interactive approval
-    if (interactive && !dryRun) {
+    if (interactive && !dryRun && sorted.length > 2) {
       await displayPotentialChain(
         normalizedName,
         restaurants,
@@ -471,10 +509,237 @@ async function fuzzyMatchMultiLocation(
   console.log(`   Total restaurants processed: ${processedRestaurantIds.size}`);
 }
 
-// Phase 3: Create single-location groups for remaining restaurants
-async function createSingleLocationGroups(dryRun: boolean = false) {
-  console.log('\n🏪 PHASE 3: Create Single-Location Groups');
+// Phase 3: Word-based matching (3-word then 2-word)
+async function wordBasedMatching(
+  dryRun: boolean = false,
+  interactive: boolean = false,
+  skip3Word: boolean = false
+) {
+  console.log('\n🔤 PHASE 3: Word-Based Matching');
+  console.log('================================');
+
+  if (interactive && !dryRun) {
+    console.log('⚙️  INTERACTIVE MODE - You will review each potential chain');
+  }
+
+  if (skip3Word) {
+    console.log('⚠️  Skipping 3-word matches, only running 2-word matches');
+  }
+
+  // Mark already-migrated restaurants as processed
+  await findRestaurantsNotMigrated();
+
+  // Get remaining unprocessed restaurants
+  const remainingRestaurants = await prisma.restaurant.findMany({
+    where: {
+      id: {
+        notIn: Array.from(processedRestaurantIds),
+      },
+    },
+  });
+
+  console.log(
+    `📋 Analyzing ${remainingRestaurants.length} remaining restaurants`
+  );
+
+  let groupsCreated = 0;
+  let locationsCreated = 0;
+  let chainsSkipped = 0;
+
+  // Blacklist for 2-word matching - common words that shouldn't be used for grouping
+  const twoWordBlacklist = new Set([
+    'tacos',
+    'taco',
+    'pho',
+    'el',
+    'la',
+    'los',
+    'las',
+    'angeles',
+    'l',
+    'a',
+    'the',
+    'de',
+    'del',
+    'my',
+    'best',
+    'good',
+    'great',
+    'new',
+    'old',
+    'original',
+    'famous',
+    'authentic',
+    'fresh',
+    'hot',
+    'spicy',
+    'of',
+    'catch',
+  ]);
+
+  // Try 3-word matches first, then 2-word matches
+  const wordCounts = skip3Word ? [2] : [3, 2];
+  for (const wordCount of wordCounts) {
+    console.log(`\n🔍 Looking for ${wordCount}-word matches...`);
+
+    const wordGroups = new Map<string, typeof remainingRestaurants>();
+
+    // Get current remaining restaurants (excluding those processed in this phase)
+    const currentRemaining = remainingRestaurants.filter(
+      (r) => !processedRestaurantIds.has(r.id)
+    );
+
+    for (const restaurant of currentRemaining) {
+      const words = restaurant.name.toLowerCase().trim().split(/\s+/);
+      if (words.length >= wordCount) {
+        const wordKey = words.slice(0, wordCount).join(' ');
+
+        // For 2-word matches, skip if first word is in blacklist
+        if (wordCount === 2 && twoWordBlacklist.has(words[0])) {
+          continue;
+        }
+
+        if (!wordGroups.has(wordKey)) {
+          wordGroups.set(wordKey, []);
+        }
+        wordGroups.get(wordKey)!.push(restaurant);
+      }
+    }
+
+    // Find groups with 2+ locations
+    const potentialChains = Array.from(wordGroups.entries())
+      //TODO: change back to >= 2
+      .filter(([_, restaurants]) => restaurants.length === 2)
+      .sort((a, b) => b[1].length - a[1].length);
+
+    console.log(
+      `🔗 Found ${potentialChains.length} potential chains (3+ locations)`
+    );
+
+    for (let i = 0; i < potentialChains.length; i++) {
+      const [wordKey, restaurants] = potentialChains[i];
+      const sorted = _.sortBy(restaurants, [
+        (r: any) => (r.source === 'Open Data Portal' ? 0 : 1),
+        (r: any) => r.createdAt.getTime(),
+      ]);
+
+      // Use the shortest name as canonical
+      const canonicalName =
+        _.minBy(restaurants, (r: any) => r.name.length)?.name || sorted[0].name;
+
+      // Interactive approval
+      if (interactive && !dryRun && wordCount < 3) {
+        await displayPotentialChain(
+          `${wordCount}-word: ${wordKey}`,
+          restaurants,
+          i,
+          potentialChains.length
+        );
+        const answer = await promptUser(
+          '\nGroup these together? (y/n/q to quit): '
+        );
+
+        if (answer === 'q') {
+          console.log(`\n⏸️  Stopping ${wordCount}-word matching`);
+          break;
+        }
+
+        if (answer !== 'y') {
+          console.log(`⏭️  Skipped group "${canonicalName}"`);
+          chainsSkipped++;
+          continue;
+        }
+      } else {
+        console.log(`\n📍 "${canonicalName}": ${restaurants.length} locations`);
+      }
+
+      if (!dryRun) {
+        const restaurantIds = restaurants.map((r: any) => r.id);
+
+        await prisma.$transaction(async (tx) => {
+          const group = await tx.restaurantGroup.create({
+            data: {
+              name: canonicalName,
+              rawScore: null,
+              normalizedScore: null,
+            },
+          });
+
+          for (const restaurant of restaurants) {
+            await tx.restaurantLocation.create({
+              data: {
+                name: restaurant.name,
+                address: restaurant.address,
+                city: restaurant.city,
+                state: restaurant.state,
+                zipCode: restaurant.zipCode,
+                latitude: restaurant.latitude,
+                longitude: restaurant.longitude,
+                source: restaurant.source,
+                googlePlaceId: restaurant.googlePlaceId,
+                lookupAliases: restaurant.lookupAliases,
+                metadata: restaurant.metadata,
+                groupId: group.id,
+              },
+            });
+          }
+
+          // Link all posts that mention any of these restaurants to the group (bulk insert)
+          await tx.$executeRaw`
+            INSERT INTO "_PostToRestaurantGroup" ("A", "B")
+            SELECT DISTINCT p.id, ${group.id}::int
+            FROM "Post" p
+            JOIN "_PostToRestaurant" pr ON pr."A" = p.id
+            WHERE pr."B" = ANY(${Prisma.raw(`ARRAY[${restaurantIds.join(',')}]`)})
+            ON CONFLICT DO NOTHING
+          `;
+
+          // Link all comments that mention any of these restaurants to the group (bulk insert)
+          await tx.$executeRaw`
+            INSERT INTO "_CommentToRestaurantGroup" ("A", "B")
+            SELECT DISTINCT c.id, ${group.id}::int
+            FROM "Comment" c
+            JOIN "_CommentToRestaurant" cr ON cr."A" = c.id
+            WHERE cr."B" = ANY(${Prisma.raw(`ARRAY[${restaurantIds.join(',')}]`)})
+            ON CONFLICT DO NOTHING
+          `;
+        });
+
+        groupsCreated++;
+        restaurants.forEach((r: any) => processedRestaurantIds.add(r.id));
+        locationsCreated += restaurants.length;
+
+        console.log(
+          `✅ Created group "${canonicalName}" with ${restaurants.length} locations`
+        );
+      } else {
+        console.log(
+          `   [DRY RUN] Would create group with ${restaurants.length} locations`
+        );
+        restaurants.forEach((r: any) => processedRestaurantIds.add(r.id));
+      }
+    }
+  }
+
+  console.log(`\n📊 Phase 3 Summary:`);
+  console.log(`   Groups created: ${groupsCreated}`);
+  console.log(`   Locations created: ${locationsCreated}`);
+  if (interactive) {
+    console.log(`   Chains skipped: ${chainsSkipped}`);
+  }
+  console.log(`   Total restaurants processed: ${processedRestaurantIds.size}`);
+}
+
+// Phase 4: Create single-location groups for remaining restaurants
+async function createSingleLocationGroups(
+  dryRun: boolean = false,
+  interactive: boolean = false
+) {
+  console.log('\n🏪 PHASE 4: Create Single-Location Groups');
   console.log('=========================================');
+
+  // Mark already-migrated restaurants as processed
+  await findRestaurantsNotMigrated();
 
   const remainingRestaurants = await prisma.restaurant.findMany({
     where: {
@@ -493,58 +758,153 @@ async function createSingleLocationGroups(dryRun: boolean = false) {
 
   if (!dryRun) {
     for (const restaurant of remainingRestaurants) {
-      // Wrap in transaction so everything rolls back on failure
-      await prisma.$transaction(async (tx) => {
-        const group = await tx.restaurantGroup.create({
-          data: {
-            name: restaurant.name,
-            rawScore: restaurant.rawScore,
-            normalizedScore: restaurant.normalizedScore,
-          },
+      try {
+        // Wrap in transaction so everything rolls back on failure
+        await prisma.$transaction(async (tx) => {
+          const group = await tx.restaurantGroup.create({
+            data: {
+              name: restaurant.name,
+              rawScore: restaurant.rawScore,
+              normalizedScore: restaurant.normalizedScore,
+            },
+          });
+
+          await tx.restaurantLocation.create({
+            data: {
+              name: restaurant.name,
+              address: restaurant.address,
+              city: restaurant.city,
+              state: restaurant.state,
+              zipCode: restaurant.zipCode,
+              latitude: restaurant.latitude,
+              longitude: restaurant.longitude,
+              source: restaurant.source,
+              googlePlaceId: restaurant.googlePlaceId,
+              lookupAliases: restaurant.lookupAliases,
+              metadata: restaurant.metadata,
+              groupId: group.id,
+            },
+          });
+
+          // Link all posts that mention this restaurant to the group (bulk insert)
+          await tx.$executeRaw`
+            INSERT INTO "_PostToRestaurantGroup" ("A", "B")
+            SELECT DISTINCT p.id, ${group.id}::int
+            FROM "Post" p
+            JOIN "_PostToRestaurant" pr ON pr."A" = p.id
+            WHERE pr."B" = ${restaurant.id}
+            ON CONFLICT DO NOTHING
+          `;
+
+          // Link all comments that mention this restaurant to the group (bulk insert)
+          await tx.$executeRaw`
+            INSERT INTO "_CommentToRestaurantGroup" ("A", "B")
+            SELECT DISTINCT c.id, ${group.id}::int
+            FROM "Comment" c
+            JOIN "_CommentToRestaurant" cr ON cr."A" = c.id
+            WHERE cr."B" = ${restaurant.id}
+            ON CONFLICT DO NOTHING
+          `;
         });
 
-        await tx.restaurantLocation.create({
-          data: {
-            name: restaurant.name,
-            address: restaurant.address,
-            city: restaurant.city,
-            state: restaurant.state,
-            zipCode: restaurant.zipCode,
-            latitude: restaurant.latitude,
-            longitude: restaurant.longitude,
-            source: restaurant.source,
-            googlePlaceId: restaurant.googlePlaceId,
-            lookupAliases: restaurant.lookupAliases,
-            metadata: restaurant.metadata,
-            groupId: group.id,
-          },
-        });
+        // Only update counters and tracking after successful transaction
+        groupsCreated++;
+        locationsCreated++;
+        processedRestaurantIds.add(restaurant.id);
+      } catch (error: any) {
+        // Check if it's a unique constraint violation on the group name
+        if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
+          console.log(
+            `\n⚠️  Conflict: Group "${restaurant.name}" already exists`
+          );
 
-        // Link all posts that mention this restaurant to the group (bulk insert)
-        await tx.$executeRaw`
-          INSERT INTO "_PostToRestaurantGroup" ("A", "B")
-          SELECT DISTINCT p.id, ${group.id}::int
-          FROM "Post" p
-          JOIN "_PostToRestaurant" pr ON pr."A" = p.id
-          WHERE pr."B" = ${restaurant.id}
-          ON CONFLICT DO NOTHING
-        `;
+          // Find the existing group
+          const existingGroup = await prisma.restaurantGroup.findUnique({
+            where: { name: restaurant.name },
+            include: { locations: true },
+          });
 
-        // Link all comments that mention this restaurant to the group (bulk insert)
-        await tx.$executeRaw`
-          INSERT INTO "_CommentToRestaurantGroup" ("A", "B")
-          SELECT DISTINCT c.id, ${group.id}::int
-          FROM "Comment" c
-          JOIN "_CommentToRestaurant" cr ON cr."A" = c.id
-          WHERE cr."B" = ${restaurant.id}
-          ON CONFLICT DO NOTHING
-        `;
-      });
+          if (existingGroup) {
+            console.log(
+              `\n📍 Existing group has ${existingGroup.locations.length} location(s):`
+            );
+            existingGroup.locations.forEach((loc, i) => {
+              console.log(`   ${i + 1}. ${loc.name}`);
+              if (loc.address) {
+                console.log(`      ${loc.address}, ${loc.city}, ${loc.state}`);
+              }
+            });
 
-      // Only update counters and tracking after successful transaction
-      groupsCreated++;
-      locationsCreated++;
-      processedRestaurantIds.add(restaurant.id);
+            console.log(`\n🆕 New restaurant:`);
+            console.log(`   ${restaurant.name}`);
+            if (restaurant.address) {
+              console.log(
+                `   ${restaurant.address}, ${restaurant.city}, ${restaurant.state}`
+              );
+            }
+
+            if (interactive) {
+              const answer = await promptUser(
+                '\nAdd this restaurant to the existing group? (y/n): '
+              );
+
+              if (answer === 'y') {
+                // Add location to existing group
+                await prisma.$transaction(async (tx) => {
+                  await tx.restaurantLocation.create({
+                    data: {
+                      name: restaurant.name,
+                      address: restaurant.address,
+                      city: restaurant.city,
+                      state: restaurant.state,
+                      zipCode: restaurant.zipCode,
+                      latitude: restaurant.latitude,
+                      longitude: restaurant.longitude,
+                      source: restaurant.source,
+                      googlePlaceId: restaurant.googlePlaceId,
+                      lookupAliases: restaurant.lookupAliases,
+                      metadata: restaurant.metadata,
+                      groupId: existingGroup.id,
+                    },
+                  });
+
+                  // Link posts and comments
+                  await tx.$executeRaw`
+                    INSERT INTO "_PostToRestaurantGroup" ("A", "B")
+                    SELECT DISTINCT p.id, ${existingGroup.id}::int
+                    FROM "Post" p
+                    JOIN "_PostToRestaurant" pr ON pr."A" = p.id
+                    WHERE pr."B" = ${restaurant.id}
+                    ON CONFLICT DO NOTHING
+                  `;
+
+                  await tx.$executeRaw`
+                    INSERT INTO "_CommentToRestaurantGroup" ("A", "B")
+                    SELECT DISTINCT c.id, ${existingGroup.id}::int
+                    FROM "Comment" c
+                    JOIN "_CommentToRestaurant" cr ON cr."A" = c.id
+                    WHERE cr."B" = ${restaurant.id}
+                    ON CONFLICT DO NOTHING
+                  `;
+                });
+
+                console.log(
+                  `✅ Added location to existing group "${existingGroup.name}"`
+                );
+                locationsCreated++;
+                processedRestaurantIds.add(restaurant.id);
+              } else {
+                console.log(`⏭️  Skipped restaurant "${restaurant.name}"`);
+              }
+            } else {
+              console.log(`⏭️  Skipping - non-interactive mode`);
+            }
+          }
+        } else {
+          // Re-throw if it's a different error
+          throw error;
+        }
+      }
     }
   } else {
     remainingRestaurants.forEach((r) => processedRestaurantIds.add(r.id));
@@ -562,6 +922,7 @@ async function main() {
   const dryRun = args.includes('--dry-run');
   const interactive = args.includes('--interactive');
   const resetAll = args.includes('--reset-all');
+  const skip3Word = args.includes('--skip-3-word');
 
   console.log('🚀 Restaurant Group Migration');
   console.log('==============================\n');
@@ -593,10 +954,61 @@ async function main() {
     // Parse chain mappings
     const chains = parseChainRestaurantsFile();
 
-    // Execute three phases
-    await processKnownChains(chains, dryRun);
-    await fuzzyMatchMultiLocation(dryRun, interactive);
-    await createSingleLocationGroups(dryRun);
+    // Phase 1: Process known chains
+    if (interactive && !dryRun) {
+      const phase1Answer = await promptUser(
+        '\n▶️  Run Phase 1 (Process Known Chains)? (y/n): '
+      );
+      if (phase1Answer !== 'y') {
+        console.log('⏭️  Skipping Phase 1');
+      } else {
+        await processKnownChains(chains, dryRun);
+      }
+    } else {
+      await processKnownChains(chains, dryRun);
+    }
+
+    // Phase 2: Fuzzy match multi-location
+    if (interactive && !dryRun) {
+      const phase2Answer = await promptUser(
+        '\n▶️  Run Phase 2 (Fuzzy Match Multi-Location)? (y/n): '
+      );
+      if (phase2Answer !== 'y') {
+        console.log('⏭️  Skipping Phase 2');
+      } else {
+        await fuzzyMatchMultiLocation(dryRun, interactive);
+      }
+    } else {
+      await fuzzyMatchMultiLocation(dryRun, interactive);
+    }
+
+    // Phase 3: Word-based matching
+    if (interactive && !dryRun) {
+      const phase3Answer = await promptUser(
+        '\n▶️  Run Phase 3 (Word-Based Matching)? (y/n): '
+      );
+      if (phase3Answer !== 'y') {
+        console.log('⏭️  Skipping Phase 3');
+      } else {
+        await wordBasedMatching(dryRun, interactive, skip3Word);
+      }
+    } else {
+      await wordBasedMatching(dryRun, interactive, skip3Word);
+    }
+
+    // Phase 4: Single-location groups
+    if (interactive && !dryRun) {
+      const phase4Answer = await promptUser(
+        '\n▶️  Run Phase 4 (Create Single-Location Groups)? (y/n): '
+      );
+      if (phase4Answer !== 'y') {
+        console.log('⏭️  Skipping Phase 4');
+      } else {
+        await createSingleLocationGroups(dryRun, interactive);
+      }
+    } else {
+      await createSingleLocationGroups(dryRun, interactive);
+    }
 
     // Final summary
     const totalRestaurants = await prisma.restaurant.count();

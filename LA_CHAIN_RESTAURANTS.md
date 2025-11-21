@@ -29,6 +29,9 @@ Generated from database analysis of Restaurant table.
   - Variations: "In N Out Burger", "In-N-Out Burger", "In N Out Burgers A California Corporation"
   - **Canonical**: `In-N-Out Burger`
 
+- **Shake Shack**
+  - **Canonical**: `Shake Shack`
+
 ### Fast Food - Mexican
 - **Taco Bell** (21 locations)
   - **Canonical**: `Taco Bell`
@@ -50,7 +53,8 @@ Generated from database analysis of Restaurant table.
   - **Canonical**: `Wingstop`
 
 - **Kentucky Fried Chicken** (8 locations)
-  - **Canonical**: `KFC`
+  - Variations: "KFC", "Kentucky Fried Chicken"
+  - **Canonical**: `Kentucky Fried Chicken`
 
 - **Popeyes** (7 locations)
   - Variations: "Popeyes Chicken", "Popeyes Louisiana Kitchen"
@@ -62,6 +66,10 @@ Generated from database analysis of Restaurant table.
 
 - **Zankou Chicken** (6 locations)
   - **Canonical**: `Zankou Chicken`
+
+- **Chick-fil-A**
+  - Variations: "Chick-Fil-A", "Chickfila", "Chick Fil A"
+  - **Canonical**: `Chick-fil-A`
 
 ### Fast Food - Other
 - **Panda Express** (36 locations)
