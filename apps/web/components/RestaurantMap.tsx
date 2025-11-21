@@ -38,6 +38,7 @@ type MarkerProps = {
   isSelected: boolean;
   isHighlighted: boolean;
   onClick: () => void;
+  $hover?: boolean;
 };
 
 // Smooth color gradient from red (0) → yellow (5) → green (10), or gray for no score
@@ -95,6 +96,7 @@ const Marker = ({ normalizedScore, isSelected, isHighlighted, onClick }: MarkerP
 export default function RestaurantMap() {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const [isPanelVisible, setIsPanelVisible] = useState(true);
   const isDraggingRef = useRef(false);
   const mapRef = useRef<any>(null);
 
@@ -109,11 +111,17 @@ export default function RestaurantMap() {
     limit: 500,
   });
 
+  // Fetch selected group details if it's not in the current groups list
+  const { data: selectedGroupData } = trpc.customRestaurantGroup.getGroupById.useQuery(
+    { id: selectedGroupId! },
+    { enabled: selectedGroupId !== null }
+  );
+
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-xl text-gray-700">Loading restaurant groups...</div>
+        <div className="text-xl text-gray-900">Loading restaurant groups...</div>
       </div>
     );
   }
@@ -121,7 +129,7 @@ export default function RestaurantMap() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-xl text-red-600">
+        <div className="text-xl text-red-700">
           Error loading restaurant groups: {error.message}
         </div>
       </div>
@@ -148,7 +156,13 @@ export default function RestaurantMap() {
   let displayLocations;
   if (selectedGroupId) {
     // If a group is selected, only show locations for that group
-    const selectedGroup = displayGroups.find((g) => g.id === selectedGroupId);
+    let selectedGroup = displayGroups.find((g) => g.id === selectedGroupId);
+
+    // If not found in displayGroups, use the separately fetched group data
+    if (!selectedGroup && selectedGroupData) {
+      selectedGroup = selectedGroupData;
+    }
+
     displayLocations = selectedGroup
       ? selectedGroup.locations
           .filter((loc) => loc.latitude !== null && loc.longitude !== null)
@@ -185,73 +199,67 @@ export default function RestaurantMap() {
     setSelectedGroupId(groupId);
     setSelectedLocationId(locationId ?? null);
 
-    // Find the group to get bounds
-    const group = displayGroups.find((g) => g.id === groupId);
-    if (!group || !mapRef.current) return;
+    // Use setTimeout to ensure map panning happens after state updates and data fetching
+    setTimeout(() => {
+      if (!mapRef.current) return;
 
-    const validLocations = group.locations.filter(
-      (loc) => loc.latitude !== null && loc.longitude !== null
-    );
-
-    if (validLocations.length === 0) return;
-
-    // If specific location selected, pan to it
-    if (locationId) {
-      const location = validLocations.find((loc) => loc.id === locationId);
-      if (location && location.latitude && location.longitude) {
-        mapRef.current.panTo({ lat: location.latitude, lng: location.longitude });
-        mapRef.current.setZoom(15);
-        return;
+      // Find the group - check displayGroups first, then selectedGroupData
+      let group = displayGroups.find((g) => g.id === groupId);
+      if (!group && selectedGroupData && selectedGroupData.id === groupId) {
+        group = selectedGroupData;
       }
-    }
 
-    // Otherwise, fit bounds to show all locations
-    if (validLocations.length === 1) {
-      // Single location - just pan and zoom
-      const loc = validLocations[0];
-      mapRef.current.panTo({ lat: loc.latitude!, lng: loc.longitude! });
-      mapRef.current.setZoom(14);
-    } else {
-      // Multiple locations - fit bounds
-      const bounds = new google.maps.LatLngBounds();
-      validLocations.forEach((loc) => {
-        bounds.extend({ lat: loc.latitude!, lng: loc.longitude! });
-      });
-      mapRef.current.fitBounds(bounds);
-    }
+      if (!group) return;
+
+      const validLocations = group.locations.filter(
+        (loc) => loc.latitude !== null && loc.longitude !== null
+      );
+
+      if (validLocations.length === 0) return;
+
+      // If specific location selected, pan to it
+      if (locationId) {
+        const location = validLocations.find((loc) => loc.id === locationId);
+        if (location && location.latitude && location.longitude) {
+          mapRef.current.panTo({ lat: location.latitude, lng: location.longitude });
+          mapRef.current.setZoom(15);
+          return;
+        }
+      }
+
+      // Otherwise, fit bounds to show all locations
+      if (validLocations.length === 1) {
+        // Single location - just pan and zoom
+        const loc = validLocations[0];
+        mapRef.current.panTo({ lat: loc.latitude!, lng: loc.longitude! });
+        mapRef.current.setZoom(14);
+      } else {
+        // Multiple locations - fit bounds
+        const bounds = new google.maps.LatLngBounds();
+        validLocations.forEach((loc) => {
+          bounds.extend({ lat: loc.latitude!, lng: loc.longitude! });
+        });
+        mapRef.current.fitBounds(bounds);
+      }
+    }, 100);
   };
 
   const defaultCenter = { lat: 34.0522, lng: -118.2437 };
   const defaultZoom = 11;
 
-  const totalLocations = displayLocations.length;
-  const totalGroups = displayGroups.length;
-
   return (
-    <div className="h-screen flex flex-col">
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Restaurant Map</h1>
-            <p className="text-sm text-gray-600">
-              {hasActiveSearch
-                ? `${totalGroups} groups, ${totalLocations} locations`
-                : `${totalGroups} groups (score > 8), ${totalLocations} locations`}
-            </p>
-          </div>
-          <RestaurantSearch onSelectGroup={handleSelectGroup} />
-        </div>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* Map */}
-        <div className="flex-1">
-          <GoogleMapReact
+    <div className="h-screen flex relative">
+      {/* Map - Full screen */}
+      <div className="flex-1">
+        <GoogleMapReact
             bootstrapURLKeys={{
               key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
             }}
             defaultCenter={defaultCenter}
             defaultZoom={defaultZoom}
+            options={{
+              fullscreenControl: false,
+            }}
             onClick={() => {
               setSelectedGroupId(null);
               setSelectedLocationId(null);
@@ -288,25 +296,79 @@ export default function RestaurantMap() {
                   isSelected={isThisLocationSelected}
                   isHighlighted={isPartOfSelectedGroup}
                   onClick={() => handleSelectGroup(location.groupId, location.id)}
+                  $hover={false}
                 />
               );
             })}
           </GoogleMapReact>
-        </div>
-
-        {/* Sidebar */}
-        {selectedGroupId && (
-          <RestaurantSidebar
-            groupId={selectedGroupId}
-            selectedLocationId={selectedLocationId}
-            onClose={() => {
-              setSelectedGroupId(null);
-              setSelectedLocationId(null);
-            }}
-            onSelectLocation={(locationId) => handleSelectGroup(selectedGroupId, locationId)}
-          />
-        )}
       </div>
+
+      {/* Toggle visibility button - Fixed position */}
+      <button
+        onClick={() => setIsPanelVisible(!isPanelVisible)}
+        className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-lg rounded-full shadow-lg p-2 hover:bg-white transition-colors"
+        aria-label={isPanelVisible ? "Hide search panel" : "Show search panel"}
+      >
+        {isPanelVisible ? (
+          // Eye slash icon (hide)
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-gray-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+            />
+          </svg>
+        ) : (
+          // Eye icon (show)
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-gray-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+        )}
+      </button>
+
+      {/* Floating search and sidebar panel - Top right */}
+      {isPanelVisible && (
+        <div className="absolute top-4 right-4 flex flex-col gap-4 max-w-md w-96 z-10">
+          <RestaurantSearch onSelectGroup={handleSelectGroup} />
+
+          {selectedGroupId && (
+            <RestaurantSidebar
+              groupId={selectedGroupId}
+              selectedLocationId={selectedLocationId}
+              onClose={() => {
+                setSelectedGroupId(null);
+                setSelectedLocationId(null);
+              }}
+              onSelectLocation={(locationId) => handleSelectGroup(selectedGroupId, locationId)}
+              onSelectGroup={(groupId) => handleSelectGroup(groupId)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

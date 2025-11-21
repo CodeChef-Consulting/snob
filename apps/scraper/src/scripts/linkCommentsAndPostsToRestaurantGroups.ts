@@ -169,10 +169,10 @@ function createExtractionGroups<
   );
 
   // Group by restaurant name(s) - join array to create unique group key
-  // Using ~ as delimiter since it won't appear in restaurant names
+  // Using ^ as delimiter since it won't appear in restaurant names
   const primaryGroups = _.groupBy(withPrimary, (e) => e.primaryRestaurant);
   const secondaryGroups = _.groupBy(withoutPrimary, (e) =>
-    e.restaurantsMentioned.join('~')
+    e.restaurantsMentioned.join('^')
   );
 
   return { primaryGroups, secondaryGroups };
@@ -214,11 +214,11 @@ async function processExtractionGroup(options: {
     `\n${icon} Processing ${groupType} ${contentType} group: "${groupKey}" (${extractions.length} ${contentType}s)`
   );
 
-  // Parse restaurant names (primary has single name, secondary has array joined by ~)
+  // Parse restaurant names (primary has single name, secondary has array joined by ^)
   const restaurantNames =
     groupType === 'primary'
       ? [groupKey]
-      : groupKey.split('~').filter((n) => n.trim());
+      : groupKey.split('^').filter((n) => n.trim());
 
   const matchedGroupIds = new Set<number>();
   let hadGooglePlacesError = false;

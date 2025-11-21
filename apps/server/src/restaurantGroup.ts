@@ -89,10 +89,7 @@ export const restaurantGroupRouter = t.router({
             },
           },
         },
-        orderBy: [
-          { normalizedScore: 'desc' },
-          { name: 'asc' },
-        ],
+        orderBy: [{ normalizedScore: 'desc' }, { name: 'asc' }],
         take: input.limit,
       });
 
@@ -655,5 +652,107 @@ export const restaurantGroupRouter = t.router({
       );
 
       return _.take(sortedResults, limit);
+    }),
+
+  /**
+   * Get restaurant groups mentioned alongside the specified group
+   * Returns other groups that appear in the same posts/comments
+   */
+  getGroupsMentionedAlongside: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      // Get all posts where this restaurant group is mentioned
+      const postsWithGroup = await ctx.prisma.post.findMany({
+        where: {
+          restaurantGroupsMentioned: {
+            some: { id: input.id },
+          },
+        },
+        select: {
+          id: true,
+          restaurantGroupsMentioned: {
+            where: {
+              id: { not: input.id },
+            },
+            select: {
+              id: true,
+              name: true,
+              normalizedScore: true,
+            },
+          },
+        },
+      });
+
+      // Get all comments where this restaurant group is mentioned
+      const commentsWithGroup = await ctx.prisma.comment.findMany({
+        where: {
+          restaurantGroupsMentioned: {
+            some: { id: input.id },
+          },
+        },
+        select: {
+          id: true,
+          restaurantGroupsMentioned: {
+            where: {
+              id: { not: input.id },
+            },
+            select: {
+              id: true,
+              name: true,
+              normalizedScore: true,
+            },
+          },
+        },
+      });
+
+      // Count mentions of each co-occurring restaurant group
+      const mentionCounts = new Map<
+        number,
+        {
+          id: number;
+          name: string;
+          normalizedScore: number | null;
+          count: number;
+        }
+      >();
+
+      // Process posts
+      _.forEach(postsWithGroup, (post) => {
+        _.forEach(post.restaurantGroupsMentioned, (group) => {
+          if (!mentionCounts.has(group.id)) {
+            mentionCounts.set(group.id, {
+              id: group.id,
+              name: group.name,
+              normalizedScore: group.normalizedScore,
+              count: 0,
+            });
+          }
+          mentionCounts.get(group.id)!.count++;
+        });
+      });
+
+      // Process comments
+      _.forEach(commentsWithGroup, (comment) => {
+        _.forEach(comment.restaurantGroupsMentioned, (group) => {
+          if (!mentionCounts.has(group.id)) {
+            mentionCounts.set(group.id, {
+              id: group.id,
+              name: group.name,
+              normalizedScore: group.normalizedScore,
+              count: 0,
+            });
+          }
+          mentionCounts.get(group.id)!.count++;
+        });
+      });
+
+      // Sort by mention count descending, then by name
+      const sortedGroups = _.orderBy(
+        Array.from(mentionCounts.values()),
+        ['count', (g) => g.name.toLowerCase()],
+        ['desc', 'asc']
+      ).slice(0, 100);
+
+      return sortedGroups;
     }),
 });

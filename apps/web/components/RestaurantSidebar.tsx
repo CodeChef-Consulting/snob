@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import * as Tabs from '@radix-ui/react-tabs';
 import { trpc } from '../lib/providers';
 
 interface RestaurantSidebarProps {
@@ -7,6 +9,7 @@ interface RestaurantSidebarProps {
   selectedLocationId: number | null;
   onClose: () => void;
   onSelectLocation: (locationId: number) => void;
+  onSelectGroup?: (groupId: number) => void;
 }
 
 // Smooth color gradient from red (0) → yellow (5) → green (10)
@@ -45,30 +48,64 @@ export default function RestaurantSidebar({
   selectedLocationId,
   onClose,
   onSelectLocation,
+  onSelectGroup,
 }: RestaurantSidebarProps) {
-  // Fetch group details with all locations
+  const [activeTab, setActiveTab] = useState('locations');
+  const [dishFilter, setDishFilter] = useState('');
+  const [similarFilter, setSimilarFilter] = useState('');
+
+  // Always fetch group details (needed for header)
   const { data: group, isLoading: isLoadingGroup } =
     trpc.customRestaurantGroup.getGroupById.useQuery({ id: groupId });
 
-  // Fetch restaurant dishes
+  // Conditionally fetch data based on active tab
   const { data: dishes, isLoading: isLoadingDishes } =
-    trpc.customRestaurantGroup.getGroupDishes.useQuery({ id: groupId });
+    trpc.customRestaurantGroup.getGroupDishes.useQuery(
+      { id: groupId },
+      { enabled: activeTab === 'dishes' }
+    );
 
-  // Fetch restaurant mentions
+  const { data: mentionedAlongside, isLoading: isLoadingAlongside } =
+    trpc.customRestaurantGroup.getGroupsMentionedAlongside.useQuery(
+      { id: groupId },
+      { enabled: activeTab === 'alongside' }
+    );
+
   const { data: mentions, isLoading: isLoadingMentions } =
-    trpc.customRestaurantGroup.getGroupMentions.useQuery({ id: groupId });
+    trpc.customRestaurantGroup.getGroupMentions.useQuery(
+      { id: groupId },
+      { enabled: activeTab === 'mentions' }
+    );
+
+  // Filter dishes client-side
+  const filteredDishes = useMemo(() => {
+    if (!dishes) return [];
+    if (!dishFilter.trim()) return dishes;
+    const lowerFilter = dishFilter.toLowerCase();
+    return dishes.filter(dish => dish.toLowerCase().includes(lowerFilter));
+  }, [dishes, dishFilter]);
+
+  // Filter similar restaurants client-side
+  const filteredSimilar = useMemo(() => {
+    if (!mentionedAlongside) return [];
+    if (!similarFilter.trim()) return mentionedAlongside;
+    const lowerFilter = similarFilter.toLowerCase();
+    return mentionedAlongside.filter(group =>
+      group.name.toLowerCase().includes(lowerFilter)
+    );
+  }, [mentionedAlongside, similarFilter]);
 
   if (isLoadingGroup) {
     return (
-      <div className="w-96 bg-white border-l flex flex-col h-full">
-        <div className="flex-shrink-0 bg-white border-b p-6">
+      <div className="bg-white/50 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden">
+        <div className="p-6">
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 mb-4"
+            className="text-gray-600 hover:text-gray-900 mb-4 float-right"
           >
-            ✕ Close
+            ✕
           </button>
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-gray-700">Loading...</div>
         </div>
       </div>
     );
@@ -76,166 +113,218 @@ export default function RestaurantSidebar({
 
   if (!group) {
     return (
-      <div className="w-96 bg-white border-l flex flex-col h-full">
-        <div className="flex-shrink-0 bg-white border-b p-6">
+      <div className="bg-white/50 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden">
+        <div className="p-6">
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 mb-4"
+            className="text-gray-600 hover:text-gray-900 mb-4 float-right"
           >
-            ✕ Close
+            ✕
           </button>
-          <div className="text-red-500">Group not found</div>
+          <div className="text-red-700">Group not found</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-96 bg-white border-l flex flex-col h-full">
-      <div className="flex-shrink-0 bg-white border-b p-6">
+    <div className="bg-white/50 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden flex flex-col h-[calc(100vh-180px)]">
+      <div className="flex-shrink-0 border-b p-4">
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 mb-4"
+          className="text-gray-600 hover:text-gray-900 mb-2 float-right"
         >
-          ✕ Close
+          ✕
         </button>
 
-        <h2 className="text-2xl font-bold mb-2">{group.name}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{group.name}</h2>
 
-        <p className="text-sm text-gray-600 mb-4">
-          {group.locationCount} location{group.locationCount !== 1 ? 's' : ''}
-        </p>
-
-        {group.normalizedScore !== null && group.normalizedScore !== undefined && (
-          <div className="mb-4">
-            <span className="font-semibold text-sm">Score:</span>
-            <span
-              className="ml-2 px-3 py-1 rounded text-sm font-medium text-white"
-              style={{
-                backgroundColor: getScoreColor(group.normalizedScore),
-              }}
-            >
-              {group.normalizedScore.toFixed(1)}/10
-            </span>
-          </div>
-        )}
-
-        {group.rawScore !== null && group.rawScore !== undefined && (
-          <p className="text-sm text-gray-600 mb-4">
-            Raw Score: {group.rawScore.toFixed(2)}
-          </p>
-        )}
+        {group.normalizedScore !== null &&
+          group.normalizedScore !== undefined && (
+            <div>
+              <span
+                className="px-3 py-1 rounded text-sm font-medium text-white"
+                style={{
+                  backgroundColor: getScoreColor(group.normalizedScore),
+                }}
+              >
+                {group.normalizedScore.toFixed(1)}/10
+              </span>
+            </div>
+          )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        {/* Locations List */}
-        {group.locations.length > 0 && (
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-3">
-              Locations ({group.locations.length})
-            </h3>
-            <div className="space-y-2">
-              {group.locations.map((location) => (
-                <button
-                  key={location.id}
-                  onClick={() => onSelectLocation(location.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
-                    selectedLocationId === location.id
-                      ? 'bg-blue-50 border-blue-500'
-                      : 'bg-white border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="font-medium text-sm">{location.name}</div>
-                  {location.address && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      {location.address}
-                      {location.city && `, ${location.city}`}
-                      {location.state && `, ${location.state}`}
+      <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs.List className="flex border-b border-gray-200 px-4 flex-shrink-0">
+          <Tabs.Trigger
+            value="locations"
+            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+          >
+            Locations
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="dishes"
+            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+          >
+            Dishes
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="alongside"
+            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+          >
+            Similar
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="mentions"
+            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+          >
+            Discussion
+          </Tabs.Trigger>
+        </Tabs.List>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <Tabs.Content value="locations">
+            {group.locations.length > 0 ? (
+              <div className="space-y-2">
+                {group.locations.map((location) => (
+                  <button
+                    key={location.id}
+                    onClick={() => onSelectLocation(location.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                      selectedLocationId === location.id
+                        ? 'bg-blue-50 border-blue-500'
+                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="font-medium text-sm text-gray-900">
+                      {location.name}
                     </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+                    {location.address && (
+                      <div className="text-xs text-gray-700 mt-1">
+                        {location.address}
+                        {location.city && `, ${location.city}`}
+                        {location.state && `, ${location.state}`}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700">No locations found</p>
+            )}
+          </Tabs.Content>
 
-        {/* Dishes Mentioned */}
-        {isLoadingDishes ? (
-          <div className="text-sm text-gray-500 mb-6">Loading dishes...</div>
-        ) : dishes && dishes.length > 0 ? (
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Popular Dishes</h3>
-            <div className="flex flex-wrap gap-2">
-              {dishes.map((dish, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                >
-                  {dish}
-                </span>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {/* Reddit Mentions */}
-        {isLoadingMentions ? (
-          <div className="text-sm text-gray-500">Loading mentions...</div>
-        ) : mentions && mentions.length > 0 ? (
-          <div>
-            <h3 className="font-semibold text-sm mb-3">
-              Reddit Mentions ({mentions.length})
-            </h3>
-            <div className="space-y-4">
-              {mentions.map((mention: any) => (
-                <div
-                  key={mention.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden"
-                >
-                  {mention.type === 'comment' && mention.postTitle && (
-                    <div className="text-xs text-gray-500 mb-2 truncate">
-                      from: {mention.postTitle}
-                    </div>
-                  )}
-
-                  <blockquote className="text-sm text-gray-700 mb-2 italic break-words">
-                    "{getExcerpt(mention.body)}"
-                  </blockquote>
-
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="px-2 py-0.5 bg-gray-100 rounded flex-shrink-0">
-                        {mention.type}
-                      </span>
-                      {mention.author && (
-                        <span className="truncate">by u/{mention.author}</span>
-                      )}
-                      {mention.score !== null && (
-                        <span className="flex-shrink-0">
-                          • {mention.score} points
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {mention.permalink && (
-                    <a
-                      href={`https://reddit.com${mention.permalink}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm mt-2 inline-block truncate max-w-full"
+          <Tabs.Content value="dishes">
+            {isLoadingDishes ? (
+              <div className="text-sm text-gray-700">Loading dishes...</div>
+            ) : dishes && dishes.length > 0 ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Filter dishes..."
+                  value={dishFilter}
+                  onChange={(e) => setDishFilter(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {filteredDishes.map((dish, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                     >
-                      Read full {mention.type} on Reddit →
-                    </a>
-                  )}
+                      {dish}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">No mentions found</p>
-        )}
-      </div>
+                {filteredDishes.length === 0 && dishFilter && (
+                  <p className="text-sm text-gray-600">No matching dishes</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700">No dishes found</p>
+            )}
+          </Tabs.Content>
+
+          <Tabs.Content value="alongside">
+            {isLoadingAlongside ? (
+              <div className="text-sm text-gray-700">Loading related restaurants...</div>
+            ) : mentionedAlongside && mentionedAlongside.length > 0 ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Filter restaurants..."
+                  value={similarFilter}
+                  onChange={(e) => setSimilarFilter(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {filteredSimilar.map((coGroup) => (
+                    <button
+                      key={coGroup.id}
+                      onClick={() => onSelectGroup?.(coGroup.id)}
+                      className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200 transition-colors cursor-pointer"
+                      title={`${coGroup.count} co-mention${coGroup.count !== 1 ? 's' : ''}`}
+                    >
+                      {coGroup.name} ({coGroup.count})
+                    </button>
+                  ))}
+                </div>
+                {filteredSimilar.length === 0 && similarFilter && (
+                  <p className="text-sm text-gray-600">No matching restaurants</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700">No related restaurants found</p>
+            )}
+          </Tabs.Content>
+
+          <Tabs.Content value="mentions">
+            {isLoadingMentions ? (
+              <div className="text-sm text-gray-700">Loading mentions...</div>
+            ) : mentions && mentions.length > 0 ? (
+              <div className="space-y-4">
+                {mentions.map((mention: any) => (
+                  <a
+                    key={mention.id}
+                    href={mention.permalink ? `https://reddit.com${mention.permalink}` : undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden cursor-pointer"
+                  >
+                    {mention.type === 'comment' && mention.postTitle && (
+                      <div className="text-xs text-gray-600 mb-2 truncate">
+                        from: {mention.postTitle}
+                      </div>
+                    )}
+
+                    <blockquote className="text-sm text-gray-800 mb-2 italic break-words">
+                      "{getExcerpt(mention.body)}"
+                    </blockquote>
+
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span className="px-2 py-0.5 bg-gray-100 rounded flex-shrink-0">
+                          {mention.type}
+                        </span>
+                        {mention.author && (
+                          <span className="truncate">by u/{mention.author}</span>
+                        )}
+                        {mention.score !== null && (
+                          <span className="flex-shrink-0">
+                            • {mention.score} points
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700">No mentions found</p>
+            )}
+          </Tabs.Content>
+        </div>
+      </Tabs.Root>
     </div>
   );
 }
