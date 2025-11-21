@@ -293,7 +293,7 @@ export default function RestaurantSidebar({
                   >
                     {mention.type === 'comment' && mention.postTitle && (
                       <div className="text-xs text-gray-600 mb-2 truncate">
-                        from: {mention.postTitle}
+                        {mention.postTitle}
                       </div>
                     )}
 
