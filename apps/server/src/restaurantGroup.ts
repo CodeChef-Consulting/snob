@@ -334,6 +334,7 @@ export const restaurantGroupRouter = t.router({
         orderBy: {
           createdUtc: 'desc',
         },
+        take: 50,
       });
 
       // Get comments where this restaurant group is mentioned
@@ -360,6 +361,7 @@ export const restaurantGroupRouter = t.router({
         orderBy: {
           createdUtc: 'desc',
         },
+        take: 50,
       });
 
       // Format mentions for display
@@ -388,7 +390,7 @@ export const restaurantGroupRouter = t.router({
         [...postMentions, ...commentMentions],
         [(m) => (m.createdUtc ? new Date(m.createdUtc).getTime() : 0)],
         ['desc']
-      );
+      ).slice(0, 50);
 
       return mentions;
     }),
@@ -754,5 +756,55 @@ export const restaurantGroupRouter = t.router({
       ).slice(0, 100);
 
       return sortedGroups;
+    }),
+
+  /**
+   * Unlink a post from a restaurant group
+   */
+  unlinkPostFromGroup: publicProcedure
+    .input(
+      z.object({
+        postId: z.number(),
+        groupId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { postId, groupId } = input;
+
+      await ctx.prisma.post.update({
+        where: { id: postId },
+        data: {
+          restaurantGroupsMentioned: {
+            disconnect: { id: groupId },
+          },
+        },
+      });
+
+      return { success: true, postId, groupId };
+    }),
+
+  /**
+   * Unlink a comment from a restaurant group
+   */
+  unlinkCommentFromGroup: publicProcedure
+    .input(
+      z.object({
+        commentId: z.number(),
+        groupId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { commentId, groupId } = input;
+
+      await ctx.prisma.comment.update({
+        where: { id: commentId },
+        data: {
+          restaurantGroupsMentioned: {
+            disconnect: { id: groupId },
+          },
+        },
+      });
+
+      return { success: true, commentId, groupId };
     }),
 });

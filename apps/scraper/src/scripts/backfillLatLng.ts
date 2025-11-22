@@ -18,7 +18,9 @@ async function geocodeWithMapbox(
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(`  ✗ Mapbox error ${response.status}: ${text.substring(0, 200)}`);
+      console.error(
+        `  ✗ Mapbox error ${response.status}: ${text.substring(0, 200)}`
+      );
       return null;
     }
 
@@ -38,35 +40,59 @@ async function geocodeWithMapbox(
 async function backfillLatLng() {
   console.log('Starting lat/lng backfill...\n');
 
-  // Get all restaurants without lat/lng
-  const restaurants = await prisma.restaurant.findMany({
+  // Get all restaurantLocations without lat/lng or where lat equals lng
+  const allLocations = await prisma.restaurantLocation.findMany({
     where: {
-      OR: [{ latitude: null }, { longitude: null }],
+      OR: [
+        { latitude: null },
+        { longitude: null },
+        // Get all locations with both lat/lng to check if they're equal
+        {
+          AND: [{ latitude: { not: null } }, { longitude: { not: null } }],
+        },
+      ],
     },
     orderBy: { id: 'asc' },
   });
 
-  console.log(`Found ${restaurants.length} restaurants needing geocoding\n`);
+  // Filter out locations where latitude incorrectly equals longitude
+  const restaurantLocations = allLocations.filter(
+    (loc) =>
+      loc.latitude === null ||
+      loc.longitude === null ||
+      loc.latitude === loc.longitude
+  );
+
+  console.log(
+    `Found ${restaurantLocations.length} restaurantLocations needing geocoding\n`
+  );
 
   let fromMetadata = 0;
   let fromGeocoding = 0;
   let failed = 0;
 
-  for (let i = 0; i < restaurants.length; i++) {
-    const restaurant = restaurants[i]!;
+  for (let i = 0; i < restaurantLocations.length; i++) {
+    const restaurantLocation = restaurantLocations[i]!;
     console.log(
-      `[${i + 1}/${restaurants.length}] Processing: ${restaurant.name}`
+      `[${i + 1}/${restaurantLocations.length}] Processing: ${restaurantLocation.name}`
     );
 
     let lat: number | null = null;
     let lng: number | null = null;
 
     // Try to extract from metadata first
-    if (restaurant.metadata && typeof restaurant.metadata === 'object') {
-      const metadata = restaurant.metadata as any;
+    if (
+      restaurantLocation.metadata &&
+      typeof restaurantLocation.metadata === 'object'
+    ) {
+      const metadata = restaurantLocation.metadata as any;
 
       // Open Data Portal format
-      if (metadata.coordinates?.latitude && metadata.coordinates?.longitude) {
+      if (
+        metadata.coordinates?.latitude &&
+        metadata.coordinates?.longitude &&
+        metadata.coordinates.latitude !== metadata.coordinates.longitude
+      ) {
         lat = parseFloat(metadata.coordinates.latitude);
         lng = parseFloat(metadata.coordinates.longitude);
         console.log(`  ✓ Found in metadata (Open Data Portal)`);
@@ -83,8 +109,12 @@ async function backfillLatLng() {
 
     // If not in metadata, try geocoding with Mapbox
     if (lat === null || lng === null) {
-      if (restaurant.address && restaurant.city && restaurant.state) {
-        const address = `${restaurant.address}, ${restaurant.city}, ${restaurant.state}${restaurant.zipCode ? ' ' + restaurant.zipCode : ''}`;
+      if (
+        restaurantLocation.address &&
+        restaurantLocation.city &&
+        restaurantLocation.state
+      ) {
+        const address = `${restaurantLocation.address}, ${restaurantLocation.city}, ${restaurantLocation.state}${restaurantLocation.zipCode ? ' ' + restaurantLocation.zipCode : ''}`;
         console.log(`  → Geocoding with Mapbox: ${address}`);
 
         const coords = await geocodeWithMapbox(address);
@@ -104,10 +134,10 @@ async function backfillLatLng() {
       }
     }
 
-    // Update restaurant with lat/lng
+    // Update restaurantLocation with lat/lng
     if (lat !== null && lng !== null) {
-      await prisma.restaurant.update({
-        where: { id: restaurant.id },
+      await prisma.restaurantLocation.update({
+        where: { id: restaurantLocation.id },
         data: { latitude: lat, longitude: lng },
       });
     }
@@ -119,7 +149,7 @@ async function backfillLatLng() {
   console.log(`From metadata: ${fromMetadata}`);
   console.log(`From geocoding: ${fromGeocoding}`);
   console.log(`Failed: ${failed}`);
-  console.log(`Total processed: ${restaurants.length}`);
+  console.log(`Total processed: ${restaurantLocations.length}`);
 }
 
 backfillLatLng()

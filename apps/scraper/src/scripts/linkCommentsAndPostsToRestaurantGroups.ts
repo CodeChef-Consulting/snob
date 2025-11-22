@@ -2,6 +2,7 @@ import { config } from '@dotenvx/dotenvx';
 import { PrismaClient } from '@repo/db';
 import Fuse, { FuseResult } from 'fuse.js';
 import _ from 'lodash';
+import { lookupAndAddRestaurantLocationAndGroup } from '../utils/googlePlaces';
 config({ path: ['../../.env'] });
 
 const prisma = new PrismaClient();
@@ -16,6 +17,10 @@ interface LinkingStats {
   unmatchedNames: Set<string>;
   commentsProcessed: number;
   commentsLinked: number;
+  // Google Places stats (required by lookupAndAddRestaurantLocationAndGroup)
+  googlePlacesLookups: number;
+  googlePlacesAdded: number;
+  googlePlacesFailed: number;
 }
 
 // Common restaurant name suffixes and prefixes to strip for normalization
@@ -69,7 +74,7 @@ function normalizeRestaurantName(name: string): string {
 }
 
 /**
- * Two-pass fuzzy matching for restaurant locations
+ * Two-pass fuzzy matching for restaurant locations. Doesnt need to be too exact now that we have restaurant groups.
  * @param extractedName Original restaurant name from extraction
  * @param fuse Fuse.js instance for searching locations
  * @param threshold Score threshold for matching (default 0.3)
@@ -221,7 +226,7 @@ async function processExtractionGroup(options: {
       : groupKey.split('^').filter((n) => n.trim());
 
   const matchedGroupIds = new Set<number>();
-  let hadGooglePlacesError = false;
+  let hadGooglePlacesErrorOrDidntTryGooglePlaces = false;
 
   // Look up each restaurant name
   for (const restaurantName of restaurantNames) {
@@ -254,21 +259,20 @@ async function processExtractionGroup(options: {
       console.log(
         `🔍 "${restaurantName}" → no fuzzy match, trying Google Places...`
       );
-      const result = {
-        hadError: true,
-        groupId: null,
-      };
+      // const result = {
+      //   hadError: true,
+      //   groupId: null,
+      // };
 
-      // await lookupAndAddRestaurantLocationAndGroup(
-      //   restaurantName,
-      //   prisma,
-      //   stats,
-      //   restaurantLocationNameFuse,
-      //   restaurantLocations,
-      // );
+      const result = await lookupAndAddRestaurantLocationAndGroup(
+        restaurantName,
+        prisma,
+        stats,
+        restaurantLocationNameFuse
+      );
 
       if (result.hadError) {
-        hadGooglePlacesError = true;
+        hadGooglePlacesErrorOrDidntTryGooglePlaces = true;
         console.log(`⚠️  "${restaurantName}" → Google Places error`);
       } else if (result.groupId) {
         matchedGroupIds.add(result.groupId);
@@ -327,15 +331,17 @@ async function processExtractionGroup(options: {
     }
   }
 
-  // Mark extractions as attempted
-  await Promise.all(
-    ids.map((id) =>
-      prisma.restaurantExtraction.update({
-        where: contentType === 'post' ? { postId: id } : { commentId: id },
-        data: { attemptedLinkToRestaurantsMentioned: true },
-      })
-    )
-  );
+  // Mark extractions as attempted, if there wasn't a place we should have looked up using google places
+  if (!hadGooglePlacesErrorOrDidntTryGooglePlaces) {
+    await Promise.all(
+      ids.map((id) =>
+        prisma.restaurantExtraction.update({
+          where: contentType === 'post' ? { postId: id } : { commentId: id },
+          data: { attemptedLinkToRestaurantsMentioned: true },
+        })
+      )
+    );
+  }
 
   console.log(
     `   Updated ${ids.length} ${contentType}s with ${matchedGroupIds.size} restaurant group(s)`
@@ -403,6 +409,9 @@ async function linkCommentsAndPostsToRestaurantGroups() {
       unmatchedNames: new Set(),
       commentsProcessed: 0,
       commentsLinked: 0,
+      googlePlacesLookups: 0,
+      googlePlacesAdded: 0,
+      googlePlacesFailed: 0,
     };
 
     // Get all restaurant locations for fuzzy matching
@@ -432,6 +441,10 @@ async function linkCommentsAndPostsToRestaurantGroups() {
     // Check for content type flags
     const postsOnly = process.argv.includes('--posts-only');
     const commentsOnly = process.argv.includes('--comments-only');
+
+    // Check for group type flags
+    const primaryOnly = process.argv.includes('--primary-only');
+    const secondaryOnly = process.argv.includes('--secondary-only');
 
     // Determine which content types to process
     let submissionTypes: Array<'post' | 'comment'> = ['post', 'comment'];
@@ -473,34 +486,38 @@ async function linkCommentsAndPostsToRestaurantGroups() {
         `Split ${contentType}s into ${Object.keys(primaryGroups).length} primary groups, ${Object.keys(secondaryGroups).length} secondary groups\n`
       );
 
-      // Process primary groups
-      for (const [groupKey, groupExtractions] of Object.entries(
-        primaryGroups
-      )) {
-        await processExtractionGroup({
-          groupKey,
-          extractions: groupExtractions,
-          groupType: 'primary',
-          contentType,
-          stats,
-          restaurantLocationNameFuse,
-          prisma,
-        });
+      // Process primary groups (unless --secondary-only is set)
+      if (!secondaryOnly) {
+        for (const [groupKey, groupExtractions] of Object.entries(
+          primaryGroups
+        )) {
+          await processExtractionGroup({
+            groupKey,
+            extractions: groupExtractions,
+            groupType: 'primary',
+            contentType,
+            stats,
+            restaurantLocationNameFuse,
+            prisma,
+          });
+        }
       }
 
-      // Process secondary groups
-      for (const [groupKey, groupExtractions] of Object.entries(
-        secondaryGroups
-      )) {
-        await processExtractionGroup({
-          groupKey,
-          extractions: groupExtractions,
-          groupType: 'secondary',
-          contentType,
-          stats,
-          restaurantLocationNameFuse,
-          prisma,
-        });
+      // Process secondary groups (unless --primary-only is set)
+      if (!primaryOnly) {
+        for (const [groupKey, groupExtractions] of Object.entries(
+          secondaryGroups
+        )) {
+          await processExtractionGroup({
+            groupKey,
+            extractions: groupExtractions,
+            groupType: 'secondary',
+            contentType,
+            stats,
+            restaurantLocationNameFuse,
+            prisma,
+          });
+        }
       }
     }
 
@@ -531,11 +548,13 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
 Usage: tsx src/scripts/linkCommentsAndPostsToRestaurantGroups.ts [options]
 
 Options:
-  --clear           Clear all existing restaurant group connections before linking
-  --reattempt-all   Reprocess ALL extractions (default: skip already attempted)
-  --posts-only      Only process posts (skip comments)
-  --comments-only   Only process comments (skip posts)
-  -h, --help        Show this help message
+  --clear            Clear all existing restaurant group connections before linking
+  --reattempt-all    Reprocess ALL extractions (default: skip already attempted)
+  --posts-only       Only process posts (skip comments)
+  --comments-only    Only process comments (skip posts)
+  --primary-only     Only process primary restaurant mentions (skip secondary)
+  --secondary-only   Only process secondary restaurant mentions (skip primary)
+  -h, --help         Show this help message
 
 Examples:
   # Process only new extractions (default behavior)
@@ -552,6 +571,12 @@ Examples:
 
   # Process only comments
   tsx src/scripts/linkCommentsAndPostsToRestaurantGroups.ts --comments-only
+
+  # Process only primary restaurant mentions
+  tsx src/scripts/linkCommentsAndPostsToRestaurantGroups.ts --primary-only
+
+  # Process only secondary restaurant mentions
+  tsx src/scripts/linkCommentsAndPostsToRestaurantGroups.ts --secondary-only
 
 Features:
   ✅ Fuzzy matching using Fuse.js (threshold 0.3)

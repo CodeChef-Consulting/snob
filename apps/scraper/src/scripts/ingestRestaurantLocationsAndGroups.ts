@@ -13,6 +13,7 @@ import {
 
 const prisma = new PrismaClient();
 
+//TODO: this isn't a great source
 interface RestaurantCSVRow {
   'LOCATION ACCOUNT #': string;
   'BUSINESS NAME': string;
@@ -109,7 +110,9 @@ async function ingestRestaurantLocationsAndGroups() {
 
         // Phase 0 check is now done inside the utility
         if (!result.wasNewLocation) {
-          console.log(`Location already exists: ${name} (${result.matchPhase})`);
+          console.log(
+            `Location already exists: ${name} (${result.matchPhase})`
+          );
           skipped++;
           continue;
         }
@@ -150,7 +153,9 @@ async function ingestRestaurantLocationsAndGroups() {
 
 ingestRestaurantLocationsAndGroups()
   .then(() => {
-    console.log('Restaurant location and group ingestion completed successfully');
+    console.log(
+      'Restaurant location and group ingestion completed successfully'
+    );
     process.exit(0);
   })
   .catch((error) => {

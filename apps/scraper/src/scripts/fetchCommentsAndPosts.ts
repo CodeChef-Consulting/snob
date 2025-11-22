@@ -364,7 +364,7 @@ async function fetchComments(options: FetchOptions = {}) {
     }
     //for new comments, if parentExternalId is not null, find the dbCommentId to reassociate with the parent comment
     for (const comment of newComments) {
-      if (comment.parentExternalId) {
+      if (comment.parentExternalId && !comment.parentCommentId) {
         const parentComment = await prisma.comment.findFirst({
           where: { externalId: comment.parentExternalId },
         });

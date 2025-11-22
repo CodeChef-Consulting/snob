@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { trpc } from '../lib/providers';
 
@@ -71,11 +71,35 @@ export default function RestaurantSidebar({
       { enabled: activeTab === 'alongside' }
     );
 
-  const { data: mentions, isLoading: isLoadingMentions } =
+  const { data: mentions, isLoading: isLoadingMentions, refetch: refetchMentions } =
     trpc.customRestaurantGroup.getGroupMentions.useQuery(
       { id: groupId },
       { enabled: activeTab === 'mentions' }
     );
+
+  const unlinkPostMutation = trpc.customRestaurantGroup.unlinkPostFromGroup.useMutation({
+    onSuccess: () => {
+      refetchMentions();
+    },
+  });
+
+  const unlinkCommentMutation = trpc.customRestaurantGroup.unlinkCommentFromGroup.useMutation({
+    onSuccess: () => {
+      refetchMentions();
+    },
+  });
+
+  const handleUnlink = useCallback((mentionId: string, type: 'post' | 'comment') => {
+    const idStr = mentionId.replace(`${type}-`, '');
+    const id = parseInt(idStr, 10);
+    if (isNaN(id)) return;
+
+    if (type === 'post') {
+      unlinkPostMutation.mutate({ postId: id, groupId });
+    } else {
+      unlinkCommentMutation.mutate({ commentId: id, groupId });
+    }
+  }, [groupId, unlinkPostMutation, unlinkCommentMutation]);
 
   // Filter dishes client-side
   const filteredDishes = useMemo(() => {
@@ -284,12 +308,9 @@ export default function RestaurantSidebar({
             ) : mentions && mentions.length > 0 ? (
               <div className="space-y-4">
                 {mentions.map((mention: any) => (
-                  <a
+                  <div
                     key={mention.id}
-                    href={mention.permalink ? `https://reddit.com${mention.permalink}` : undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden cursor-pointer"
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden"
                   >
                     {mention.type === 'comment' && mention.postTitle && (
                       <div className="text-xs text-gray-600 mb-2 truncate">
@@ -297,9 +318,16 @@ export default function RestaurantSidebar({
                       </div>
                     )}
 
-                    <blockquote className="text-sm text-gray-800 mb-2 italic break-words">
-                      "{getExcerpt(mention.body)}"
-                    </blockquote>
+                    <a
+                      href={mention.permalink ? `https://reddit.com${mention.permalink}` : undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block cursor-pointer"
+                    >
+                      <blockquote className="text-sm text-gray-800 mb-2 italic break-words">
+                        "{getExcerpt(mention.body)}"
+                      </blockquote>
+                    </a>
 
                     <div className="flex items-center justify-between text-xs text-gray-600">
                       <div className="flex items-center gap-2 overflow-hidden">
@@ -315,8 +343,19 @@ export default function RestaurantSidebar({
                           </span>
                         )}
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnlink(mention.id, mention.type);
+                        }}
+                        disabled={unlinkPostMutation.isPending || unlinkCommentMutation.isPending}
+                        className="flex-shrink-0 px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        title="Remove this mention link"
+                      >
+                        Unlink
+                      </button>
                     </div>
-                  </a>
+                  </div>
                 ))}
               </div>
             ) : (

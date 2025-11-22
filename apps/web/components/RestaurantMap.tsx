@@ -198,6 +198,7 @@ export default function RestaurantMap() {
 
     setSelectedGroupId(groupId);
     setSelectedLocationId(locationId ?? null);
+    setIsPanelVisible(true);
 
     // Use setTimeout to ensure map panning happens after state updates and data fetching
     setTimeout(() => {
