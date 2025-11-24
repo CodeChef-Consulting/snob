@@ -32,10 +32,12 @@ export function getPlacesClient(): PlacesClient | null {
 
 /**
  * Query Google Places API to find a restaurant
+ * @param fieldMask Optional field mask to control which fields are returned (default: full details)
  */
 export async function findPlaceByName(
   restaurantName: string,
-  location: string = 'Los Angeles, CA'
+  location: string = 'Los Angeles, CA',
+  fieldMask: string = 'places.id,places.displayName,places.addressComponents,places.location'
 ): Promise<protos.google.maps.places.v1.IPlace | null> {
   const client = getPlacesClient();
 
@@ -60,8 +62,7 @@ export async function findPlaceByName(
     const [response] = await client.searchText(request, {
       otherArgs: {
         headers: {
-          'X-Goog-FieldMask':
-            'places.id,places.displayName,places.addressComponents,places.location',
+          'X-Goog-FieldMask': fieldMask,
         },
       },
     });
@@ -151,28 +152,15 @@ export async function lookupAndAddRestaurantLocationAndGroup(
   stats.googlePlacesLookups++;
 
   try {
-    const place = await findPlaceByName(restaurantName);
+    // First, do a minimal API call to get just the place ID
+    const idOnlyPlace = await findPlaceByName(restaurantName, 'Los Angeles, CA', 'places.id');
 
-    if (!place) {
+    if (!idOnlyPlace?.id) {
       stats.googlePlacesFailed++;
       return { groupId: null, hadError: false }; // Not found, but no error
     }
 
-    // Extract place ID from the resource name (format: "places/{place_id}")
-    const placeId = place.id || place.name?.split('/').pop() || '';
-
-    if (!placeId) {
-      stats.googlePlacesFailed++;
-      console.log(`   ⚠️  No place ID found in response`);
-      return { groupId: null, hadError: false };
-    }
-
-    if (!place.location?.latitude || !place.location?.longitude) {
-      stats.googlePlacesFailed++;
-      console.log(`   ⚠️  No latitude or longitude found in response`);
-      console.log(`   ⚠️  Google Places response:`, place);
-      return { groupId: null, hadError: true };
-    }
+    const placeId = idOnlyPlace.id;
 
     // Check if we already have this place_id as a RestaurantLocation
     const existingLocation = await prisma.restaurantLocation.findUnique({
@@ -205,6 +193,21 @@ export async function lookupAndAddRestaurantLocationAndGroup(
       }
 
       return { groupId: existingLocation.groupId, hadError: false };
+    }
+
+    // Not in DB - fetch full details with second API call
+    const place = await findPlaceByName(restaurantName);
+
+    if (!place) {
+      stats.googlePlacesFailed++;
+      return { groupId: null, hadError: false };
+    }
+
+    if (!place.location?.latitude || !place.location?.longitude) {
+      stats.googlePlacesFailed++;
+      console.log(`   ⚠️  No latitude or longitude found in response`);
+      console.log(`   ⚠️  Google Places response:`, place);
+      return { groupId: null, hadError: true };
     }
 
     // Extract data from Google Places response (only fields in field mask)
