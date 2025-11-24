@@ -629,7 +629,7 @@ async function initializeCommentSentimentBatch(
       },
       //has at least one restaurant linked
       {
-        restaurantsMentioned: {
+        restaurantGroupsMentioned: {
           some: {},
         },
       },

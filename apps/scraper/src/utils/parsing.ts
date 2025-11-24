@@ -32,6 +32,13 @@ export function normalizeField(
 }
 
 /**
+ * Remove surrounding quotes from a single item (not middle apostrophes)
+ */
+function removeSurroundingQuotes(item: string): string {
+  return item.replace(/^["'](.*)["']$/, '$1');
+}
+
+/**
  * Normalize extraction field to array: convert empty/'NONE' to empty array, deduplicate
  */
 export function normalizeFieldToArray(
@@ -45,6 +52,7 @@ export function normalizeFieldToArray(
   const items = value
     .split(',')
     .map((item) => item.trim())
+    .map(removeSurroundingQuotes) // Remove surrounding quotes from each item
     .filter((item) => item.length > 0);
 
   if (deduplicate) {
@@ -82,6 +90,7 @@ export function normalizeRestaurantsMentionedToArray(
     const items = withPlaceholder
       .split(',')
       .map((item) => item.trim())
+      .map(removeSurroundingQuotes) // Remove surrounding quotes from each item
       .filter((item) => item.length > 0)
       .map((item) => (item === placeholder ? primaryRestaurant : item));
 
@@ -191,19 +200,22 @@ export function parseRestaurantExtractionResponse(
         .replace('restaurantsMentioned:', '')
         .trim()
         .replace(/^\[|\]$/g, '')
-        .replace(/"/g, '');
+        .replace(/\\'/g, "'") // Unescape \' to '
+        .replace(/\\"/g, '"'); // Unescape \" to " (surrounding quotes removed per-item in normalizeFieldToArray)
     } else if (line.startsWith('primaryRestaurant:')) {
       primaryRestaurant = line
         .replace('primaryRestaurant:', '')
         .trim()
-        .replace(/^["']|["']$/g, '')
-        .replace(/"/g, '');
+        .replace(/\\'/g, "'") // Unescape \' to '
+        .replace(/\\"/g, '"') // Unescape \" to "
+        .replace(/^["'](.*)["']$/, '$1'); // Remove surrounding quotes only
     } else if (line.startsWith('dishesMentioned:')) {
       dishesMentioned = line
         .replace('dishesMentioned:', '')
         .trim()
         .replace(/^\[|\]$/g, '')
-        .replace(/"/g, '');
+        .replace(/\\'/g, "'") // Unescape \' to '
+        .replace(/\\"/g, '"'); // Unescape \" to " (surrounding quotes removed per-item in normalizeFieldToArray)
     } else if (line.startsWith('isSubjective:')) {
       const value = line.replace('isSubjective:', '').trim().toLowerCase();
       isSubjective = value === 'true';

@@ -1,7 +1,6 @@
 import { PlacesClient, protos } from '@googlemaps/places';
 import { PrismaClient } from '@repo/db';
 import Fuse from 'fuse.js';
-import _ from 'lodash';
 import { calculateDistance } from './haversineQuery';
 import {
   ingestRestaurantGroupAndLocations,
@@ -62,7 +61,7 @@ export async function findPlaceByName(
       otherArgs: {
         headers: {
           'X-Goog-FieldMask':
-            'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.priceLevel,places.types,places.nationalPhoneNumber,places.websiteUri',
+            'places.id,places.displayName,places.addressComponents,places.location',
         },
       },
     });
@@ -168,6 +167,13 @@ export async function lookupAndAddRestaurantLocationAndGroup(
       return { groupId: null, hadError: false };
     }
 
+    if (!place.location?.latitude || !place.location?.longitude) {
+      stats.googlePlacesFailed++;
+      console.log(`   ⚠️  No latitude or longitude found in response`);
+      console.log(`   ⚠️  Google Places response:`, place);
+      return { groupId: null, hadError: true };
+    }
+
     // Check if we already have this place_id as a RestaurantLocation
     const existingLocation = await prisma.restaurantLocation.findUnique({
       where: { googlePlaceId: placeId },
@@ -201,14 +207,8 @@ export async function lookupAndAddRestaurantLocationAndGroup(
       return { groupId: existingLocation.groupId, hadError: false };
     }
 
-    // Extract data from Google Places response
+    // Extract data from Google Places response (only fields in field mask)
     const displayName = place.displayName?.text || restaurantName;
-    const formattedAddress = place.formattedAddress || '';
-    const rating = place.rating;
-    const priceLevel = place.priceLevel;
-    const types = place.types || [];
-    const nationalPhoneNumber = place.nationalPhoneNumber;
-    const websiteUri = place.websiteUri;
     const latitude = place.location?.latitude;
     const longitude = place.location?.longitude;
 
@@ -275,14 +275,7 @@ export async function lookupAndAddRestaurantLocationAndGroup(
               source: 'Google Places API',
               googlePlaceId: placeId,
               lookupAliases,
-              metadata: {
-                rating,
-                priceLevel,
-                types,
-                formattedAddress,
-                nationalPhoneNumber,
-                websiteUri,
-              },
+              metadata: {},
               createdAt: new Date(), // New, so will be loser
             };
 
@@ -332,14 +325,7 @@ export async function lookupAndAddRestaurantLocationAndGroup(
         source: 'Google Places API',
         googlePlaceId: placeId,
         lookupAliases,
-        metadata: {
-          rating,
-          priceLevel,
-          types,
-          formattedAddress,
-          nationalPhoneNumber,
-          websiteUri,
-        },
+        metadata: {},
       };
 
       // Use the 4-phase gauntlet (Phase 0: exact, Phase 1: chains, Phase 2: fuzzy, Phase 3: word-based, Phase 4: new)
