@@ -2,7 +2,11 @@ import { config } from '@dotenvx/dotenvx';
 import { PrismaClient } from '@repo/db';
 import Fuse, { FuseResult } from 'fuse.js';
 import _ from 'lodash';
-import { lookupAndAddRestaurantLocationAndGroup } from '../utils/googlePlaces';
+import {
+  checkExistingLocationByPlaceId,
+  findPlaceByName,
+  lookupAndAddRestaurantLocationAndGroup,
+} from '../utils/googlePlaces';
 config({ path: ['../../.env'] });
 
 const prisma = new PrismaClient();
@@ -244,10 +248,33 @@ async function processExtractionGroup(options: {
       continue;
     }
 
+    const idOnlyPlace = await findPlaceByName(
+      restaurantName,
+      'Los Angeles, CA',
+      'places.id'
+    );
+
+    if (idOnlyPlace?.id) {
+      const result = await checkExistingLocationByPlaceId(
+        idOnlyPlace?.id || '',
+        restaurantName,
+        prisma
+      );
+      if (result.groupId) {
+        console.log(
+          `   🔗 Google Places ID match (FREE): "${restaurantName}" → (Group ID: ${result.groupId})`
+        );
+        matchedGroupIds.add(result.groupId);
+        stats.fuzzyMatches++;
+        continue;
+      }
+    }
+
     // Step 2: Try fuzzy matching on RestaurantLocation names
     const locationFuzzyMatch = findRestaurantLocationMatch(
       restaurantName,
-      restaurantLocationNameFuse
+      restaurantLocationNameFuse,
+      0.1
     );
     if (locationFuzzyMatch) {
       matchedGroupIds.add(locationFuzzyMatch.item.groupId);
@@ -255,7 +282,7 @@ async function processExtractionGroup(options: {
       console.log(
         `✅ Fuzzy match: "${restaurantName}" → Location "${locationFuzzyMatch.item.name}" (Group ID: ${locationFuzzyMatch.item.groupId}, score: ${locationFuzzyMatch.score!.toFixed(3)})`
       );
-    } else {
+    } else if (idOnlyPlace?.id) {
       console.log(
         `🔍 "${restaurantName}" → no fuzzy match, trying Google Places...`
       );
@@ -266,6 +293,7 @@ async function processExtractionGroup(options: {
 
       const result = await lookupAndAddRestaurantLocationAndGroup(
         restaurantName,
+        idOnlyPlace.id,
         prisma,
         stats,
         restaurantLocationNameFuse
@@ -282,6 +310,9 @@ async function processExtractionGroup(options: {
         stats.unmatchedNames.add(restaurantName);
         console.log(`❌ "${restaurantName}" → not found anywhere`);
       }
+    } else if (!idOnlyPlace?.id) {
+      hadGooglePlacesErrorOrDidntTryGooglePlaces = true;
+      console.log(`❌ "${restaurantName}" → no Google Places ID found`);
     }
   }
 

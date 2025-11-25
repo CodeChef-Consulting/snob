@@ -78,6 +78,29 @@ export async function findPlaceByName(
   }
 }
 
+//find place by id
+export async function findPlaceById(
+  placeId: string
+): Promise<protos.google.maps.places.v1.IPlace | null> {
+  const client = getPlacesClient();
+  if (!client) {
+    return null;
+  }
+  try {
+    const request: protos.google.maps.places.v1.IGetPlaceRequest = {
+      name: `places/${placeId}`,
+    };
+    const [response] = await client.getPlace(request);
+    return response || null;
+  } catch (error) {
+    console.error(
+      `   ⚠️  Google Places API error for place ID "${placeId}":`,
+      error
+    );
+    throw error;
+  }
+}
+
 /**
  * Extract address components from Google Places addressComponents
  */
@@ -127,6 +150,54 @@ export interface GooglePlacesGroupResult {
 }
 
 /**
+ * Check if a restaurant location already exists in DB by Google Place ID
+ * If found and restaurantName is a new alias, adds it to lookupAliases
+ *
+ * @returns Object with groupId if found, null if not found
+ */
+export async function checkExistingLocationByPlaceId(
+  placeId: string,
+  restaurantName: string,
+  prisma: PrismaClient
+): Promise<GooglePlacesGroupResult> {
+  const normalizedName = restaurantName.trim().toLowerCase();
+
+  const existingLocation = await prisma.restaurantLocation.findUnique({
+    where: { googlePlaceId: placeId },
+    select: { id: true, name: true, lookupAliases: true, groupId: true },
+  });
+
+  if (!existingLocation) {
+    return { groupId: null, hadError: false };
+  }
+
+  console.log(
+    `   ℹ️  Found via Google (already in DB): "${existingLocation.name}" (Group ID: ${existingLocation.groupId})`
+  );
+
+  // If this is a new alias for an existing location, add it
+  const existingAliases = existingLocation.lookupAliases || [];
+
+  if (
+    normalizedName !== existingLocation.name.trim().toLowerCase() &&
+    !existingAliases.some((a) => a === normalizedName)
+  ) {
+    const updatedAliases = [...existingAliases, normalizedName];
+
+    await prisma.restaurantLocation.update({
+      where: { id: existingLocation.id },
+      data: { lookupAliases: updatedAliases },
+    });
+
+    console.log(
+      `   ✨ Added new alias "${normalizedName}" to location "${existingLocation.name}"`
+    );
+  }
+
+  return { groupId: existingLocation.groupId, hadError: false };
+}
+
+/**
  * Lookup and add a restaurant location with Google Places API
  * Creates a RestaurantLocation, tries to find matching RestaurantGroup via fuzzy matching,
  * and creates both if no group exists
@@ -140,6 +211,8 @@ export interface GooglePlacesGroupResult {
  */
 export async function lookupAndAddRestaurantLocationAndGroup(
   restaurantName: string,
+  placeId: string,
+
   prisma: PrismaClient,
   stats: GooglePlacesStats,
   restaurantLocationNameFuse: Fuse<{
@@ -148,55 +221,11 @@ export async function lookupAndAddRestaurantLocationAndGroup(
     groupId: number;
   }>
 ): Promise<GooglePlacesGroupResult> {
-  const normalizedName = restaurantName.trim().toLowerCase();
   stats.googlePlacesLookups++;
 
   try {
-    // First, do a minimal API call to get just the place ID
-    const idOnlyPlace = await findPlaceByName(restaurantName, 'Los Angeles, CA', 'places.id');
-
-    if (!idOnlyPlace?.id) {
-      stats.googlePlacesFailed++;
-      return { groupId: null, hadError: false }; // Not found, but no error
-    }
-
-    const placeId = idOnlyPlace.id;
-
-    // Check if we already have this place_id as a RestaurantLocation
-    const existingLocation = await prisma.restaurantLocation.findUnique({
-      where: { googlePlaceId: placeId },
-      select: { id: true, name: true, lookupAliases: true, groupId: true },
-    });
-
-    if (existingLocation) {
-      console.log(
-        `   ℹ️  Found via Google (already in DB): "${existingLocation.name}" (Group ID: ${existingLocation.groupId})`
-      );
-
-      // If this is a new alias for an existing location, add it
-      const existingAliases = existingLocation.lookupAliases || [];
-
-      if (
-        normalizedName !== existingLocation.name.trim().toLowerCase() &&
-        !existingAliases.some((a) => a === normalizedName)
-      ) {
-        const updatedAliases = [...existingAliases, normalizedName];
-
-        await prisma.restaurantLocation.update({
-          where: { id: existingLocation.id },
-          data: { lookupAliases: updatedAliases },
-        });
-
-        console.log(
-          `   ✨ Added new alias "${normalizedName}" to location "${existingLocation.name}"`
-        );
-      }
-
-      return { groupId: existingLocation.groupId, hadError: false };
-    }
-
     // Not in DB - fetch full details with second API call
-    const place = await findPlaceByName(restaurantName);
+    const place = await findPlaceById(placeId);
 
     if (!place) {
       stats.googlePlacesFailed++;
@@ -220,6 +249,7 @@ export async function lookupAndAddRestaurantLocationAndGroup(
     );
 
     // If the searched name differs from the canonical name, add it as a lookup alias
+    const normalizedName = restaurantName.trim().toLowerCase();
     const canonicalNameNormalized = displayName.trim().toLowerCase();
     const lookupAliases =
       normalizedName !== canonicalNameNormalized ? [normalizedName] : [];

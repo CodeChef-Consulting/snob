@@ -289,7 +289,7 @@ export const restaurantGroupRouter = t.router({
         }
       });
 
-      // Calculate average sentiment for each dish and sort
+      // Calculate weighted score for each dish (sentiment + mention frequency)
       const dishesWithScores = _.map(
         Array.from(dishSentiments.entries()),
         ([dish, sentiments]) => ({
@@ -299,10 +299,23 @@ export const restaurantGroupRouter = t.router({
         })
       );
 
-      // Sort by average sentiment (highest first), then alphabetically
+      // Normalize mention counts to 0-1 scale for weighting
+      const maxCount = _.maxBy(dishesWithScores, 'count')?.count ?? 1;
+      const dishesWithWeightedScores = _.map(dishesWithScores, (d) => {
+        // Normalize sentiment from [-1, 1] to [0, 1]
+        const normalizedSentiment = (d.avgSentiment + 1) / 2;
+        // Normalize count to [0, 1] using log scale to reduce impact of outliers
+        const normalizedCount =
+          maxCount > 1 ? Math.log(d.count + 1) / Math.log(maxCount + 1) : 1;
+        // Weighted score: 60% sentiment, 40% mention frequency
+        const weightedScore = normalizedSentiment * 0.6 + normalizedCount * 0.4;
+        return { ...d, weightedScore };
+      });
+
+      // Sort by weighted score (highest first), then alphabetically
       const sortedDishes = _.orderBy(
-        dishesWithScores,
-        ['avgSentiment', (d) => d.dish.toLowerCase()],
+        dishesWithWeightedScores,
+        ['weightedScore', (d) => d.dish.toLowerCase()],
         ['desc', 'asc']
       );
 
