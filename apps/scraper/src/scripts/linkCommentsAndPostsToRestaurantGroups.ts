@@ -121,16 +121,25 @@ function findRestaurantLocationMatch(
  * @param prisma Prisma client instance
  * @returns groupId if exact alias match found, null otherwise
  */
-async function findLocationByExactAlias(
+async function findLocationByExactNameOrAlias(
   restaurantName: string,
   prisma: PrismaClient
 ): Promise<{ groupId: number; locationName: string } | null> {
   const normalizedName = restaurantName.trim().toLowerCase();
   const locationMatches = await prisma.restaurantLocation.findMany({
     where: {
-      lookupAliases: {
-        has: normalizedName,
-      },
+      OR: [
+        {
+          name: {
+            equals: restaurantName,
+          },
+        },
+        {
+          lookupAliases: {
+            has: normalizedName,
+          },
+        },
+      ],
     },
     select: {
       id: true,
@@ -141,9 +150,20 @@ async function findLocationByExactAlias(
   });
 
   for (const location of locationMatches) {
+    if (location?.name === restaurantName) {
+      console.log(
+        `   🔗 Exact NAME match: "${restaurantName}" → Location "${location.name}" (Group ID: ${location.groupId})`
+      );
+      // Exact match
+      return { groupId: location.groupId, locationName: location.name };
+    }
+
     if (location?.lookupAliases && location.lookupAliases.length > 0) {
       // Verify it's an exact match (not just a substring)
-      if (location.lookupAliases.includes(normalizedName)) {
+      if (location.lookupAliases.find((alias) => alias === normalizedName)) {
+        console.log(
+          `   🔗 Exact ALIAS match: "${restaurantName}" → Location "${location.name}" (Group ID: ${location.groupId})`
+        );
         return { groupId: location.groupId, locationName: location.name };
       }
     }
@@ -235,14 +255,11 @@ async function processExtractionGroup(options: {
   // Look up each restaurant name
   for (const restaurantName of restaurantNames) {
     // Step 1: Check if any RestaurantLocation has this as a lookupAlias (exact match)
-    const exactAliasMatch = await findLocationByExactAlias(
+    const exactAliasMatch = await findLocationByExactNameOrAlias(
       restaurantName,
       prisma
     );
     if (exactAliasMatch) {
-      console.log(
-        `   🔗 Exact alias match: "${restaurantName}" → Location "${exactAliasMatch.locationName}" (Group ID: ${exactAliasMatch.groupId})`
-      );
       matchedGroupIds.add(exactAliasMatch.groupId);
       stats.fuzzyMatches++; // Reusing this stat for alias matches
       continue;
@@ -253,6 +270,8 @@ async function processExtractionGroup(options: {
       'Los Angeles, CA',
       'places.id'
     );
+
+    console.log('idOnlyPlace', idOnlyPlace?.id);
 
     if (idOnlyPlace?.id) {
       const result = await checkExistingLocationByPlaceId(
@@ -286,18 +305,18 @@ async function processExtractionGroup(options: {
       console.log(
         `🔍 "${restaurantName}" → no fuzzy match, trying Google Places...`
       );
-      // const result = {
-      //   hadError: true,
-      //   groupId: null,
-      // };
+      const result = {
+        hadError: true,
+        groupId: null,
+      };
 
-      const result = await lookupAndAddRestaurantLocationAndGroup(
-        restaurantName,
-        idOnlyPlace.id,
-        prisma,
-        stats,
-        restaurantLocationNameFuse
-      );
+      // const result = await lookupAndAddRestaurantLocationAndGroup(
+      //   restaurantName,
+      //   idOnlyPlace.id,
+      //   prisma,
+      //   stats,
+      //   restaurantLocationNameFuse
+      // );
 
       if (result.hadError) {
         hadGooglePlacesErrorOrDidntTryGooglePlaces = true;
