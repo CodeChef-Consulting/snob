@@ -1,6 +1,6 @@
 {
   "withZod": true,
   "withMiddleware": false,
-  "contextPath": "../../../apps/server/src/context",
-  "trpcOptionsPath": "../../../apps/server/src/trpcOptions"
+  "contextPath": "../../../apps/web/server/context",
+  "trpcOptionsPath": "../../../apps/web/server/trpcOptions"
 }
