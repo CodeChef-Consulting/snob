@@ -331,9 +331,18 @@ export const restaurantGroupRouter = t.router({
       // Get posts where this restaurant group is mentioned
       const posts = await ctx.prisma.post.findMany({
         where: {
-          restaurantGroupsMentioned: {
-            some: { id: input.id },
-          },
+          AND: [
+            {
+              restaurantGroupsMentioned: {
+                some: { id: input.id },
+              },
+            },
+            {
+              sentimentExtraction: {
+                isNot: null,
+              },
+            },
+          ],
         },
         select: {
           id: true,
@@ -343,6 +352,11 @@ export const restaurantGroupRouter = t.router({
           permalink: true,
           score: true,
           createdUtc: true,
+          sentimentExtraction: {
+            select: {
+              rawAiScore: true,
+            },
+          },
         },
         orderBy: {
           createdUtc: 'desc',
@@ -353,9 +367,18 @@ export const restaurantGroupRouter = t.router({
       // Get comments where this restaurant group is mentioned
       const comments = await ctx.prisma.comment.findMany({
         where: {
-          restaurantGroupsMentioned: {
-            some: { id: input.id },
-          },
+          AND: [
+            {
+              restaurantGroupsMentioned: {
+                some: { id: input.id },
+              },
+            },
+            {
+              sentimentExtraction: {
+                isNot: null,
+              },
+            },
+          ],
         },
         select: {
           id: true,
@@ -364,6 +387,11 @@ export const restaurantGroupRouter = t.router({
           permalink: true,
           score: true,
           createdUtc: true,
+          sentimentExtraction: {
+            select: {
+              rawAiScore: true,
+            },
+          },
           post: {
             select: {
               title: true,
@@ -386,6 +414,7 @@ export const restaurantGroupRouter = t.router({
         permalink: post.permalink,
         score: post.score,
         createdUtc: post.createdUtc,
+        sentiment: post.sentimentExtraction?.rawAiScore ?? null,
       }));
 
       const commentMentions = _.map(comments, (comment) => ({
@@ -397,6 +426,7 @@ export const restaurantGroupRouter = t.router({
         score: comment.score,
         createdUtc: comment.createdUtc,
         postTitle: comment.post?.title,
+        sentiment: comment.sentimentExtraction?.rawAiScore ?? null,
       }));
 
       const mentions = _.orderBy(
@@ -819,5 +849,186 @@ export const restaurantGroupRouter = t.router({
       });
 
       return { success: true, commentId, groupId };
+    }),
+
+  /**
+   * Get restaurant group gallery (media files from posts/comments where this is the only group mentioned)
+   */
+  getGroupGallery: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const group = await ctx.prisma.restaurantGroup.findUnique({
+        where: { id: input.id },
+        select: { id: true, name: true },
+      });
+
+      if (!group) {
+        return [];
+      }
+
+      // Get posts where this restaurant group is mentioned, and it's the only group mentioned
+      const posts = await ctx.prisma.post.findMany({
+        where: {
+          AND: [
+            {
+              restaurantGroupsMentioned: {
+                some: { id: input.id },
+              },
+            },
+            {
+              restaurantGroupsMentioned: {
+                none: {
+                  id: { not: input.id },
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          files: {
+            select: {
+              id: true,
+              fileUrl: true,
+              fileType: true,
+              metadata: true,
+            },
+          },
+          sentimentExtraction: {
+            select: {
+              rawAiScore: true,
+            },
+          },
+        },
+      });
+
+      // Get comments where this restaurant group is mentioned and it's the only group in the comment AND post
+      const comments = await ctx.prisma.comment.findMany({
+        where: {
+          AND: [
+            {
+              restaurantGroupsMentioned: {
+                some: { id: input.id },
+              },
+            },
+            {
+              restaurantGroupsMentioned: {
+                none: {
+                  id: { not: input.id },
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          files: {
+            select: {
+              id: true,
+              fileUrl: true,
+              fileType: true,
+              metadata: true,
+            },
+          },
+          sentimentExtraction: {
+            select: {
+              rawAiScore: true,
+            },
+          },
+          post: {
+            select: {
+              restaurantGroupsMentioned: {
+                select: { id: true },
+              },
+            },
+          },
+        },
+      });
+
+      // Collect all media files with source context
+      const mediaFiles: Array<{
+        id: number;
+        fileUrl: string;
+        fileType: string;
+        metadata: any;
+        sourceType: 'post' | 'comment';
+        sourceId: number;
+        permalink: string | null;
+        sentiment: number | null;
+      }> = [];
+
+      // Get permalinks for posts
+      const postPermalinks = await ctx.prisma.post.findMany({
+        where: { id: { in: posts.map((p) => p.id) } },
+        select: { id: true, permalink: true },
+      });
+      const postPermalinkMap = new Map(
+        postPermalinks.map((p) => [p.id, p.permalink])
+      );
+
+      // Get permalinks for comments
+      const commentPermalinks = await ctx.prisma.comment.findMany({
+        where: { id: { in: comments.map((c) => c.id) } },
+        select: { id: true, permalink: true },
+      });
+      const commentPermalinkMap = new Map(
+        commentPermalinks.map((c) => [c.id, c.permalink])
+      );
+
+      // Add post files
+      _.forEach(posts, (post) => {
+        const sentiment = post.sentimentExtraction?.rawAiScore ?? null;
+        _.forEach(post.files, (file) => {
+          mediaFiles.push({
+            ...file,
+            sourceType: 'post',
+            sourceId: post.id,
+            permalink: postPermalinkMap.get(post.id) ?? null,
+            sentiment,
+          });
+        });
+      });
+
+      // Add comment files only if the parent post also has only this group mentioned
+      _.forEach(comments, (comment) => {
+        if (
+          comment.post.restaurantGroupsMentioned.length === 1 &&
+          comment.post.restaurantGroupsMentioned[0]?.id === input.id
+        ) {
+          const sentiment = comment.sentimentExtraction?.rawAiScore ?? null;
+          _.forEach(comment.files, (file) => {
+            mediaFiles.push({
+              ...file,
+              sourceType: 'comment',
+              sourceId: comment.id,
+              permalink: commentPermalinkMap.get(comment.id) ?? null,
+              sentiment,
+            });
+          });
+        }
+      });
+
+      // Filter to only image types first
+      const imageFiles = mediaFiles.filter((file) => file.fileType === 'image');
+
+      // Deduplicate by normalizing URLs (remove query params and preview subdomains)
+      const uniqueMedia = _.uniqBy(imageFiles, (file) => {
+        const url = file.fileUrl;
+        // Remove query parameters and normalize preview/external-preview URLs
+        const baseUrl = url
+          .replace(/\?.*$/, '') // Remove query params
+          .replace(/^https:\/\/preview\.redd\.it\//, 'https://i.redd.it/')
+          .replace(/^https:\/\/external-preview\.redd\.it\//, 'https://i.redd.it/');
+        return baseUrl;
+      });
+
+      // Sort by sentiment score descending (null values last)
+      const sortedMedia = _.orderBy(
+        uniqueMedia,
+        [(file) => (file.sentiment !== null ? file.sentiment : -Infinity)],
+        ['desc']
+      );
+
+      return sortedMedia;
     }),
 });

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
+import Image from 'next/image';
 import { trpc } from '../lib/providers';
 
 interface RestaurantSidebarProps {
@@ -53,6 +54,7 @@ export default function RestaurantSidebar({
   const [activeTab, setActiveTab] = useState('locations');
   const [dishFilter, setDishFilter] = useState('');
   const [similarFilter, setSimilarFilter] = useState('');
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
   // Always fetch group details (needed for header)
   const { data: group, isLoading: isLoadingGroup } =
@@ -79,6 +81,12 @@ export default function RestaurantSidebar({
     { id: groupId },
     { enabled: activeTab === 'mentions' }
   );
+
+  const { data: gallery, isLoading: isLoadingGallery } =
+    trpc.customRestaurantGroup.getGroupGallery.useQuery(
+      { id: groupId },
+      { enabled: activeTab === 'gallery' }
+    );
 
   const unlinkPostMutation =
     trpc.customRestaurantGroup.unlinkPostFromGroup.useMutation({
@@ -173,7 +181,7 @@ export default function RestaurantSidebar({
 
         {group.normalizedScore !== null &&
           group.normalizedScore !== undefined && (
-            <div>
+            <div className="flex items-center gap-2">
               <span
                 className="px-3 py-1 rounded text-sm font-medium text-white"
                 style={{
@@ -182,6 +190,32 @@ export default function RestaurantSidebar({
               >
                 {group.normalizedScore.toFixed(1)}/10
               </span>
+              {(() => {
+                const selectedLocation = selectedLocationId
+                  ? group.locations.find((loc: any) => loc.id === selectedLocationId)
+                  : null;
+                const locationWithPlaceId = selectedLocation?.googlePlaceId
+                  ? selectedLocation
+                  : group.locations.find((loc: any) => loc.googlePlaceId);
+
+                return locationWithPlaceId?.googlePlaceId ? (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${locationWithPlaceId.googlePlaceId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 pl-2 pr-3 py-1 rounded bg-blue-500 hover:bg-blue-600 transition-colors text-white text-sm font-medium"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                    </svg>
+                    View in Google Maps
+                  </a>
+                ) : null;
+              })()}
             </div>
           )}
       </div>
@@ -203,6 +237,12 @@ export default function RestaurantSidebar({
             className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
           >
             Dishes
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="gallery"
+            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+          >
+            Gallery
           </Tabs.Trigger>
           <Tabs.Trigger
             value="alongside"
@@ -281,6 +321,50 @@ export default function RestaurantSidebar({
             )}
           </Tabs.Content>
 
+          <Tabs.Content value="gallery">
+            {isLoadingGallery ? (
+              <div className="grid grid-cols-3 gap-2">
+                {[...Array(9)].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="aspect-square rounded-lg bg-gray-200 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : gallery && gallery.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                  {gallery
+                    .filter((file) => !failedImages.has(file.id))
+                    .map((file) => (
+                      <a
+                        key={file.id}
+                        href={
+                          file.permalink
+                            ? `https://reddit.com${file.permalink}`
+                            : file.fileUrl
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-blue-500 transition-all"
+                      >
+                        <Image
+                          src={file.fileUrl}
+                          alt="Restaurant media"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 33vw, 200px"
+                          onError={() => {
+                            setFailedImages((prev) => new Set(prev).add(file.id));
+                          }}
+                        />
+                      </a>
+                    ))}
+                </div>
+            ) : (
+              <p className="text-sm text-gray-700">No images found</p>
+            )}
+          </Tabs.Content>
+
           <Tabs.Content value="alongside">
             {isLoadingAlongside ? (
               <div className="text-sm text-gray-700">
@@ -328,10 +412,15 @@ export default function RestaurantSidebar({
                 {mentions.map((mention: any) => (
                   <div
                     key={mention.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden"
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden relative"
                   >
+                    {mention.sentiment !== null && mention.sentiment !== undefined && (
+                      <div className="absolute top-2 right-2 text-xl" title={`Sentiment: ${mention.sentiment.toFixed(2)}`}>
+                        {mention.sentiment > 0.25 ? '😊' : mention.sentiment < -0.25 ? '😞' : '😐'}
+                      </div>
+                    )}
                     {mention.type === 'comment' && mention.postTitle && (
-                      <div className="text-xs text-gray-600 mb-2 truncate">
+                      <div className="text-xs text-gray-600 mb-2 truncate pr-8">
                         {mention.postTitle}
                       </div>
                     )}
