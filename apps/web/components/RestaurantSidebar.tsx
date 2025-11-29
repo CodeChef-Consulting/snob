@@ -367,20 +367,22 @@ export default function RestaurantSidebar({
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUnlink(mention.id, mention.type);
-                        }}
-                        disabled={
-                          unlinkPostMutation.isPending ||
-                          unlinkCommentMutation.isPending
-                        }
-                        className="flex-shrink-0 px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                        title="Remove this mention link"
-                      >
-                        Unlink
-                      </button>
+                      {process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnlink(mention.id, mention.type);
+                          }}
+                          disabled={
+                            unlinkPostMutation.isPending ||
+                            unlinkCommentMutation.isPending
+                          }
+                          className="flex-shrink-0 px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                          title="Remove this mention link"
+                        >
+                          Unlink
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
