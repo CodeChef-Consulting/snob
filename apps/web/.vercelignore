@@ -1,0 +1,23 @@
+# Keep ../../.env.production (encrypted) - safe to deploy
+# Never deploy .env.keys (contains decryption keys)
+../../.env.keys
+../../.env
+
+# Development files
+.env.local
+.env.*.local
+
+# Docker files in monorepo root
+../../docker-compose.yml
+../../init-db.sql
+
+# Backups in monorepo root
+../../backups/
+../../tmp/
+
+# Local database
+../../*.dump
+
+# Development tools
+.turbo
+.next
