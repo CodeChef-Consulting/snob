@@ -114,7 +114,7 @@ export default function RestaurantSearch({
   ]);
 
   return (
-    <div className="w-full max-w-md bg-white/50 backdrop-blur-lg rounded-lg shadow-lg p-4">
+    <div className="w-full max-w-md bg-white/50 backdrop-blur-lg md:rounded-lg shadow-lg pb-4 px-2">
       <Tabs.Root
         value={searchMode}
         onValueChange={(value) => {

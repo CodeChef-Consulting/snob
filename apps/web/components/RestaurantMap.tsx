@@ -323,7 +323,7 @@ export default function RestaurantMap() {
       {/* Toggle visibility button - Fixed position */}
       <button
         onClick={() => setIsPanelVisible(!isPanelVisible)}
-        className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-lg rounded-full shadow-lg p-2 hover:bg-white transition-colors"
+        className="fixed md:absolute top-2 right-2 md:top-4 md:right-4 z-30 bg-white/80 backdrop-blur-lg rounded-full shadow-lg p-2 hover:bg-white transition-colors"
         aria-label={isPanelVisible ? 'Hide search panel' : 'Show search panel'}
       >
         {isPanelVisible ? (
@@ -367,25 +367,28 @@ export default function RestaurantMap() {
         )}
       </button>
 
-      {/* Floating search and sidebar panel - Top right */}
+      {/* Search bar - Sticky on mobile, floating on desktop */}
       {isPanelVisible && (
-        <div className="absolute top-4 right-4 flex flex-col gap-4 max-w-md w-96 z-10">
+        <div className="fixed md:absolute top-0 left-0 right-0 md:top-4 md:right-4 md:left-auto z-20 md:w-96">
           <RestaurantSearch onSelectGroup={handleSelectGroup} />
+        </div>
+      )}
 
-          {selectedGroupId && (
-            <RestaurantSidebar
-              groupId={selectedGroupId}
-              selectedLocationId={selectedLocationId}
-              onClose={() => {
-                setSelectedGroupId(null);
-                setSelectedLocationId(null);
-              }}
-              onSelectLocation={(locationId) =>
-                handleSelectGroup(selectedGroupId, locationId)
-              }
-              onSelectGroup={(groupId) => handleSelectGroup(groupId)}
-            />
-          )}
+      {/* Sidebar panel - Below search on mobile, combined on desktop */}
+      {isPanelVisible && selectedGroupId && (
+        <div className="fixed md:absolute top-[140px] md:top-[160px] left-0 right-0 md:right-4 md:left-auto z-10 md:w-96">
+          <RestaurantSidebar
+            groupId={selectedGroupId}
+            selectedLocationId={selectedLocationId}
+            onClose={() => {
+              setSelectedGroupId(null);
+              setSelectedLocationId(null);
+            }}
+            onSelectLocation={(locationId) =>
+              handleSelectGroup(selectedGroupId, locationId)
+            }
+            onSelectGroup={(groupId) => handleSelectGroup(groupId)}
+          />
         </div>
       )}
     </div>

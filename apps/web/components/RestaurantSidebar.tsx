@@ -151,22 +151,22 @@ export default function RestaurantSidebar({
   }
 
   return (
-    <div className="bg-white/50 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden flex flex-col h-[calc(100vh-180px)]">
-      <div className="flex-shrink-0 border-b p-4">
+    <div className="bg-white/50 backdrop-blur-lg md:rounded-lg shadow-lg overflow-hidden flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-240px)]">
+      <div className="flex-shrink-0 border-b p-3 md:p-4">
         <button
           onClick={onClose}
-          className="text-gray-600 hover:text-gray-900 mb-2 float-right"
+          className="text-gray-600 hover:text-gray-900 mb-2 float-right text-xl md:text-base"
         >
           ✕
         </button>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{group.name}</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 pr-8">{group.name}</h2>
 
         {group.normalizedScore !== null &&
           group.normalizedScore !== undefined && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span
-                className="px-3 py-1 rounded text-sm font-medium text-white"
+                className="px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium text-white"
                 style={{
                   backgroundColor: getScoreColor(group.normalizedScore),
                 }}
@@ -186,10 +186,10 @@ export default function RestaurantSidebar({
                     href={`https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${locationWithPlaceId.googlePlaceId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 pl-2 pr-3 py-1 rounded bg-blue-500 hover:bg-blue-600 transition-colors text-white text-sm font-medium"
+                    className="inline-flex items-center gap-1 md:gap-1.5 pl-1.5 md:pl-2 pr-2 md:pr-3 py-1 rounded bg-blue-500 hover:bg-blue-600 transition-colors text-white text-xs md:text-sm font-medium"
                   >
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 md:w-4 md:h-4"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -208,34 +208,34 @@ export default function RestaurantSidebar({
         onValueChange={setActiveTab}
         className="flex-1 flex flex-col overflow-hidden"
       >
-        <Tabs.List className="flex border-b border-gray-200 px-4 flex-shrink-0">
+        <Tabs.List className="flex border-b border-gray-200 px-2 md:px-4 flex-shrink-0 overflow-x-auto">
           <Tabs.Trigger
             value="locations"
-            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+            className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900 whitespace-nowrap"
           >
             Locations
           </Tabs.Trigger>
           <Tabs.Trigger
             value="dishes"
-            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+            className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900 whitespace-nowrap"
           >
             Dishes
           </Tabs.Trigger>
           <Tabs.Trigger
             value="gallery"
-            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+            className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900 whitespace-nowrap"
           >
             Gallery
           </Tabs.Trigger>
           <Tabs.Trigger
             value="mentions"
-            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
+            className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900 whitespace-nowrap"
           >
             Discussion
           </Tabs.Trigger>
         </Tabs.List>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4">
           <Tabs.Content value="locations">
             {group.locations.length > 0 ? (
               <div className="space-y-2">
@@ -243,13 +243,13 @@ export default function RestaurantSidebar({
                   <button
                     key={location.id}
                     onClick={() => onSelectLocation(location.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                    className={`w-full text-left px-2 md:px-3 py-2 rounded-lg border transition-colors ${
                       selectedLocationId === location.id
                         ? 'bg-blue-50 border-blue-500'
                         : 'bg-white border-gray-200 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="font-medium text-sm text-gray-900">
+                    <div className="font-medium text-xs md:text-sm text-gray-900">
                       {location.name}
                     </div>
                     {location.address && (
@@ -279,11 +279,11 @@ export default function RestaurantSidebar({
                   onChange={(e) => setDishFilter(e.target.value)}
                   className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
                   {filteredDishes.map((dish, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                      className="px-2 md:px-3 py-0.5 md:py-1 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm"
                     >
                       {dish}
                     </span>
@@ -300,7 +300,7 @@ export default function RestaurantSidebar({
 
           <Tabs.Content value="gallery">
             {isLoadingGallery ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 md:gap-2">
                 {[...Array(9)].map((_, idx) => (
                   <div
                     key={idx}
@@ -309,7 +309,7 @@ export default function RestaurantSidebar({
                 ))}
               </div>
             ) : gallery && gallery.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 md:gap-2">
                   {gallery
                     .filter((file) => !failedImages.has(file.id))
                     .map((file) => (
@@ -329,7 +329,7 @@ export default function RestaurantSidebar({
                           alt="Restaurant media"
                           fill
                           className="object-cover"
-                          sizes="(max-width: 768px) 33vw, 200px"
+                          sizes="(max-width: 768px) 50vw, 33vw"
                           onError={() => {
                             setFailedImages((prev) => new Set(prev).add(file.id));
                           }}
@@ -346,19 +346,19 @@ export default function RestaurantSidebar({
             {isLoadingMentions ? (
               <div className="text-sm text-gray-700">Loading mentions...</div>
             ) : mentions && mentions.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {mentions.map((mention: any) => (
                   <div
                     key={mention.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition overflow-hidden relative"
+                    className="border rounded-lg p-3 md:p-4 hover:bg-gray-50 transition overflow-hidden relative"
                   >
                     {mention.sentiment !== null && mention.sentiment !== undefined && (
-                      <div className="absolute top-2 right-2 text-xl" title={`Sentiment: ${mention.sentiment.toFixed(2)}`}>
+                      <div className="absolute top-2 right-2 text-lg md:text-xl" title={`Sentiment: ${mention.sentiment.toFixed(2)}`}>
                         {mention.sentiment > 0.25 ? '😊' : mention.sentiment < -0.25 ? '😞' : '😐'}
                       </div>
                     )}
                     {mention.type === 'comment' && mention.postTitle && (
-                      <div className="text-xs text-gray-600 mb-2 truncate pr-8">
+                      <div className="text-xs text-gray-600 mb-2 truncate pr-8 md:pr-10">
                         {mention.postTitle}
                       </div>
                     )}
@@ -373,7 +373,7 @@ export default function RestaurantSidebar({
                       rel="noopener noreferrer"
                       className="block cursor-pointer"
                     >
-                      <blockquote className="text-sm text-gray-800 mb-2 italic break-words">
+                      <blockquote className="text-xs md:text-sm text-gray-800 mb-2 italic break-words">
                         &ldquo;{getExcerpt(mention.body)}&rdquo;
                       </blockquote>
                     </a>
