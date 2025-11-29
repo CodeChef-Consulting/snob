@@ -53,7 +53,6 @@ export default function RestaurantSidebar({
 }: RestaurantSidebarProps) {
   const [activeTab, setActiveTab] = useState('locations');
   const [dishFilter, setDishFilter] = useState('');
-  const [similarFilter, setSimilarFilter] = useState('');
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
   // Always fetch group details (needed for header)
@@ -65,12 +64,6 @@ export default function RestaurantSidebar({
     trpc.customRestaurantGroup.getGroupDishes.useQuery(
       { id: groupId },
       { enabled: activeTab === 'dishes' }
-    );
-
-  const { data: mentionedAlongside, isLoading: isLoadingAlongside } =
-    trpc.customRestaurantGroup.getGroupsMentionedAlongside.useQuery(
-      { id: groupId },
-      { enabled: activeTab === 'alongside' }
     );
 
   const {
@@ -124,16 +117,6 @@ export default function RestaurantSidebar({
     const lowerFilter = dishFilter.toLowerCase();
     return dishes.filter((dish) => dish.toLowerCase().includes(lowerFilter));
   }, [dishes, dishFilter]);
-
-  // Filter similar restaurants client-side
-  const filteredSimilar = useMemo(() => {
-    if (!mentionedAlongside) return [];
-    if (!similarFilter.trim()) return mentionedAlongside;
-    const lowerFilter = similarFilter.toLowerCase();
-    return mentionedAlongside.filter((group) =>
-      group.name.toLowerCase().includes(lowerFilter)
-    );
-  }, [mentionedAlongside, similarFilter]);
 
   if (isLoadingGroup) {
     return (
@@ -212,7 +195,7 @@ export default function RestaurantSidebar({
                     >
                       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
-                    View in Google Maps
+                    Google Maps
                   </a>
                 ) : null;
               })()}
@@ -243,12 +226,6 @@ export default function RestaurantSidebar({
             className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
           >
             Gallery
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="alongside"
-            className="px-4 py-3 text-sm font-medium border-b-2 transition-colors data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-600 hover:text-gray-900"
-          >
-            Similar
           </Tabs.Trigger>
           <Tabs.Trigger
             value="mentions"
@@ -362,45 +339,6 @@ export default function RestaurantSidebar({
                 </div>
             ) : (
               <p className="text-sm text-gray-700">No images found</p>
-            )}
-          </Tabs.Content>
-
-          <Tabs.Content value="alongside">
-            {isLoadingAlongside ? (
-              <div className="text-sm text-gray-700">
-                Loading related restaurants...
-              </div>
-            ) : mentionedAlongside && mentionedAlongside.length > 0 ? (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Filter restaurants..."
-                  value={similarFilter}
-                  onChange={(e) => setSimilarFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div className="flex flex-wrap gap-2">
-                  {filteredSimilar.map((coGroup) => (
-                    <button
-                      key={coGroup.id}
-                      onClick={() => onSelectGroup?.(coGroup.id)}
-                      className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200 transition-colors cursor-pointer"
-                      title={`${coGroup.count} co-mention${coGroup.count !== 1 ? 's' : ''}`}
-                    >
-                      {coGroup.name} ({coGroup.count})
-                    </button>
-                  ))}
-                </div>
-                {filteredSimilar.length === 0 && similarFilter && (
-                  <p className="text-sm text-gray-600">
-                    No matching restaurants
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-700">
-                No related restaurants found
-              </p>
             )}
           </Tabs.Content>
 

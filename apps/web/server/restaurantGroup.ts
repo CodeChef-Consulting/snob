@@ -339,7 +339,9 @@ export const restaurantGroupRouter = t.router({
             },
             {
               sentimentExtraction: {
-                isNot: null,
+                rawAiScore: {
+                  not: null,
+                },
               },
             },
           ],
@@ -375,7 +377,9 @@ export const restaurantGroupRouter = t.router({
             },
             {
               sentimentExtraction: {
-                isNot: null,
+                rawAiScore: {
+                  not: null,
+                },
               },
             },
           ],
@@ -1018,7 +1022,10 @@ export const restaurantGroupRouter = t.router({
         const baseUrl = url
           .replace(/\?.*$/, '') // Remove query params
           .replace(/^https:\/\/preview\.redd\.it\//, 'https://i.redd.it/')
-          .replace(/^https:\/\/external-preview\.redd\.it\//, 'https://i.redd.it/');
+          .replace(
+            /^https:\/\/external-preview\.redd\.it\//,
+            'https://i.redd.it/'
+          );
         return baseUrl;
       });
 
