@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "dotenvx run -f ../../.env -f ../../.env.keys -- next dev --turbopack",
-    "build": "dotenvx run -f ../../.env.production -- next build",
-    "start": "dotenvx run -f ../../.env.production -- next start",
+    "build": "cp ../../.env.production .env.production && dotenvx run -f ../../.env.production -- next build",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
