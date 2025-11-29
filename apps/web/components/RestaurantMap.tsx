@@ -66,14 +66,22 @@ const getScoreColor = (score: number | null): string => {
   }
 };
 
-const Marker = ({ normalizedScore, isSelected, isHighlighted, onClick }: MarkerProps) => {
+const Marker = ({
+  normalizedScore,
+  isSelected,
+  isHighlighted,
+  onClick,
+}: MarkerProps) => {
   const color = getScoreColor(normalizedScore);
 
   return (
     <div
       onClick={onClick}
       className="cursor-pointer transform -translate-x-1/2 -translate-y-full relative"
-      style={{ position: 'absolute', zIndex: isSelected ? 1000 : isHighlighted ? 500 : 1 }}
+      style={{
+        position: 'absolute',
+        zIndex: isSelected ? 1000 : isHighlighted ? 500 : 1,
+      }}
     >
       <div
         className={`rounded-full shadow-lg flex items-center justify-center text-white text-xs font-bold transition-all ${
@@ -95,7 +103,9 @@ const Marker = ({ normalizedScore, isSelected, isHighlighted, onClick }: MarkerP
 
 export default function RestaurantMap() {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+    null
+  );
   const [isPanelVisible, setIsPanelVisible] = useState(true);
   const isDraggingRef = useRef(false);
   const mapRef = useRef<any>(null);
@@ -112,16 +122,18 @@ export default function RestaurantMap() {
   });
 
   // Fetch selected group details if it's not in the current groups list
-  const { data: selectedGroupData } = trpc.customRestaurantGroup.getGroupById.useQuery(
-    { id: selectedGroupId! },
-    { enabled: selectedGroupId !== null }
-  );
-
+  const { data: selectedGroupData } =
+    trpc.customRestaurantGroup.getGroupById.useQuery(
+      { id: selectedGroupId! },
+      { enabled: selectedGroupId !== null }
+    );
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-xl text-gray-900">Loading restaurant groups...</div>
+        <div className="text-xl text-gray-900">
+          Loading restaurant groups...
+        </div>
       </div>
     );
   }
@@ -150,7 +162,7 @@ export default function RestaurantMap() {
     ) ?? [];
 
   // If there's an active search, use search results; otherwise show all locations
-  const displayGroups = hasActiveSearch ? searchResults : groups ?? [];
+  const displayGroups = hasActiveSearch ? searchResults : (groups ?? []);
 
   // Determine which locations to display
   let displayLocations;
@@ -222,7 +234,10 @@ export default function RestaurantMap() {
       if (locationId) {
         const location = validLocations.find((loc) => loc.id === locationId);
         if (location && location.latitude && location.longitude) {
-          mapRef.current.panTo({ lat: location.latitude, lng: location.longitude });
+          mapRef.current.panTo({
+            lat: location.latitude,
+            lng: location.longitude,
+          });
           mapRef.current.setZoom(15);
           return;
         }
@@ -232,11 +247,12 @@ export default function RestaurantMap() {
       if (validLocations.length === 1) {
         // Single location - just pan and zoom
         const loc = validLocations[0];
-        mapRef.current.panTo({ lat: loc.latitude!, lng: loc.longitude! });
+        mapRef.current.panTo({ lat: loc!.latitude!, lng: loc!.longitude! });
         mapRef.current.setZoom(14);
       } else {
         // Multiple locations - fit bounds
-        const bounds = new google.maps.LatLngBounds();
+        // Use window.google to access the global Google Maps API
+        const bounds = new (window as any).google.maps.LatLngBounds();
         validLocations.forEach((loc) => {
           bounds.extend({ lat: loc.latitude!, lng: loc.longitude! });
         });
@@ -253,62 +269,62 @@ export default function RestaurantMap() {
       {/* Map - Full screen */}
       <div className="flex-1">
         <GoogleMapReact
-            bootstrapURLKeys={{
-              key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-            }}
-            defaultCenter={defaultCenter}
-            defaultZoom={defaultZoom}
-            options={{
-              fullscreenControl: false,
-            }}
-            onClick={() => {
-              setSelectedGroupId(null);
-              setSelectedLocationId(null);
-            }}
-            onGoogleApiLoaded={({ map }) => {
-              mapRef.current = map;
+          bootstrapURLKeys={{
+            key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+          }}
+          defaultCenter={defaultCenter}
+          defaultZoom={defaultZoom}
+          options={{
+            fullscreenControl: false,
+          }}
+          onClick={() => {
+            setSelectedGroupId(null);
+            setSelectedLocationId(null);
+          }}
+          onGoogleApiLoaded={({ map }) => {
+            mapRef.current = map;
 
-              // Track drag events using ref to avoid state timing issues
-              map.addListener('dragstart', () => {
-                isDraggingRef.current = true;
-              });
-              map.addListener('dragend', () => {
-                // Keep dragging flag set for a short time after drag ends
-                setTimeout(() => {
-                  isDraggingRef.current = false;
-                }, 200);
-              });
-            }}
-            yesIWantToUseGoogleMapApiInternals
-          >
-            {displayLocations.map((location) => {
-              const isPartOfSelectedGroup = selectedGroupId === location.groupId;
-              const isThisLocationSelected = selectedLocationId === location.id;
+            // Track drag events using ref to avoid state timing issues
+            map.addListener('dragstart', () => {
+              isDraggingRef.current = true;
+            });
+            map.addListener('dragend', () => {
+              // Keep dragging flag set for a short time after drag ends
+              setTimeout(() => {
+                isDraggingRef.current = false;
+              }, 200);
+            });
+          }}
+          yesIWantToUseGoogleMapApiInternals
+        >
+          {displayLocations.map((location) => {
+            const isPartOfSelectedGroup = selectedGroupId === location.groupId;
+            const isThisLocationSelected = selectedLocationId === location.id;
 
-              return (
-                <Marker
-                  key={`${location.groupId}-${location.id}`}
-                  lat={location.latitude!}
-                  lng={location.longitude!}
-                  location={location}
-                  groupId={location.groupId}
-                  groupName={location.groupName}
-                  normalizedScore={location.normalizedScore}
-                  isSelected={isThisLocationSelected}
-                  isHighlighted={isPartOfSelectedGroup}
-                  onClick={() => handleSelectGroup(location.groupId, location.id)}
-                  $hover={false}
-                />
-              );
-            })}
-          </GoogleMapReact>
+            return (
+              <Marker
+                key={`${location.groupId}-${location.id}`}
+                lat={location.latitude!}
+                lng={location.longitude!}
+                location={location as unknown as RestaurantLocation}
+                groupId={location.groupId}
+                groupName={location.groupName}
+                normalizedScore={location.normalizedScore}
+                isSelected={isThisLocationSelected}
+                isHighlighted={isPartOfSelectedGroup}
+                onClick={() => handleSelectGroup(location.groupId, location.id)}
+                $hover={false}
+              />
+            );
+          })}
+        </GoogleMapReact>
       </div>
 
       {/* Toggle visibility button - Fixed position */}
       <button
         onClick={() => setIsPanelVisible(!isPanelVisible)}
         className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-lg rounded-full shadow-lg p-2 hover:bg-white transition-colors"
-        aria-label={isPanelVisible ? "Hide search panel" : "Show search panel"}
+        aria-label={isPanelVisible ? 'Hide search panel' : 'Show search panel'}
       >
         {isPanelVisible ? (
           // Eye slash icon (hide)
@@ -364,7 +380,9 @@ export default function RestaurantMap() {
                 setSelectedGroupId(null);
                 setSelectedLocationId(null);
               }}
-              onSelectLocation={(locationId) => handleSelectGroup(selectedGroupId, locationId)}
+              onSelectLocation={(locationId) =>
+                handleSelectGroup(selectedGroupId, locationId)
+              }
               onSelectGroup={(groupId) => handleSelectGroup(groupId)}
             />
           )}

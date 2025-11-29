@@ -71,42 +71,50 @@ export default function RestaurantSidebar({
       { enabled: activeTab === 'alongside' }
     );
 
-  const { data: mentions, isLoading: isLoadingMentions, refetch: refetchMentions } =
-    trpc.customRestaurantGroup.getGroupMentions.useQuery(
-      { id: groupId },
-      { enabled: activeTab === 'mentions' }
-    );
+  const {
+    data: mentions,
+    isLoading: isLoadingMentions,
+    refetch: refetchMentions,
+  } = trpc.customRestaurantGroup.getGroupMentions.useQuery(
+    { id: groupId },
+    { enabled: activeTab === 'mentions' }
+  );
 
-  const unlinkPostMutation = trpc.customRestaurantGroup.unlinkPostFromGroup.useMutation({
-    onSuccess: () => {
-      refetchMentions();
+  const unlinkPostMutation =
+    trpc.customRestaurantGroup.unlinkPostFromGroup.useMutation({
+      onSuccess: () => {
+        refetchMentions();
+      },
+    });
+
+  const unlinkCommentMutation =
+    trpc.customRestaurantGroup.unlinkCommentFromGroup.useMutation({
+      onSuccess: () => {
+        refetchMentions();
+      },
+    });
+
+  const handleUnlink = useCallback(
+    (mentionId: string, type: 'post' | 'comment') => {
+      const idStr = mentionId.replace(`${type}-`, '');
+      const id = parseInt(idStr, 10);
+      if (isNaN(id)) return;
+
+      if (type === 'post') {
+        unlinkPostMutation.mutate({ postId: id, groupId });
+      } else {
+        unlinkCommentMutation.mutate({ commentId: id, groupId });
+      }
     },
-  });
-
-  const unlinkCommentMutation = trpc.customRestaurantGroup.unlinkCommentFromGroup.useMutation({
-    onSuccess: () => {
-      refetchMentions();
-    },
-  });
-
-  const handleUnlink = useCallback((mentionId: string, type: 'post' | 'comment') => {
-    const idStr = mentionId.replace(`${type}-`, '');
-    const id = parseInt(idStr, 10);
-    if (isNaN(id)) return;
-
-    if (type === 'post') {
-      unlinkPostMutation.mutate({ postId: id, groupId });
-    } else {
-      unlinkCommentMutation.mutate({ commentId: id, groupId });
-    }
-  }, [groupId, unlinkPostMutation, unlinkCommentMutation]);
+    [groupId, unlinkPostMutation, unlinkCommentMutation]
+  );
 
   // Filter dishes client-side
   const filteredDishes = useMemo(() => {
     if (!dishes) return [];
     if (!dishFilter.trim()) return dishes;
     const lowerFilter = dishFilter.toLowerCase();
-    return dishes.filter(dish => dish.toLowerCase().includes(lowerFilter));
+    return dishes.filter((dish) => dish.toLowerCase().includes(lowerFilter));
   }, [dishes, dishFilter]);
 
   // Filter similar restaurants client-side
@@ -114,7 +122,7 @@ export default function RestaurantSidebar({
     if (!mentionedAlongside) return [];
     if (!similarFilter.trim()) return mentionedAlongside;
     const lowerFilter = similarFilter.toLowerCase();
-    return mentionedAlongside.filter(group =>
+    return mentionedAlongside.filter((group) =>
       group.name.toLowerCase().includes(lowerFilter)
     );
   }, [mentionedAlongside, similarFilter]);
@@ -178,7 +186,11 @@ export default function RestaurantSidebar({
           )}
       </div>
 
-      <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+      <Tabs.Root
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col overflow-hidden"
+      >
         <Tabs.List className="flex border-b border-gray-200 px-4 flex-shrink-0">
           <Tabs.Trigger
             value="locations"
@@ -210,7 +222,7 @@ export default function RestaurantSidebar({
           <Tabs.Content value="locations">
             {group.locations.length > 0 ? (
               <div className="space-y-2">
-                {group.locations.map((location) => (
+                {group.locations.map((location: any) => (
                   <button
                     key={location.id}
                     onClick={() => onSelectLocation(location.id)}
@@ -271,7 +283,9 @@ export default function RestaurantSidebar({
 
           <Tabs.Content value="alongside">
             {isLoadingAlongside ? (
-              <div className="text-sm text-gray-700">Loading related restaurants...</div>
+              <div className="text-sm text-gray-700">
+                Loading related restaurants...
+              </div>
             ) : mentionedAlongside && mentionedAlongside.length > 0 ? (
               <div className="space-y-3">
                 <input
@@ -294,11 +308,15 @@ export default function RestaurantSidebar({
                   ))}
                 </div>
                 {filteredSimilar.length === 0 && similarFilter && (
-                  <p className="text-sm text-gray-600">No matching restaurants</p>
+                  <p className="text-sm text-gray-600">
+                    No matching restaurants
+                  </p>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-700">No related restaurants found</p>
+              <p className="text-sm text-gray-700">
+                No related restaurants found
+              </p>
             )}
           </Tabs.Content>
 
@@ -319,13 +337,17 @@ export default function RestaurantSidebar({
                     )}
 
                     <a
-                      href={mention.permalink ? `https://reddit.com${mention.permalink}` : undefined}
+                      href={
+                        mention.permalink
+                          ? `https://reddit.com${mention.permalink}`
+                          : undefined
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block cursor-pointer"
                     >
                       <blockquote className="text-sm text-gray-800 mb-2 italic break-words">
-                        "{getExcerpt(mention.body)}"
+                        &ldquo;{getExcerpt(mention.body)}&rdquo;
                       </blockquote>
                     </a>
 
@@ -335,7 +357,9 @@ export default function RestaurantSidebar({
                           {mention.type}
                         </span>
                         {mention.author && (
-                          <span className="truncate">by u/{mention.author}</span>
+                          <span className="truncate">
+                            by u/{mention.author}
+                          </span>
                         )}
                         {mention.score !== null && (
                           <span className="flex-shrink-0">
@@ -348,7 +372,10 @@ export default function RestaurantSidebar({
                           e.stopPropagation();
                           handleUnlink(mention.id, mention.type);
                         }}
-                        disabled={unlinkPostMutation.isPending || unlinkCommentMutation.isPending}
+                        disabled={
+                          unlinkPostMutation.isPending ||
+                          unlinkCommentMutation.isPending
+                        }
                         className="flex-shrink-0 px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                         title="Remove this mention link"
                       >

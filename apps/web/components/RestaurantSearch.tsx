@@ -95,7 +95,7 @@ export default function RestaurantSearch({
 
       // Update results (could be empty array if no matches)
       if (results && results.length > 0) {
-        setSearchResults(results);
+        setSearchResults(results as RestaurantGroup[]);
       } else {
         // No results found for this search
         setSearchResults([]);
