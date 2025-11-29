@@ -325,7 +325,7 @@ export default function RestaurantSidebar({
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-blue-500 transition-all"
+                      className="relative aspect-square rounded-lg overflow-hidden bg-gray-200 hover:ring-2 hover:ring-blue-500 transition-all"
                     >
                       <Image
                         src={file.fileUrl}
@@ -333,6 +333,9 @@ export default function RestaurantSidebar({
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 50vw, 33vw"
+                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2UyZThlZiIvPjwvc3ZnPg=="
                         onError={() => {
                           setFailedImages((prev) => new Set(prev).add(file.id));
                         }}
