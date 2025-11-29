@@ -160,7 +160,9 @@ export default function RestaurantSidebar({
           ✕
         </button>
 
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 pr-8">{group.name}</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 pr-8">
+          {group.name}
+        </h2>
 
         {group.normalizedScore !== null &&
           group.normalizedScore !== undefined && (
@@ -174,12 +176,13 @@ export default function RestaurantSidebar({
                 {group.normalizedScore.toFixed(1)}/10
               </span>
               {(() => {
+                const locations = group.locations as any[];
                 const selectedLocation = selectedLocationId
-                  ? group.locations.find((loc: any) => loc.id === selectedLocationId)
+                  ? locations.find((loc) => loc.id === selectedLocationId)
                   : null;
                 const locationWithPlaceId = selectedLocation?.googlePlaceId
                   ? selectedLocation
-                  : group.locations.find((loc: any) => loc.googlePlaceId);
+                  : locations.find((loc) => !!loc.googlePlaceId);
 
                 return locationWithPlaceId?.googlePlaceId ? (
                   <a
@@ -310,33 +313,33 @@ export default function RestaurantSidebar({
               </div>
             ) : gallery && gallery.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 md:gap-2">
-                  {gallery
-                    .filter((file) => !failedImages.has(file.id))
-                    .map((file) => (
-                      <a
-                        key={file.id}
-                        href={
-                          file.permalink
-                            ? `https://reddit.com${file.permalink}`
-                            : file.fileUrl
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-blue-500 transition-all"
-                      >
-                        <Image
-                          src={file.fileUrl}
-                          alt="Restaurant media"
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 50vw, 33vw"
-                          onError={() => {
-                            setFailedImages((prev) => new Set(prev).add(file.id));
-                          }}
-                        />
-                      </a>
-                    ))}
-                </div>
+                {gallery
+                  .filter((file) => !failedImages.has(file.id))
+                  .map((file) => (
+                    <a
+                      key={file.id}
+                      href={
+                        file.permalink
+                          ? `https://reddit.com${file.permalink}`
+                          : file.fileUrl
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-blue-500 transition-all"
+                    >
+                      <Image
+                        src={file.fileUrl}
+                        alt="Restaurant media"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        onError={() => {
+                          setFailedImages((prev) => new Set(prev).add(file.id));
+                        }}
+                      />
+                    </a>
+                  ))}
+              </div>
             ) : (
               <p className="text-sm text-gray-700">No images found</p>
             )}
@@ -352,11 +355,19 @@ export default function RestaurantSidebar({
                     key={mention.id}
                     className="border rounded-lg p-3 md:p-4 hover:bg-gray-50 transition overflow-hidden relative"
                   >
-                    {mention.sentiment !== null && mention.sentiment !== undefined && (
-                      <div className="absolute top-2 right-2 text-lg md:text-xl" title={`Sentiment: ${mention.sentiment.toFixed(2)}`}>
-                        {mention.sentiment > 0.25 ? '😊' : mention.sentiment < -0.25 ? '😞' : '😐'}
-                      </div>
-                    )}
+                    {mention.sentiment !== null &&
+                      mention.sentiment !== undefined && (
+                        <div
+                          className="absolute top-2 right-2 text-lg md:text-xl"
+                          title={`Sentiment: ${mention.sentiment.toFixed(2)}`}
+                        >
+                          {mention.sentiment > 0.25
+                            ? '😊'
+                            : mention.sentiment < -0.25
+                              ? '😞'
+                              : '😐'}
+                        </div>
+                      )}
                     {mention.type === 'comment' && mention.postTitle && (
                       <div className="text-xs text-gray-600 mb-2 truncate pr-8 md:pr-10">
                         {mention.postTitle}
