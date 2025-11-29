@@ -11,5 +11,3 @@ import { RestaurantUncheckedUpdateInputObjectSchema as RestaurantUncheckedUpdate
 export const RestaurantUpsertOneSchema: z.ZodType<Prisma.RestaurantUpsertArgs> = z.object({ select: RestaurantSelectObjectSchema.optional(), include: RestaurantIncludeObjectSchema.optional(), where: RestaurantWhereUniqueInputObjectSchema, create: z.union([ RestaurantCreateInputObjectSchema, RestaurantUncheckedCreateInputObjectSchema ]), update: z.union([ RestaurantUpdateInputObjectSchema, RestaurantUncheckedUpdateInputObjectSchema ]) }).strict() as unknown as z.ZodType<Prisma.RestaurantUpsertArgs>;
 
 export const RestaurantUpsertOneZodSchema = z.object({ select: RestaurantSelectObjectSchema.optional(), include: RestaurantIncludeObjectSchema.optional(), where: RestaurantWhereUniqueInputObjectSchema, create: z.union([ RestaurantCreateInputObjectSchema, RestaurantUncheckedCreateInputObjectSchema ]), update: z.union([ RestaurantUpdateInputObjectSchema, RestaurantUncheckedUpdateInputObjectSchema ]) }).strict();
-// Alias for prisma-trpc-generator compatibility
-export const RestaurantUpsertSchema = RestaurantUpsertOneSchema;

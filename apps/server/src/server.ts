@@ -1,6 +1,3 @@
-import { config } from '@dotenvx/dotenvx';
-config({ path: ['../../.env', '../../.env.keys'] });
-
 import express from 'express';
 import cors from 'cors';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';

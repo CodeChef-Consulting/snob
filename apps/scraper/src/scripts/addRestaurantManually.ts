@@ -27,7 +27,10 @@ async function addRestaurantManually() {
     console.log(`\n🔍 Searching Google Places for: "${restaurantName}"\n`);
 
     // Search Google Places
-    const place = await findPlaceByName(restaurantName);
+    const place = await findPlaceByName(
+      restaurantName,
+      'places.id,places.displayName,places.addressComponents,places.location'
+    );
 
     if (!place) {
       console.error(

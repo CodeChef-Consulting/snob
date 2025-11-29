@@ -37,7 +37,7 @@ export function getPlacesClient(): PlacesClient | null {
 export async function findPlaceByName(
   restaurantName: string,
   location: string = 'Los Angeles, CA',
-  fieldMask: string = 'places.id,places.displayName,places.addressComponents,places.location'
+  fieldMask: string = 'places.id'
 ): Promise<protos.google.maps.places.v1.IPlace | null> {
   const client = getPlacesClient();
 
@@ -80,7 +80,8 @@ export async function findPlaceByName(
 
 //find place by id
 export async function findPlaceById(
-  placeId: string
+  placeId: string,
+  fieldMask: string = 'places.id,places.displayName,places.addressComponents,places.location'
 ): Promise<protos.google.maps.places.v1.IPlace | null> {
   const client = getPlacesClient();
   if (!client) {
@@ -90,7 +91,13 @@ export async function findPlaceById(
     const request: protos.google.maps.places.v1.IGetPlaceRequest = {
       name: `places/${placeId}`,
     };
-    const [response] = await client.getPlace(request);
+    const [response] = await client.getPlace(request, {
+      otherArgs: {
+        headers: {
+          'X-Goog-FieldMask': fieldMask,
+        },
+      },
+    });
     return response || null;
   } catch (error) {
     console.error(

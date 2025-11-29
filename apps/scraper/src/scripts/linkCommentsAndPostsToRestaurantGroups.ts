@@ -1,7 +1,7 @@
 import { config } from '@dotenvx/dotenvx';
 import { PrismaClient } from '@repo/db';
 import Fuse, { FuseResult } from 'fuse.js';
-import _ from 'lodash';
+import _, { indexOf } from 'lodash';
 import {
   checkExistingLocationByPlaceId,
   findPlaceByName,
@@ -537,10 +537,21 @@ async function linkCommentsAndPostsToRestaurantGroups() {
       );
 
       // Process primary groups (unless --secondary-only is set)
+      let indexStart = false;
+      console.log(
+        'INDEX OF Szechuan Impresssion',
+        indexOf(Object.keys(primaryGroups), 'Szechuan Impression')
+      );
       if (!secondaryOnly) {
         for (const [groupKey, groupExtractions] of Object.entries(
           primaryGroups
         )) {
+          if (groupKey === 'Szechuan Impression') {
+            indexStart = true;
+          } else if (!indexStart) {
+            continue;
+          }
+
           await processExtractionGroup({
             groupKey,
             extractions: groupExtractions,

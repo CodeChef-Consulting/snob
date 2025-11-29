@@ -5,8 +5,10 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js",
+    "dev": "dotenvx run -f ../../.env -f ../../.env.keys -- tsx watch src/server.ts",
+    "dev:prod": "dotenvx run -f ../../.env.production -f ../../.env.keys -- tsx watch src/server.ts",
+    "start": "dotenvx run -f ../../.env -f ../../.env.keys -- node dist/server.js",
+    "start:prod": "dotenvx run -f ../../.env.production -f ../../.env.keys -- node dist/server.js",
     "build": "tsc"
   },
   "dependencies": {

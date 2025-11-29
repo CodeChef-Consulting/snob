@@ -12,8 +12,12 @@
     "docker:logs": "docker compose logs -f postgres",
     "docker:restart": "docker compose restart postgres",
     "db:generate": "turbo db:generate",
+    "db:generate:prod": "cd packages/db && pnpm db:generate:prod",
     "db:push": "turbo db:push",
-    "db:studio": "cd packages/db && pnpm db:studio"
+    "db:push:prod": "cd packages/db && pnpm db:push:prod",
+    "db:studio": "cd packages/db && pnpm db:studio",
+    "db:studio:prod": "cd packages/db && pnpm db:studio:prod",
+    "migrate-to-supabase": "./scripts/migrate-to-supabase.sh"
   },
   "devDependencies": {
     "turbo": "^2.3.3"

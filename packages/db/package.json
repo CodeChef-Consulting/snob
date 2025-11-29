@@ -6,9 +6,13 @@
   "types": "./index.ts",
   "scripts": {
     "db:generate": "dotenvx run -f ../../.env -f ../../.env.keys -- prisma generate && node fix-generated-code.js",
+    "db:generate:prod": "dotenvx run -f ../../.env.production -f ../../.env.keys -- prisma generate && node fix-generated-code.js",
     "db:push": "dotenvx run -f ../../.env -f ../../.env.keys -- prisma db push",
+    "db:push:prod": "dotenvx run -f ../../.env.production -f ../../.env.keys -- prisma db push",
     "db:migrate": "dotenvx run -f ../../.env -f ../../.env.keys -- prisma migrate dev",
-    "db:studio": "dotenvx run -f ../../.env -f ../../.env.keys -- prisma studio"
+    "db:migrate:prod": "dotenvx run -f ../../.env.production -f ../../.env.keys -- prisma migrate dev",
+    "db:studio": "dotenvx run -f ../../.env -f ../../.env.keys -- prisma studio",
+    "db:studio:prod": "dotenvx run -f ../../.env.production -f ../../.env.keys -- prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.16.3",
