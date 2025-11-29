@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm db:generate:prod && cd apps/web && pnpm build",
+  "buildCommand": "cd ../.. && pnpm db:generate:prod && pnpm turbo build --filter=@repo/web",
   "installCommand": "cd ../.. && pnpm install",
   "framework": "nextjs",
   "regions": ["iad1"]
