@@ -1,7 +1,7 @@
 import { config } from '@dotenvx/dotenvx';
 config({ path: ['../../.env'] });
 
-import { Comment } from 'snoowrap';
+import type { Comment } from 'snoowrap';
 import { PrismaClient } from '@repo/db';
 import {
   createRedditClient,
@@ -95,7 +95,8 @@ async function fetchCommentsOnly(options: FetchOptions = {}) {
     let postCommentsScraped = 0;
 
     try {
-      const submission = await r.getSubmission(dbPost.externalId);
+      // @ts-ignore - snoowrap has circular type references
+      const submission: any = await r.getSubmission(dbPost.externalId);
       const topLevelComments = await submission.comments.fetchAll();
 
       // Collect all comments first (breadth-first traversal)

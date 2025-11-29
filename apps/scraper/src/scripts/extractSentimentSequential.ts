@@ -1,5 +1,5 @@
-import { config } from '@dotenvx/dotenvx';
-config({ path: ['../../.env'] });
+import { config as dotenvConfig } from '@dotenvx/dotenvx';
+dotenvConfig({ path: ['../../.env'] });
 
 import { PrismaClient } from '@repo/db';
 import {

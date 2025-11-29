@@ -24,7 +24,9 @@ async function geocodeWithMapbox(
       return null;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      features?: Array<{ center: [number, number] }>;
+    };
 
     if (data.features && data.features.length > 0) {
       const [lng, lat] = data.features[0].center;

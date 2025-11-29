@@ -108,7 +108,7 @@ async function runAllScrapes() {
     console.log('─'.repeat(60));
 
     try {
-      const args = [task.mode];
+      const args: string[] = [task.mode];
       if (task.searchQuery) {
         args.push(`"${task.searchQuery}"`);
       } else {

@@ -203,7 +203,7 @@ async function processKnownChains(
               source: restaurant.source,
               googlePlaceId: restaurant.googlePlaceId,
               lookupAliases: restaurant.lookupAliases,
-              metadata: restaurant.metadata,
+              metadata: restaurant.metadata ?? undefined,
               groupId: group.id,
             },
           });
@@ -457,7 +457,7 @@ async function fuzzyMatchMultiLocation(
               source: restaurant.source,
               googlePlaceId: restaurant.googlePlaceId,
               lookupAliases: restaurant.lookupAliases,
-              metadata: restaurant.metadata,
+              metadata: restaurant.metadata ?? undefined,
               groupId: group.id,
             },
           });
@@ -678,7 +678,7 @@ async function wordBasedMatching(
                 source: restaurant.source,
                 googlePlaceId: restaurant.googlePlaceId,
                 lookupAliases: restaurant.lookupAliases,
-                metadata: restaurant.metadata,
+                metadata: restaurant.metadata ?? undefined,
                 groupId: group.id,
               },
             });
@@ -781,7 +781,7 @@ async function createSingleLocationGroups(
               source: restaurant.source,
               googlePlaceId: restaurant.googlePlaceId,
               lookupAliases: restaurant.lookupAliases,
-              metadata: restaurant.metadata,
+              metadata: restaurant.metadata ?? undefined,
               groupId: group.id,
             },
           });
@@ -863,7 +863,7 @@ async function createSingleLocationGroups(
                       source: restaurant.source,
                       googlePlaceId: restaurant.googlePlaceId,
                       lookupAliases: restaurant.lookupAliases,
-                      metadata: restaurant.metadata,
+                      metadata: restaurant.metadata ?? undefined,
                       groupId: existingGroup.id,
                     },
                   });

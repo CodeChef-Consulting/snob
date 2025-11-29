@@ -2,7 +2,7 @@ import { config } from '@dotenvx/dotenvx';
 config({ path: ['../../.env'] });
 
 import { PrismaClient } from '@repo/db';
-import { createRedditClient, extractMediaUrls } from '../utils/reddit';
+import { createRedditClient, extractMediaUrls } from '../../utils/reddit';
 
 const prisma = new PrismaClient();
 const r = createRedditClient();
@@ -36,7 +36,8 @@ async function refetchAllPostMedia(minimumPostId?: number) {
       }
 
       // Fetch post from Reddit
-      const submission = await r.getSubmission(dbPost.externalId).fetch();
+      // @ts-ignore - snoowrap has circular type references
+      const submission: any = await r.getSubmission(dbPost.externalId).fetch();
 
       // Extract media URLs
       const mediaFiles = extractMediaUrls(submission);
@@ -48,7 +49,7 @@ async function refetchAllPostMedia(minimumPostId?: number) {
       }
 
       // Check which media files already exist
-      const mediaFileKeys = mediaFiles.map((m) => ({
+      const mediaFileKeys = mediaFiles.map((m: { url: string }) => ({
         postId: dbPost.id,
         fileUrl: m.url,
       }));

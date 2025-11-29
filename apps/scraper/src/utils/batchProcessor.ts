@@ -57,7 +57,7 @@ export async function processBatch<TInput, TResult>(
   const results = await Promise.all(promises);
 
   // Filter out errors
-  const successful = results.filter((r): r is TResult => r !== null);
+  const successful = results.filter((r): r is Awaited<TResult> => r !== null) as TResult[];
   const errors = items.length - successful.length;
 
   const batchElapsedTime = Date.now() - batchStartTime;

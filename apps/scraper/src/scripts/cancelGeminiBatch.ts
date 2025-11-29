@@ -31,7 +31,9 @@ async function cancelBatch() {
     }
   );
 
-  const result = await response.json();
+  const result = (await response.json()) as {
+    error?: { message?: string };
+  };
   console.log('Result:', JSON.stringify(result, null, 2));
 
   if (!response.ok) {
