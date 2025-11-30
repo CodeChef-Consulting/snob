@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "generatorVersion": "0.0.0",
-  "generatedAt": "2025-11-29T01:17:44.096Z",
+  "generatedAt": "2025-11-30T06:44:30.192Z",
   "outputPath": "/Users/jeremytong/reddit-scraper/apps/web/server/generated",
   "files": [
     "schemas/enums/TransactionIsolationLevel.schema.ts",

@@ -128,25 +128,8 @@ export default function RestaurantMap() {
       { enabled: selectedGroupId !== null }
     );
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-xl text-gray-900">
-          Loading restaurant groups...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-xl text-red-700">
-          Error loading restaurant groups: {error.message}
-        </div>
-      </div>
-    );
-  }
+  // Show loading overlay only while fetching, but don't block the UI
+  const showLoadingOverlay = isLoading && !groups;
 
   // Flatten all locations from all groups for marker display
   const allLocations =
@@ -266,6 +249,15 @@ export default function RestaurantMap() {
 
   return (
     <div className="h-screen flex relative">
+      {/* Loading overlay - only shown if data isn't prefetched */}
+      {showLoadingOverlay && (
+        <div className="absolute inset-0 z-50 bg-gray-50/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-xl text-gray-900">Loading restaurant groups...</div>
+          </div>
+        </div>
+      )}
+
       {/* Map - Full screen */}
       <div className="flex-1">
         <GoogleMapReact

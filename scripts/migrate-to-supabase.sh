@@ -2,11 +2,20 @@
 set -e
 
 echo "🚀 Starting migration to Supabase..."
+echo "⚠️  WARNING: This will COMPLETELY OVERRIDE the production Supabase database!"
+echo ""
+read -p "Are you sure you want to continue? (yes/no): " -r
+echo
+if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+    echo "Migration cancelled."
+    exit 1
+fi
 
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Step 1: Push schema to Supabase
@@ -44,7 +53,8 @@ docker cp $CONTAINER_ID:/tmp/migration.dump "$DUMP_FILE"
 echo -e "${GREEN}✓ Local database backed up to $DUMP_FILE${NC}"
 
 # Step 3: Restore to Supabase
-echo -e "\n${BLUE}Step 3: Restoring data to Supabase...${NC}"
+echo -e "\n${BLUE}Step 3: Restoring data to Supabase (OVERRIDING existing data)...${NC}"
+echo -e "${YELLOW}This will DROP all existing tables and recreate them from local backup${NC}"
 echo "This may take a few minutes depending on data size..."
 
 # Use DIRECT_URL for pg_restore (requires direct connection, not pooler)
@@ -53,6 +63,10 @@ dotenvx run -f .env.production -f .env.keys -- sh -c '
     CONN_STRING="${DIRECT_URL}"
 
     # Use pg_restore with the full connection string
+    # --clean: Drop existing objects before recreating them
+    # --if-exists: Use IF EXISTS when dropping objects (prevents errors)
+    # --no-owner: Don'\''t set ownership (use connection user)
+    # --no-acl: Don'\''t restore access privileges
     PGPASSWORD=$(echo $CONN_STRING | sed -n "s/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p") \
     pg_restore \
         --clean \

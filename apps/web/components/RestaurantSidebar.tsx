@@ -286,7 +286,7 @@ export default function RestaurantSidebar({
                   {filteredDishes.map((dish, idx) => (
                     <span
                       key={idx}
-                      className="px-2 md:px-3 py-0.5 md:py-1 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm"
+                      className="px-2.5 md:px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm"
                     >
                       {dish}
                     </span>
