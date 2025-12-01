@@ -10,3 +10,5 @@ import { BatchJobUncheckedUpdateInputObjectSchema as BatchJobUncheckedUpdateInpu
 export const BatchJobUpsertOneSchema: z.ZodType<Prisma.BatchJobUpsertArgs> = z.object({ select: BatchJobSelectObjectSchema.optional(),  where: BatchJobWhereUniqueInputObjectSchema, create: z.union([ BatchJobCreateInputObjectSchema, BatchJobUncheckedCreateInputObjectSchema ]), update: z.union([ BatchJobUpdateInputObjectSchema, BatchJobUncheckedUpdateInputObjectSchema ]) }).strict() as unknown as z.ZodType<Prisma.BatchJobUpsertArgs>;
 
 export const BatchJobUpsertOneZodSchema = z.object({ select: BatchJobSelectObjectSchema.optional(),  where: BatchJobWhereUniqueInputObjectSchema, create: z.union([ BatchJobCreateInputObjectSchema, BatchJobUncheckedCreateInputObjectSchema ]), update: z.union([ BatchJobUpdateInputObjectSchema, BatchJobUncheckedUpdateInputObjectSchema ]) }).strict();
+// Alias for prisma-trpc-generator compatibility
+export const BatchJobUpsertSchema = BatchJobUpsertOneSchema;
