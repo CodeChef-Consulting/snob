@@ -1,0 +1,10 @@
+import type { Prisma } from '@prisma/client';
+import * as z from 'zod';
+import { GooglePlacesLookupOrderByWithRelationInputObjectSchema as GooglePlacesLookupOrderByWithRelationInputObjectSchema } from './objects/GooglePlacesLookupOrderByWithRelationInput.schema';
+import { GooglePlacesLookupWhereInputObjectSchema as GooglePlacesLookupWhereInputObjectSchema } from './objects/GooglePlacesLookupWhereInput.schema';
+import { GooglePlacesLookupWhereUniqueInputObjectSchema as GooglePlacesLookupWhereUniqueInputObjectSchema } from './objects/GooglePlacesLookupWhereUniqueInput.schema';
+import { GooglePlacesLookupCountAggregateInputObjectSchema as GooglePlacesLookupCountAggregateInputObjectSchema } from './objects/GooglePlacesLookupCountAggregateInput.schema';
+
+export const GooglePlacesLookupCountSchema: z.ZodType<Prisma.GooglePlacesLookupCountArgs> = z.object({ orderBy: z.union([GooglePlacesLookupOrderByWithRelationInputObjectSchema, GooglePlacesLookupOrderByWithRelationInputObjectSchema.array()]).optional(), where: GooglePlacesLookupWhereInputObjectSchema.optional(), cursor: GooglePlacesLookupWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), GooglePlacesLookupCountAggregateInputObjectSchema ]).optional() }).strict() as unknown as z.ZodType<Prisma.GooglePlacesLookupCountArgs>;
+
+export const GooglePlacesLookupCountZodSchema = z.object({ orderBy: z.union([GooglePlacesLookupOrderByWithRelationInputObjectSchema, GooglePlacesLookupOrderByWithRelationInputObjectSchema.array()]).optional(), where: GooglePlacesLookupWhereInputObjectSchema.optional(), cursor: GooglePlacesLookupWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), select: z.union([ z.literal(true), GooglePlacesLookupCountAggregateInputObjectSchema ]).optional() }).strict();

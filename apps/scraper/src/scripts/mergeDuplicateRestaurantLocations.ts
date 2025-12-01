@@ -81,7 +81,9 @@ async function findDuplicatesInBatch(
       'rl.longitude'
     );
 
-    let candidates: Array<RestaurantLocation & { group_name: string; distance_meters: number }> = [];
+    let candidates: Array<
+      RestaurantLocation & { group_name: string; distance_meters: number }
+    > = [];
 
     try {
       candidates = await prisma.$queryRaw<
@@ -103,7 +105,10 @@ async function findDuplicatesInBatch(
         ORDER BY distance_meters ASC
       `;
     } catch (error) {
-      console.error(`⚠️  Error finding candidates for location ${l1.id} (${l1.name}) at (${l1.latitude}, ${l1.longitude}):`, error);
+      console.error(
+        `⚠️  Error finding candidates for location ${l1.id} (${l1.name}) at (${l1.latitude}, ${l1.longitude}):`,
+        error
+      );
       continue; // Skip this location and move to next
     }
 

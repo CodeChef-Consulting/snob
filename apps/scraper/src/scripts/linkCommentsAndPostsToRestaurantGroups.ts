@@ -1,11 +1,10 @@
 import { config } from '@dotenvx/dotenvx';
 import { PrismaClient } from '@repo/db';
 import Fuse, { FuseResult } from 'fuse.js';
-import _, { indexOf } from 'lodash';
+import _ from 'lodash';
 import {
   checkExistingLocationByPlaceId,
   findPlaceByName,
-  lookupAndAddRestaurantLocationAndGroup,
 } from '../utils/googlePlaces';
 config({ path: ['../../.env'] });
 
@@ -537,7 +536,6 @@ async function linkCommentsAndPostsToRestaurantGroups() {
       );
 
       // Process primary groups (unless --secondary-only is set)
-      let indexStart = false;
       if (!secondaryOnly) {
         for (const [groupKey, groupExtractions] of Object.entries(
           primaryGroups
@@ -554,28 +552,11 @@ async function linkCommentsAndPostsToRestaurantGroups() {
         }
       }
 
-      console.log(
-        'secondaryGroups',
-        indexOf(
-          Object.keys(secondaryGroups),
-          "Nha Trang^Chef Tony^Lunasia^China Red^Ocean Harbor^Periban^Northern Thai Food Club^Sapp Coffee Shop^Tacos Y Birria La Unica^Mariscos Jalisco^Pepe's red tacos^Villas Tacos Los Angeles^Angel's Tijuana Tacos^Los Cinco Puntos^Namaste Spiceland^India Sweets and Spices^Golden Deli^Bahn Mi My Tho^Chong Qing Special Noodles^Long Xing Ji Juicy Dumplings^Tasty Noodle House^Amboy Quality Meats and Delicious Burgers^The Oinkster^El Cochinito^Mini Kabob^Zhengyalov Hatz^Raffi's Place^Eagle Rock Italian Bakery and Deli^Philippes^Giamelas^Wanderlust Creamery^Sunright Tea Studio^Prolece^Teamorrow^Yucas^Wushiland"
-        )
-      );
-
       // Process secondary groups (unless --primary-only is set)
       if (!primaryOnly) {
         for (const [groupKey, groupExtractions] of Object.entries(
           secondaryGroups
         )) {
-          if (
-            groupKey ===
-            "Nha Trang^Chef Tony^Lunasia^China Red^Ocean Harbor^Periban^Northern Thai Food Club^Sapp Coffee Shop^Tacos Y Birria La Unica^Mariscos Jalisco^Pepe's red tacos^Villas Tacos Los Angeles^Angel's Tijuana Tacos^Los Cinco Puntos^Namaste Spiceland^India Sweets and Spices^Golden Deli^Bahn Mi My Tho^Chong Qing Special Noodles^Long Xing Ji Juicy Dumplings^Tasty Noodle House^Amboy Quality Meats and Delicious Burgers^The Oinkster^El Cochinito^Mini Kabob^Zhengyalov Hatz^Raffi's Place^Eagle Rock Italian Bakery and Deli^Philippes^Giamelas^Wanderlust Creamery^Sunright Tea Studio^Prolece^Teamorrow^Yucas^Wushiland"
-          ) {
-            indexStart = true;
-          } else if (!indexStart) {
-            continue;
-          }
-
           await processExtractionGroup({
             groupKey,
             extractions: groupExtractions,

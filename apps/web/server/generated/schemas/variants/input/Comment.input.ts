@@ -25,7 +25,6 @@ export const CommentInputSchema = z.object({
     scrapingSession: z.unknown().optional().nullable(),
     scrapingSessionId: z.number().int().optional().nullable(),
     files: z.array(z.unknown()),
-    restaurantsMentioned: z.array(z.unknown()),
     restaurantGroupsMentioned: z.array(z.unknown()),
     restaurantExtraction: z.unknown().optional().nullable(),
     sentimentExtraction: z.unknown().optional().nullable()

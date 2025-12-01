@@ -11,7 +11,6 @@ import { CommentUpdateOneWithoutRepliesNestedInputObjectSchema as CommentUpdateO
 import { CommentUpdateManyWithoutParentCommentNestedInputObjectSchema as CommentUpdateManyWithoutParentCommentNestedInputObjectSchema } from './CommentUpdateManyWithoutParentCommentNestedInput.schema';
 import { ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema as ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema } from './ScrapingSessionUpdateOneWithoutCommentsNestedInput.schema';
 import { FileUpdateManyWithoutCommentNestedInputObjectSchema as FileUpdateManyWithoutCommentNestedInputObjectSchema } from './FileUpdateManyWithoutCommentNestedInput.schema';
-import { RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantUpdateManyWithoutCommentsNestedInput.schema';
 import { RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema as RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema } from './RestaurantGroupUpdateManyWithoutCommentsNestedInput.schema';
 import { SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema as SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema } from './SentimentExtractionUpdateOneWithoutCommentNestedInput.schema'
 
@@ -35,7 +34,6 @@ const makeSchema = () => z.object({
   replies: z.lazy(() => CommentUpdateManyWithoutParentCommentNestedInputObjectSchema).optional(),
   scrapingSession: z.lazy(() => ScrapingSessionUpdateOneWithoutCommentsNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUpdateManyWithoutCommentNestedInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
   restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUpdateManyWithoutCommentsNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUpdateOneWithoutCommentNestedInputObjectSchema).optional()
 }).strict();

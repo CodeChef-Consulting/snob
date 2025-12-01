@@ -5,7 +5,6 @@ import { CommentCreateNestedOneWithoutRepliesInputObjectSchema as CommentCreateN
 import { CommentCreateNestedManyWithoutParentCommentInputObjectSchema as CommentCreateNestedManyWithoutParentCommentInputObjectSchema } from './CommentCreateNestedManyWithoutParentCommentInput.schema';
 import { ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutCommentsInput.schema';
 import { FileCreateNestedManyWithoutCommentInputObjectSchema as FileCreateNestedManyWithoutCommentInputObjectSchema } from './FileCreateNestedManyWithoutCommentInput.schema';
-import { RestaurantCreateNestedManyWithoutCommentsInputObjectSchema as RestaurantCreateNestedManyWithoutCommentsInputObjectSchema } from './RestaurantCreateNestedManyWithoutCommentsInput.schema';
 import { RestaurantGroupCreateNestedManyWithoutCommentsInputObjectSchema as RestaurantGroupCreateNestedManyWithoutCommentsInputObjectSchema } from './RestaurantGroupCreateNestedManyWithoutCommentsInput.schema';
 import { RestaurantExtractionCreateNestedOneWithoutCommentInputObjectSchema as RestaurantExtractionCreateNestedOneWithoutCommentInputObjectSchema } from './RestaurantExtractionCreateNestedOneWithoutCommentInput.schema';
 import { SentimentExtractionCreateNestedOneWithoutCommentInputObjectSchema as SentimentExtractionCreateNestedOneWithoutCommentInputObjectSchema } from './SentimentExtractionCreateNestedOneWithoutCommentInput.schema'
@@ -29,7 +28,6 @@ const makeSchema = () => z.object({
   replies: z.lazy(() => CommentCreateNestedManyWithoutParentCommentInputObjectSchema),
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutCommentsInputObjectSchema).optional(),
   files: z.lazy(() => FileCreateNestedManyWithoutCommentInputObjectSchema),
-  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutCommentsInputObjectSchema),
   restaurantGroupsMentioned: z.lazy(() => RestaurantGroupCreateNestedManyWithoutCommentsInputObjectSchema),
   restaurantExtraction: z.lazy(() => RestaurantExtractionCreateNestedOneWithoutCommentInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionCreateNestedOneWithoutCommentInputObjectSchema).optional()

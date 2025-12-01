@@ -230,6 +230,32 @@ export async function lookupAndAddRestaurantLocationAndGroup(
 ): Promise<GooglePlacesGroupResult> {
   stats.googlePlacesLookups++;
 
+  // Track API usage in database
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 0-indexed, so add 1
+
+  await prisma.googlePlacesLookup.upsert({
+    where: {
+      year_month_googleSKU: {
+        year,
+        month,
+        googleSKU: 'Pro', // Using Pro SKU for findPlaceById
+      },
+    },
+    create: {
+      year,
+      month,
+      googleSKU: 'Pro',
+      count: 1,
+    },
+    update: {
+      count: {
+        increment: 1,
+      },
+    },
+  });
+
   try {
     // Not in DB - fetch full details with second API call
     const place = await findPlaceById(placeId);

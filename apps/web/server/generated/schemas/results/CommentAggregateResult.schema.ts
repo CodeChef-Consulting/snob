@@ -23,7 +23,6 @@ export const CommentAggregateResultSchema = z.object({  _count: z.object({
     scrapingSession: z.number(),
     scrapingSessionId: z.number(),
     files: z.number(),
-    restaurantsMentioned: z.number(),
     restaurantGroupsMentioned: z.number(),
     restaurantExtraction: z.number(),
     sentimentExtraction: z.number()

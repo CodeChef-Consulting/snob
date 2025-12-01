@@ -42,7 +42,6 @@ export const PostGroupByResultSchema = z.array(z.object({
     commentsFullyScraped: z.number(),
     comments: z.number(),
     files: z.number(),
-    restaurantsMentioned: z.number(),
     restaurantGroupsMentioned: z.number(),
     restaurantExtraction: z.number(),
     sentimentExtraction: z.number()

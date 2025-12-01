@@ -5,7 +5,6 @@ import { SortOrderInputObjectSchema as SortOrderInputObjectSchema } from './Sort
 import { ScrapingSessionOrderByWithRelationInputObjectSchema as ScrapingSessionOrderByWithRelationInputObjectSchema } from './ScrapingSessionOrderByWithRelationInput.schema';
 import { CommentOrderByRelationAggregateInputObjectSchema as CommentOrderByRelationAggregateInputObjectSchema } from './CommentOrderByRelationAggregateInput.schema';
 import { FileOrderByRelationAggregateInputObjectSchema as FileOrderByRelationAggregateInputObjectSchema } from './FileOrderByRelationAggregateInput.schema';
-import { RestaurantOrderByRelationAggregateInputObjectSchema as RestaurantOrderByRelationAggregateInputObjectSchema } from './RestaurantOrderByRelationAggregateInput.schema';
 import { RestaurantGroupOrderByRelationAggregateInputObjectSchema as RestaurantGroupOrderByRelationAggregateInputObjectSchema } from './RestaurantGroupOrderByRelationAggregateInput.schema';
 import { RestaurantExtractionOrderByWithRelationInputObjectSchema as RestaurantExtractionOrderByWithRelationInputObjectSchema } from './RestaurantExtractionOrderByWithRelationInput.schema';
 import { SentimentExtractionOrderByWithRelationInputObjectSchema as SentimentExtractionOrderByWithRelationInputObjectSchema } from './SentimentExtractionOrderByWithRelationInput.schema'
@@ -33,7 +32,6 @@ const makeSchema = () => z.object({
   scrapingSession: z.lazy(() => ScrapingSessionOrderByWithRelationInputObjectSchema).optional(),
   comments: z.lazy(() => CommentOrderByRelationAggregateInputObjectSchema).optional(),
   files: z.lazy(() => FileOrderByRelationAggregateInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantOrderByRelationAggregateInputObjectSchema).optional(),
   restaurantGroupsMentioned: z.lazy(() => RestaurantGroupOrderByRelationAggregateInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionOrderByWithRelationInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionOrderByWithRelationInputObjectSchema).optional()

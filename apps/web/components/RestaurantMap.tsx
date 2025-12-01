@@ -163,9 +163,9 @@ export default function RestaurantMap() {
           .filter((loc) => loc.latitude !== null && loc.longitude !== null)
           .map((loc) => ({
             ...loc,
-            groupId: selectedGroup.id,
-            groupName: selectedGroup.name,
-            normalizedScore: selectedGroup.normalizedScore,
+            groupId: selectedGroup!.id,
+            groupName: selectedGroup!.name,
+            normalizedScore: selectedGroup!.normalizedScore,
           }))
       : [];
   } else if (hasActiveSearch) {
@@ -253,7 +253,9 @@ export default function RestaurantMap() {
       {showLoadingOverlay && (
         <div className="absolute inset-0 z-50 bg-gray-50/80 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="text-xl text-gray-900">Loading restaurant groups...</div>
+            <div className="text-xl text-gray-900">
+              Loading restaurant groups...
+            </div>
           </div>
         </div>
       )}

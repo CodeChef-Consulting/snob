@@ -9,7 +9,6 @@ import { NullableDateTimeFieldUpdateOperationsInputObjectSchema as NullableDateT
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
 import { CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema as CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutPostNestedInput.schema';
-import { RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantUncheckedUpdateManyWithoutPostsNestedInput.schema';
 import { RestaurantGroupUncheckedUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantGroupUncheckedUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantGroupUncheckedUpdateManyWithoutPostsNestedInput.schema';
 import { RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema as RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema } from './RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInput.schema';
 import { SentimentExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema as SentimentExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema } from './SentimentExtractionUncheckedUpdateOneWithoutPostNestedInput.schema'
@@ -35,7 +34,6 @@ const makeSchema = () => z.object({
   commentsLastScrapedAt: z.union([z.coerce.date(), z.lazy(() => NullableDateTimeFieldUpdateOperationsInputObjectSchema)]).optional().nullable(),
   commentsFullyScraped: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   comments: z.lazy(() => CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema).optional(),
   restaurantGroupsMentioned: z.lazy(() => RestaurantGroupUncheckedUpdateManyWithoutPostsNestedInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema).optional()

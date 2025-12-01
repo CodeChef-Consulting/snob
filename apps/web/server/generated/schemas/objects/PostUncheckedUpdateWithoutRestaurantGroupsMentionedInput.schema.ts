@@ -10,7 +10,6 @@ import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOp
 import { BoolFieldUpdateOperationsInputObjectSchema as BoolFieldUpdateOperationsInputObjectSchema } from './BoolFieldUpdateOperationsInput.schema';
 import { CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema as CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema } from './CommentUncheckedUpdateManyWithoutPostNestedInput.schema';
 import { FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema as FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema } from './FileUncheckedUpdateManyWithoutPostNestedInput.schema';
-import { RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema as RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema } from './RestaurantUncheckedUpdateManyWithoutPostsNestedInput.schema';
 import { RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema as RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema } from './RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInput.schema';
 import { SentimentExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema as SentimentExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema } from './SentimentExtractionUncheckedUpdateOneWithoutPostNestedInput.schema'
 
@@ -36,7 +35,6 @@ const makeSchema = () => z.object({
   commentsFullyScraped: z.union([z.boolean(), z.lazy(() => BoolFieldUpdateOperationsInputObjectSchema)]).optional(),
   comments: z.lazy(() => CommentUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
   files: z.lazy(() => FileUncheckedUpdateManyWithoutPostNestedInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantUncheckedUpdateManyWithoutPostsNestedInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionUncheckedUpdateOneWithoutPostNestedInputObjectSchema).optional()
 }).strict();

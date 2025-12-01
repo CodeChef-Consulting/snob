@@ -50,7 +50,6 @@ model Post {
 
   comments                  Comment[]
   files                     File[]
-  restaurantsMentioned      Restaurant[]
   restaurantGroupsMentioned RestaurantGroup[]
   restaurantExtraction      RestaurantExtraction?
   sentimentExtraction       SentimentExtraction?
@@ -84,7 +83,6 @@ model Comment {
   scrapingSessionId Int?
 
   files                     File[]
-  restaurantsMentioned      Restaurant[]
   restaurantGroupsMentioned RestaurantGroup[]
   restaurantExtraction      RestaurantExtraction?
   sentimentExtraction       SentimentExtraction?
@@ -108,33 +106,6 @@ model File {
   @@unique([commentId, fileUrl], name: "commentId_fileUrl")
 }
 
-model Restaurant {
-  id            Int      @id @default(autoincrement())
-  name          String
-  address       String?
-  city          String?
-  state         String?
-  zipCode       String?
-  latitude      Float?
-  longitude     Float?
-  source        String   @default("Open Data Portal") // "Open Data Portal" or "Google Places API"
-  googlePlaceId String?  @unique // Google Places ID for API lookups
-  lookupAliases String[] @default([]) // Array of alternative names for exact matching (Google Places only)
-  metadata      Json? // Store additional data (phone, website, rating, priceLevel, types, etc.)
-  rawScore      Float? // Raw mathematical score from sentiment analysis (unbounded, typically -20 to +20)
-  normalizedScore Float? // Normalized score 0-10, centered at 7 (computed from rawScore distribution)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  posts    Post[]
-  comments Comment[]
-
-  @@index([source])
-  @@index([googlePlaceId])
-  @@index([rawScore])
-  @@index([normalizedScore])
-  @@index([latitude, longitude])
-}
 
 model RestaurantGroup {
   id              Int      @id @default(autoincrement())
@@ -269,6 +240,19 @@ model SentimentExtraction {
   @@unique([commentId]) // One sentiment per comment
   @@index([rawAiScore]) // For filtering by sentiment
   @@index([extractedAt]) // For tracking extraction progress
+}
+
+model GooglePlacesLookup {
+  id         Int @id @default(autoincrement())
+  year       Int // e.g., 2025
+  month      Int // 1-12
+  googleSKU  String // "Pro" or "Basic"
+  count      Int @default(0) // Number of lookups this month
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([year, month, googleSKU]) // One record per SKU per month
+  @@index([year, month])
 }
 
 model ScrapingSession {

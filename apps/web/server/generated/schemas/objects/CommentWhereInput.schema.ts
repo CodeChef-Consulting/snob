@@ -14,7 +14,6 @@ import { CommentListRelationFilterObjectSchema as CommentListRelationFilterObjec
 import { ScrapingSessionNullableScalarRelationFilterObjectSchema as ScrapingSessionNullableScalarRelationFilterObjectSchema } from './ScrapingSessionNullableScalarRelationFilter.schema';
 import { ScrapingSessionWhereInputObjectSchema as ScrapingSessionWhereInputObjectSchema } from './ScrapingSessionWhereInput.schema';
 import { FileListRelationFilterObjectSchema as FileListRelationFilterObjectSchema } from './FileListRelationFilter.schema';
-import { RestaurantListRelationFilterObjectSchema as RestaurantListRelationFilterObjectSchema } from './RestaurantListRelationFilter.schema';
 import { RestaurantGroupListRelationFilterObjectSchema as RestaurantGroupListRelationFilterObjectSchema } from './RestaurantGroupListRelationFilter.schema';
 import { RestaurantExtractionNullableScalarRelationFilterObjectSchema as RestaurantExtractionNullableScalarRelationFilterObjectSchema } from './RestaurantExtractionNullableScalarRelationFilter.schema';
 import { RestaurantExtractionWhereInputObjectSchema as RestaurantExtractionWhereInputObjectSchema } from './RestaurantExtractionWhereInput.schema';
@@ -48,7 +47,6 @@ const commentwhereinputSchema = z.object({
   replies: z.lazy(() => CommentListRelationFilterObjectSchema).optional(),
   scrapingSession: z.union([z.lazy(() => ScrapingSessionNullableScalarRelationFilterObjectSchema), z.lazy(() => ScrapingSessionWhereInputObjectSchema)]).optional(),
   files: z.lazy(() => FileListRelationFilterObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantListRelationFilterObjectSchema).optional(),
   restaurantGroupsMentioned: z.lazy(() => RestaurantGroupListRelationFilterObjectSchema).optional(),
   restaurantExtraction: z.union([z.lazy(() => RestaurantExtractionNullableScalarRelationFilterObjectSchema), z.lazy(() => RestaurantExtractionWhereInputObjectSchema)]).optional(),
   sentimentExtraction: z.union([z.lazy(() => SentimentExtractionNullableScalarRelationFilterObjectSchema), z.lazy(() => SentimentExtractionWhereInputObjectSchema)]).optional()

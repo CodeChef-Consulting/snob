@@ -2,7 +2,6 @@ import * as z from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema as ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema } from './ScrapingSessionCreateNestedOneWithoutPostsInput.schema';
 import { CommentCreateNestedManyWithoutPostInputObjectSchema as CommentCreateNestedManyWithoutPostInputObjectSchema } from './CommentCreateNestedManyWithoutPostInput.schema';
-import { RestaurantCreateNestedManyWithoutPostsInputObjectSchema as RestaurantCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantCreateNestedManyWithoutPostsInput.schema';
 import { RestaurantGroupCreateNestedManyWithoutPostsInputObjectSchema as RestaurantGroupCreateNestedManyWithoutPostsInputObjectSchema } from './RestaurantGroupCreateNestedManyWithoutPostsInput.schema';
 import { RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema as RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema } from './RestaurantExtractionCreateNestedOneWithoutPostInput.schema';
 import { SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema as SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema } from './SentimentExtractionCreateNestedOneWithoutPostInput.schema'
@@ -27,7 +26,6 @@ const makeSchema = () => z.object({
   commentsFullyScraped: z.boolean().optional(),
   scrapingSession: z.lazy(() => ScrapingSessionCreateNestedOneWithoutPostsInputObjectSchema).optional(),
   comments: z.lazy(() => CommentCreateNestedManyWithoutPostInputObjectSchema).optional(),
-  restaurantsMentioned: z.lazy(() => RestaurantCreateNestedManyWithoutPostsInputObjectSchema).optional(),
   restaurantGroupsMentioned: z.lazy(() => RestaurantGroupCreateNestedManyWithoutPostsInputObjectSchema).optional(),
   restaurantExtraction: z.lazy(() => RestaurantExtractionCreateNestedOneWithoutPostInputObjectSchema).optional(),
   sentimentExtraction: z.lazy(() => SentimentExtractionCreateNestedOneWithoutPostInputObjectSchema).optional()
