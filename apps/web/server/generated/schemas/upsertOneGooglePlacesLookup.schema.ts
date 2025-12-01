@@ -10,5 +10,3 @@ import { GooglePlacesLookupUncheckedUpdateInputObjectSchema as GooglePlacesLooku
 export const GooglePlacesLookupUpsertOneSchema: z.ZodType<Prisma.GooglePlacesLookupUpsertArgs> = z.object({ select: GooglePlacesLookupSelectObjectSchema.optional(),  where: GooglePlacesLookupWhereUniqueInputObjectSchema, create: z.union([ GooglePlacesLookupCreateInputObjectSchema, GooglePlacesLookupUncheckedCreateInputObjectSchema ]), update: z.union([ GooglePlacesLookupUpdateInputObjectSchema, GooglePlacesLookupUncheckedUpdateInputObjectSchema ]) }).strict() as unknown as z.ZodType<Prisma.GooglePlacesLookupUpsertArgs>;
 
 export const GooglePlacesLookupUpsertOneZodSchema = z.object({ select: GooglePlacesLookupSelectObjectSchema.optional(),  where: GooglePlacesLookupWhereUniqueInputObjectSchema, create: z.union([ GooglePlacesLookupCreateInputObjectSchema, GooglePlacesLookupUncheckedCreateInputObjectSchema ]), update: z.union([ GooglePlacesLookupUpdateInputObjectSchema, GooglePlacesLookupUncheckedUpdateInputObjectSchema ]) }).strict();
-// Alias for prisma-trpc-generator compatibility
-export const GooglePlacesLookupUpsertSchema = GooglePlacesLookupUpsertOneSchema;
