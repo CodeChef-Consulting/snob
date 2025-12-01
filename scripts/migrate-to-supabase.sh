@@ -83,8 +83,8 @@ echo -e "${GREEN}✓ Data restored to Supabase${NC}"
 echo -e "\n${BLUE}Step 4: Verifying migration...${NC}"
 
 dotenvx run -f .env.production -f .env.keys -- sh -c '
-    # Use DATABASE_URL (pooled connection) for queries
-    CONN_STRING="${DATABASE_URL}"
+    # Use DIRECT_URL for queries (not pooled connection)
+    CONN_STRING="${DIRECT_URL}"
 
     echo "Counting records in Supabase:"
     PGPASSWORD=$(echo $CONN_STRING | sed -n "s/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p") \
@@ -98,7 +98,9 @@ dotenvx run -f .env.production -f .env.keys -- sh -c '
         UNION ALL
         SELECT '\''ScrapingSession'\'', COUNT(*) FROM \"ScrapingSession\"
         UNION ALL
-        SELECT '\''Restaurant'\'', COUNT(*) FROM \"Restaurant\"
+        SELECT '\''RestaurantLocation'\'', COUNT(*) FROM \"RestaurantLocation\"
+        UNION ALL
+        SELECT '\''RestaurantGroup'\'', COUNT(*) FROM \"RestaurantGroup\"
         ORDER BY table_name;
     "
 '
