@@ -63,35 +63,76 @@ export default function AboutPage() {
               <thead>
                 <tr className="border-b-2 border-slate-300">
                   <th className="py-3 px-2 sm:px-4 w-12 sm:w-16 hidden sm:table-cell"></th>
-                  <th className="py-3 px-2 sm:px-4 font-bold text-slate-900">What a Foodie Does</th>
-                  <th className="py-3 px-2 sm:px-4 font-bold text-blue-600">What Our AI-Foodie Does</th>
+                  <th className="py-3 px-2 sm:px-4 font-bold text-slate-900">
+                    What a Foodie Does
+                  </th>
+                  <th className="py-3 px-2 sm:px-4 font-bold text-blue-600">
+                    What Our AI-Foodie Does
+                  </th>
                 </tr>
               </thead>
               <tbody className="text-slate-700">
                 <tr className="border-b border-slate-200">
-                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">1</td>
-                  <td className="py-4 px-2 sm:px-4 align-top">Starts with a question like "Best pho in LA?" or "What should I eat in Neighborhood A?"</td>
-                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">Scours the internet thoroughly, reading all qualitative posts, comments, and reviews on restaurants</td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">
+                    1
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 align-top">
+                    Starts with a question like &ldquo;Best pho in LA?&rdquo; or &ldquo;What
+                    should I eat in Neighborhood A?&rdquo;
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">
+                    Scours the internet thoroughly, reading all qualitative
+                    posts, comments, and reviews on restaurants
+                  </td>
                 </tr>
                 <tr className="border-b border-slate-200">
-                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">2</td>
-                  <td className="py-4 px-2 sm:px-4 align-top">Skeptical of numeric ratings, aware of bias in 5-star systems</td>
-                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">Ignores preexisting star ratings entirely, focusing only on qualitative insights</td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">
+                    2
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 align-top">
+                    Skeptical of numeric ratings, aware of bias in 5-star
+                    systems
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">
+                    Ignores preexisting star ratings entirely, focusing only on
+                    qualitative insights
+                  </td>
                 </tr>
                 <tr className="border-b border-slate-200">
-                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">3</td>
-                  <td className="py-4 px-2 sm:px-4 align-top">Judges which opinions are trustworthy and relevant</td>
-                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">Gauges the merit of each post or comment, weighing recency, visibility, and controversy</td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">
+                    3
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 align-top">
+                    Judges which opinions are trustworthy and relevant
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">
+                    Gauges the merit of each post or comment, weighing recency,
+                    visibility, and controversy
+                  </td>
                 </tr>
                 <tr className="border-b border-slate-200">
-                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">4</td>
-                  <td className="py-4 px-2 sm:px-4 align-top">Synthesizes insights into a gut feeling or personal recommendation</td>
-                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">Synthesizes insights into nuanced, data-driven ratings</td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">
+                    4
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 align-top">
+                    Synthesizes insights into a gut feeling or personal
+                    recommendation
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">
+                    Synthesizes insights into nuanced, data-driven ratings
+                  </td>
                 </tr>
                 <tr>
-                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">5</td>
-                  <td className="py-4 px-2 sm:px-4 align-top">Relies on memory, experience, and limited sources</td>
-                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">Operates at superhuman scale, capturing every thread, nuance, and signal</td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-400 font-semibold align-top hidden sm:table-cell">
+                    5
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 align-top">
+                    Relies on memory, experience, and limited sources
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 text-slate-900 align-top">
+                    Operates at superhuman scale, capturing every thread,
+                    nuance, and signal
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -124,7 +165,9 @@ export default function AboutPage() {
             . Open to feedback and dev collaboration.
           </p>
           <p className="text-slate-600 mb-6 text-xs sm:text-sm">
-            <strong>Tech:</strong> Gemini AI (prompt engineering, batch processing), orthogonal-weighting scoring engine, Next.js, tRPC, PostgreSQL
+            <strong>Tech:</strong> Gemini AI (prompt engineering, batch
+            processing), orthogonal-weighting scoring engine, Next.js, tRPC,
+            PostgreSQL
           </p>
           <form onSubmit={handleContact} className="space-y-4">
             <input
