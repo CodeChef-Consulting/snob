@@ -21,7 +21,7 @@
     "@trpc/server": "^11.7.1",
     "google-map-react": "^2.2.5",
     "lodash": "^4.17.21",
-    "next": "15.1.4",
+    "next": "16.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",
