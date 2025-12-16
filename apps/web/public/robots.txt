@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://larestaurants.ai
+
+# Sitemaps
+Sitemap: https://larestaurants.ai/sitemap.xml

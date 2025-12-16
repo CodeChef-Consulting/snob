@@ -1,6 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
+import AboutModal from '../../components/AboutModal';
 
 // Dynamically import RestaurantMap with SSR disabled
 // This prevents hydration mismatches from Google Maps DOM manipulation
@@ -17,5 +19,23 @@ const RestaurantMap = dynamic(
 );
 
 export default function MapWrapper() {
-  return <RestaurantMap />;
+  const [showAboutModal, setShowAboutModal] = useState(false);
+
+  useEffect(() => {
+    // Check if user has chosen to hide the modal
+    const hideModal = localStorage.getItem('hideAboutModal');
+    if (!hideModal) {
+      setShowAboutModal(true);
+    }
+  }, []);
+
+  return (
+    <>
+      <RestaurantMap onShowAbout={() => setShowAboutModal(true)} />
+      <AboutModal
+        isOpen={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+      />
+    </>
+  );
 }
