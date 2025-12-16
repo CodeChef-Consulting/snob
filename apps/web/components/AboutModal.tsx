@@ -75,7 +75,7 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
         {/* Fixed Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-br from-slate-50 to-slate-100 border-b border-slate-200 px-4 sm:px-6 py-4 flex items-center justify-center md:rounded-t-2xl relative">
           <h1 className="text-lg sm:text-3xl md:text-4xl font-bold text-slate-900 text-center pr-8 sm:pr-0">
-            Foodie-Simulated Rating System
+            Snob: A Foodie-Simulated Rating System
           </h1>
           <button
             onClick={handleClose}
