@@ -182,6 +182,16 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                 </tbody>
               </table>
             </div>
+            <div className="mt-6 text-center">
+              <a
+                href="https://jeremy-t.medium.com/reddits-best-restaurants-in-la-a-data-scientist-s-perspective-b56d9d1872df?postPublishedType=initial"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-blue-600 hover:text-blue-800 font-semibold text-sm sm:text-base underline"
+              >
+                Learn More About the Data Science →
+              </a>
+            </div>
           </section>
 
           {/* Contact */}
